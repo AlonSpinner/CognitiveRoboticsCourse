@@ -8,11 +8,25 @@ class landmark:
     xy : np.ndarray((2))
     type : str
 
+    def angle(lm1,lm2): #akeen to lm2 - lm1
+        dy = lm2.xy[1]-lm1.xy[1]
+        dx = lm2.xy[0]-lm1.xy[0]
+        return np.arctan2(dy,dx)
+
 @dataclass(frozen = True, order = True)
 class beacon:
     id : int
     xy : np.ndarray((2))
     r : float
 
-def pose2ToNumpy(pose2: gtsam.Pose2):
-    return np.array([pose2.x(),pose2.y(),pose2.theta()])
+@dataclass(frozen = False, order = True)
+class package:
+    id : int
+    location : int #landmark or robot == 1000
+    timeLeft : float
+
+@dataclass()
+class mvnormal:
+    dim = int
+    mu = np.ndarray
+    sigma = np.ndarray

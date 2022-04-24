@@ -7,7 +7,7 @@ class Map:
         #instance attributes
         self.beacons : list[beacon] = beacons
         self.landmarks : list[landmark]  = landmarks
-        self.connectivityList : list  = connectivityList #list of [i,j]
+        self.connectivityList : list[(int,int)]  = connectivityList
 
     def plot(self,ax : plt.Axes = None):
         if ax == None:
@@ -25,6 +25,16 @@ class Map:
             lm2 = self.landmarks[c[1]]
             plotting.plot_road(ax,lm1,lm2)
         return ax
+
+    def find_adjacent(self,lm : landmark):
+        adjacent = []
+        for c in self.connectivityList:
+            if lm.id in c:
+                c.remove(lm.id)
+                adjacent.append(c[0])
+        return adjacent
+
+
 
 
     
