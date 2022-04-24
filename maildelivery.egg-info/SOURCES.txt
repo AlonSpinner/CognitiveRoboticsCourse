@@ -1,0 +1,6 @@
+README.md
+setup.py
+maildelivery.egg-info/PKG-INFO
+maildelivery.egg-info/SOURCES.txt
+maildelivery.egg-info/dependency_links.txt
+maildelivery.egg-info/top_level.txt
