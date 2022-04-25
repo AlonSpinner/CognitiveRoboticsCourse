@@ -77,11 +77,15 @@ with plt.ion():
             
         if type(cmd) == pickup:
             r.pickup(cmd)
-            print(f'picked up package {cmd.p.id} from landmark {cmd.lm.id}')
+            ax.set_title(f'picked up package {cmd.p.id}')
+            plt.pause(2)
+            ax.set_title('')
 
         if type(cmd) == drop:
             r.drop(cmd)
-            print(f'droped off package {cmd.p.id} at landmark {cmd.lm.id}')
+            ax.set_title(f'droped off package {cmd.p.id}')
+            plt.pause(2)
+            ax.set_title('')
 
         graphics_r.remove()
         graphics_r = r.plot(ax)
