@@ -26,9 +26,7 @@ def execute_plan(robot : robot, plan):
 
 class planner:
     def __init__(self) -> None:
-        self.step_size_straight = 1.0
-        self.step_size_rotate = np.pi/4
-
+        pass
     def create_plan(self, belief : mvnormal, map : Map, packages : list[package]):
         #create a sequence of [move,reach,pickup,drop] actions to later be formulated as PDDL
         pass

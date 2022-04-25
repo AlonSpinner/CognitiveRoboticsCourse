@@ -51,7 +51,7 @@ def plot_beacon(ax: plt.Axes, b : beacon, markerShape = 'o', markerSize = 10, co
 def plot_robot(ax , pose : gtsam.Pose2, scale = 9, color = 'b'):
         u = np.cos(pose.theta())
         v = np.sin(pose.theta())
-        return ax.quiver(pose.x(),pose.y(),u,v, color = color, scale = scale)
+        return ax.quiver(pose.x(),pose.y(),u,v, color = color, scale = scale, width = 0.02)
     
 def plot_cov_ellipse(pos, cov, nstd=1, ax=None, facecolor = 'none',edgecolor = 'b' ,  **kwargs):
         #slightly edited from https://stackoverflow.com/questions/12301071/multidimensional-confidence-intervals

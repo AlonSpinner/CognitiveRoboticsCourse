@@ -1,4 +1,5 @@
-from maildelivery.datatypes import beacon, landmark, move
+from maildelivery.datatypes import beacon, landmark, package
+from maildelivery.datatypes import  move, goto, pickup, drop #commands
 
 from maildelivery.map import Map
 from maildelivery.robot import robot
@@ -33,28 +34,47 @@ def createMap():
     landmarks = houses + intersections
     connectivityList = [[0,8],[8,1],[8,5],[5,2],[5,3],[2,9],[5,6],[6,4],[4,10],[10,3],[9,3],[4,7],[7,1]]
 
-    packages = []
+    packages = [package(0,5,100)]
 
     m = Map(beacons, landmarks, connectivityList, packages)
     return m
 
 m = createMap()
 
-
+#initalize robot location
 lm0 = m.landmarks[0]
-lm1 = m.landmarks[8]
+lm1 = m.landmarks[m.find_adjacent(lm0)[0]]
 r = robot(gtsam.Pose2(lm0.xy[0],lm0.xy[1],landmark.angle(lm0,lm1)))
+
+#create commands
+plan = [goto(m.landmarks[8]),
+        goto(m.landmarks[5]),
+        pickup(m.packages[0], m.landmarks[5]),
+        goto(m.landmarks[3]),
+        goto(m.landmarks[10]),
+        goto(m.landmarks[4]),
+        drop(m.packages[0], m.landmarks[4])]
 
 _, ax = plotting.spawnWorld()
 m.plot(ax)
 graphics_r = r.plot(ax)
 
-odom = gtsam.Pose2(0.4,0,0)
-cmd = move(odom)
-
 with plt.ion():
-    for _ in range(5):
-        r.move(cmd)
+    for cmd in plan:
+        if type(cmd) == goto:
+            #--- parsing in the level of the robot
+            turn = move(gtsam.Pose2(0,0,r.pose.bearing(cmd.lm.xy).theta()))
+            forward = move(gtsam.Pose2(r.pose.range(cmd.lm.xy), 0, 0))
+            r.move(turn)
+            r.move(forward)
+            #--- parsing in the level of the robot
+        if type(cmd) == pickup:
+            r.pickup(cmd)
+            print(f'picked up package {cmd.p.id} from landmark {cmd.lm.id}')
+
+        if type(cmd) == drop:
+            r.drop(cmd)
+            print(f'droped off package {cmd.p.id} at landmark {cmd.lm.id}')
 
         graphics_r.remove()
         graphics_r = r.plot(ax)

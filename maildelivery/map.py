@@ -1,13 +1,14 @@
 import maildelivery.plotting as plotting
-from maildelivery.datatypes import beacon, landmark
+from maildelivery.datatypes import beacon, landmark, package
 import matplotlib.pyplot as plt
 
 class Map:    
-    def __init__(self,beacons,landmarks,connectivityList):
+    def __init__(self,beacons,landmarks,connectivityList, packages = None):
         #instance attributes
         self.beacons : list[beacon] = beacons
         self.landmarks : list[landmark]  = landmarks
         self.connectivityList : list[(int,int)]  = connectivityList
+        self.packages : list[package] = packages
 
     def plot(self,ax : plt.Axes = None):
         if ax == None:
@@ -30,8 +31,8 @@ class Map:
         adjacent = []
         for c in self.connectivityList:
             if lm.id in c:
-                c.remove(lm.id)
-                adjacent.append(c[0])
+                i = 1 - c.index(lm.id)
+                adjacent.append(c[i])
         return adjacent
 
 
