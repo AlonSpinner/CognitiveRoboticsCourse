@@ -1,5 +1,6 @@
 from maildelivery.datatypes import beacon, landmark, package
-from maildelivery.datatypes import  move, goto, pickup, drop #commands
+from maildelivery.datatypes import  move, goto, pickup, drop
+from maildelivery import brains
 
 from maildelivery.map import Map
 from maildelivery.robot import robot
@@ -62,12 +63,18 @@ graphics_r = r.plot(ax)
 with plt.ion():
     for cmd in plan:
         if type(cmd) == goto:
-            #--- parsing in the level of the robot
-            turn = move(gtsam.Pose2(0,0,r.pose.bearing(cmd.lm.xy).theta()))
-            forward = move(gtsam.Pose2(r.pose.range(cmd.lm.xy), 0, 0))
-            r.move(turn)
-            r.move(forward)
-            #--- parsing in the level of the robot
+            #move until movecmd == false
+            movecmd = brains.control(r,cmd)
+            while movecmd:
+                r.move(movecmd)
+                
+                graphics_r.remove()
+                graphics_r = r.plot(ax)
+                plt.pause(0.5)
+
+                movecmd = brains.control(r,cmd)
+            continue
+            
         if type(cmd) == pickup:
             r.pickup(cmd)
             print(f'picked up package {cmd.p.id} from landmark {cmd.lm.id}')
