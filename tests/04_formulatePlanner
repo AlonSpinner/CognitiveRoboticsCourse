@@ -13,7 +13,7 @@ from fractions import Fraction
 
 # --------------------------------------------- Define problem variables and actions
 
-#problem types ~ objects
+#problem types ~ objectsv
 location = UserType('location')
 robot = UserType('robot')
 package = UserType('package')
