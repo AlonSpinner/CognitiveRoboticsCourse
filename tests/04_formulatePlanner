@@ -1,6 +1,6 @@
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType, RealType, \
-        Fluent, DurativeAction, InstantaneousAction, SimulatedEffect, Problem,\
+        Fluent, DurativeAction, InstantaneousAction, SimulatedEffect, Problem, Object,\
         StartTiming, EndTiming, Real, GT
         
 from unified_planning.io.pddl_writer import PDDLWriter
@@ -53,6 +53,7 @@ drop.add_effect(EndTiming,location_has_package(p, l), True)
 fillfuel = DurativeAction('fllfuel', r = robot, l = location)
 r = fillfuel.parameter('r')
 l = fillfuel.parameter('l')
+fillfuel.set_fixed_duration(2)
 fillfuel.add_condition(StartTiming(), location_is_pump(l))
 fillfuel.add_effect(EndTiming, fuel(r), Real(Fraction(100.0)))
 
@@ -60,9 +61,41 @@ problem = Problem('maildelivery')
 problem.add_action(move)
 problem.add_action(pickup)
 problem.add_action(drop)
+problem.add_action(fillfuel)
+
+locations = [Object(f"l{i}", location) for i in range(5)]
+pump = Object("pump",location)
+houses = [Object(f"h{i}", location) for i in range(2)]
+deliverybot = Object("r0",robot)
+note = Object("p0",package)
+problem.add_objects(locations + [pump] + [deliverybot] + [note] + houses)
+
+problem.set_initial_value(distance(locations[0],locations[1]),5.0)
+problem.set_initial_value(distance(locations[1],locations[2]),5.0)
+problem.set_initial_value(distance(locations[2],locations[3]),5.0)
+problem.set_initial_value(distance(locations[3],locations[4]),5.0)
+
+problem.set_initial_value(location_is_pump(pump),True)
+problem.set_initial_value(distance(locations[2],pump),2)
+
+problem.set_initial_value(robot_at(deliverybot,locations[0]),True)
+
+problem.set_initial_value(distance(locations[3],houses[0]),2)
+problem.set_initial_value(distance(locations[4],houses[1]),2)
+problem.set_initial_value(location_has_package(note,houses[0]),True)
+
+problem.set_initial_value(fuel(deliverybot),15.0)
+
+problem.add_goal(location_has_package(note,houses[1]))
+
 
 print(problem)
 
+
+
+# w = PDDLWriter(problem)
+# print(w.get_domain())
+# print(w.get_problem())
 # NLOC = 10
 # locations = [unified_planning.model.Object('l%s' % i, Location) for i in range(NLOC)]
 # problem.add_objects(locations)
