@@ -33,7 +33,7 @@ r = move.parameter('r')
 l_from = move.parameter('l_from')
 l_to = move.parameter('l_to')
 # move.set_duration_constraint(distance(l_from, l_to))
-move.set_fixed_duration(5)
+move.set_fixed_duration(1)
 # move.add_condition(StartTiming(),GT(fuel(r),distance(l_from, l_to)))
 move.add_condition(StartTiming(),robot_at(r, l_from))
 move.add_effect(StartTiming(),robot_at(r, l_from), False)
@@ -56,7 +56,7 @@ r = drop.parameter('r')
 l = drop.parameter('l')
 drop.set_fixed_duration(1)
 drop.add_condition(StartTiming(),robot_at(r, l))
-drop.add_condition(StartTiming(),location_has_package(p, l))
+drop.add_condition(StartTiming(),robot_has_package(p, r))
 drop.add_effect(StartTiming(),robot_has_package(p, r), False)
 drop.add_effect(EndTiming(),location_has_package(p, l), True)
 
@@ -73,7 +73,7 @@ problem.add_action(pickup)
 problem.add_action(drop)
 problem.add_action(fillfuel)
 problem.add_fluent(robot_at, default_initial_value = False)
-problem.add_fluent(distance, default_initial_value = 10000.0)
+problem.add_fluent(distance, default_initial_value = 1.0)
 problem.add_fluent(delivery_time, default_initial_value = 100000.0)
 problem.add_fluent(robot_has_package, default_initial_value = False)
 problem.add_fluent(location_has_package, default_initial_value = False)
@@ -82,38 +82,35 @@ problem.add_fluent(fuel, default_initial_value = 10000.0)
 
 # --------------------------------------------- Set specific values
 #objects of problem
-locations = [Object(f"l{i}", location) for i in range(5)]
-pump = Object("pump",location)
-houses = [Object(f"h{i}", location) for i in range(2)]
-deliverybot = Object("r0",robot)
-note = Object("p0",package)
-problem.add_objects(locations + [pump] + [deliverybot] + [note] + houses)
-#initial values of grid locations
-problem.set_initial_value(distance(locations[0],locations[1]),5.0)
-problem.set_initial_value(distance(locations[1],locations[2]),5.0)
-problem.set_initial_value(distance(locations[2],locations[3]),5.0)
-problem.set_initial_value(distance(locations[3],locations[4]),5.0)
+locations = [Object(f"l{i}", location) for i in range(3)]
+deliverybot = Object("r",robot)
+note = Object("p",package)
+problem.add_objects(locations + [deliverybot] + [note])
+# #initial values of grid locations
+# problem.set_initial_value(distance(locations[0],locations[1]),5.0)
+# problem.set_initial_value(distance(locations[1],locations[2]),5.0)
+# problem.set_initial_value(distance(locations[2],locations[3]),5.0)
+# problem.set_initial_value(distance(locations[3],locations[4]),5.0)
 #connect pump to grid
-problem.set_initial_value(location_is_pump(pump),True)
-problem.set_initial_value(distance(locations[2],pump),2.0)
+problem.set_initial_value(location_is_pump(locations[0]),True)
 #robot at start
 problem.set_initial_value(robot_at(deliverybot,locations[0]),True)
 #connect houses to grid and place package in house 0
-problem.set_initial_value(distance(locations[3],houses[0]),2.0)
-problem.set_initial_value(distance(locations[4],houses[1]),2.0)
-problem.set_initial_value(location_has_package(note,houses[0]),True)
+problem.set_initial_value(location_has_package(note,locations[1]),True)
 #fuel at start
 # problem.set_initial_value(fuel(deliverybot),15.0)
 #goal
-# problem.add_goal(location_has_package(note,houses[1]))
-problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
+problem.add_goal(location_has_package(note,locations[2]))
+# problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
 
 print(problem.kind)
 with OneshotPlanner(names=['tamer', 'tamer'],
                     params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}]) as planner:
     plan = planner.solve(problem).plan
-    print("%s returned: %s" % (planner.name, plan))
 
+if plan is not None:
+        for action in plan.timed_actions:
+                print(action[1])
 # with OneshotPlanner(problem_kind=problem.kind) as planner:
 #     result = planner.solve(problem)
 #     print("%s returned: %s" % (planner.name, result.plan))
