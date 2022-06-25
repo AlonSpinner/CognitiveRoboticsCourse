@@ -1,17 +1,21 @@
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType, RealType, \
         Fluent, DurativeAction, InstantaneousAction, SimulatedEffect, Problem, Object,\
-        StartTiming, EndTiming, Real, GT
+        StartTiming, EndTiming, GlobalStartTiming, GlobalEndTiming, Real, GT, Or
         
 from unified_planning.io.pddl_writer import PDDLWriter
 from unified_planning.io.pddl_reader import PDDLReader
 
 from fractions import Fraction
 
+# --------------------------------------------- Define problem variables and actions
+
+#problem types ~ objects
 location = UserType('location')
 robot = UserType('robot')
 package = UserType('package')
 
+#problem variables that are changed by actions on objects
 robot_at = Fluent('robot_at', BoolType(), r = robot, l = location)
 distance = Fluent('distance', RealType(), l_from = location, l_to = location)
 delivery_time = Fluent('delivery_time', RealType(), p = package)
@@ -20,10 +24,13 @@ location_has_package = Fluent('location_has_package', BoolType(), p = package, l
 location_is_pump = Fluent('location_is_pump', BoolType(), l = location)
 fuel = Fluent('fuel', RealType(0,100), r = robot)
 
+#actions
 move = DurativeAction('move',  r = robot, l_from = location, l_to = location)
 r = move.parameter('r')
 l_from = move.parameter('l_from')
 l_to = move.parameter('l_to')
+# move.set_duration_constraint(distance(l_from, l_to))
+move.set_fixed_duration(5.0)
 move.add_condition(StartTiming(),GT(fuel(r),distance(l_from, l_to)))
 move.add_condition(StartTiming(),robot_at(r, l_from))
 move.add_effect(StartTiming(),robot_at(r, l_from), False)
@@ -63,33 +70,37 @@ problem.add_action(pickup)
 problem.add_action(drop)
 problem.add_action(fillfuel)
 
+# --------------------------------------------- Set specific values
+#objects of problem
 locations = [Object(f"l{i}", location) for i in range(5)]
 pump = Object("pump",location)
 houses = [Object(f"h{i}", location) for i in range(2)]
 deliverybot = Object("r0",robot)
 note = Object("p0",package)
 problem.add_objects(locations + [pump] + [deliverybot] + [note] + houses)
-
+#initial values of grid locations
 problem.set_initial_value(distance(locations[0],locations[1]),5.0)
 problem.set_initial_value(distance(locations[1],locations[2]),5.0)
 problem.set_initial_value(distance(locations[2],locations[3]),5.0)
 problem.set_initial_value(distance(locations[3],locations[4]),5.0)
-
+#connect pump to grid
 problem.set_initial_value(location_is_pump(pump),True)
-problem.set_initial_value(distance(locations[2],pump),2)
-
+problem.set_initial_value(distance(locations[2],pump),2.0)
+#robot at start
 problem.set_initial_value(robot_at(deliverybot,locations[0]),True)
-
-problem.set_initial_value(distance(locations[3],houses[0]),2)
-problem.set_initial_value(distance(locations[4],houses[1]),2)
+#connect houses to grid and place package in house 0
+problem.set_initial_value(distance(locations[3],houses[0]),2.0)
+problem.set_initial_value(distance(locations[4],houses[1]),2.0)
 problem.set_initial_value(location_has_package(note,houses[0]),True)
-
+#fuel at start
 problem.set_initial_value(fuel(deliverybot),15.0)
 
-problem.add_goal(location_has_package(note,houses[1]))
+# problem.set_initial_value(GlobalStartTiming())
 
+problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
 
 print(problem)
+# print(problem.kind)
 
 
 
