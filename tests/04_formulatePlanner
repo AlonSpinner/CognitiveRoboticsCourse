@@ -25,7 +25,7 @@ delivery_time = Fluent('delivery_time', RealType(), p = package)
 robot_has_package = Fluent('robot_has_package', BoolType(), p = package, r = robot)
 location_has_package = Fluent('location_has_package', BoolType(), p = package, l = location)
 location_is_pump = Fluent('location_is_pump', BoolType(), l = location)
-fuel = Fluent('fuel', RealType(0,100), r = robot)
+fuel = Fluent('fuel', RealType(), r = robot)
 
 #actions
 move = DurativeAction('move',  r = robot, l_from = location, l_to = location)
@@ -34,11 +34,11 @@ l_from = move.parameter('l_from')
 l_to = move.parameter('l_to')
 # move.set_duration_constraint(distance(l_from, l_to))
 move.set_fixed_duration(5)
-move.add_condition(StartTiming(),GT(fuel(r),distance(l_from, l_to)))
+# move.add_condition(StartTiming(),GT(fuel(r),distance(l_from, l_to)))
 move.add_condition(StartTiming(),robot_at(r, l_from))
 move.add_effect(StartTiming(),robot_at(r, l_from), False)
 move.add_effect(EndTiming(),robot_at(r, l_to), True)
-move.add_decrease_effect(EndTiming(),fuel(r),distance(l_from, l_to))
+# move.add_decrease_effect(EndTiming(),fuel(r),distance(l_from, l_to))
 
 pickup = DurativeAction('pickup', p = package, r = robot, l = location)
 p = pickup.parameter('p')
@@ -63,15 +63,21 @@ drop.add_effect(EndTiming(),location_has_package(p, l), True)
 fillfuel = DurativeAction('fllfuel', r = robot, l = location)
 r = fillfuel.parameter('r')
 l = fillfuel.parameter('l')
-fillfuel.set_fixed_duration(2)
 fillfuel.add_condition(StartTiming(), location_is_pump(l))
-fillfuel.add_effect(EndTiming(), fuel(r), Real(Fraction(100.0)))
+fillfuel.add_effect(EndTiming(), fuel(r), Real(Fraction(100,1)))
 
 problem = Problem('maildelivery')
 problem.add_action(move)
 problem.add_action(pickup)
 problem.add_action(drop)
 problem.add_action(fillfuel)
+problem.add_fluent(robot_at, default_initial_value = False)
+problem.add_fluent(distance, default_initial_value = 10000.0)
+problem.add_fluent(delivery_time, default_initial_value = 100000.0)
+problem.add_fluent(robot_has_package, default_initial_value = False)
+problem.add_fluent(location_has_package, default_initial_value = False)
+problem.add_fluent(location_is_pump, default_initial_value = False)
+problem.add_fluent(fuel, default_initial_value = 0.0)
 
 # --------------------------------------------- Set specific values
 #objects of problem
@@ -96,16 +102,19 @@ problem.set_initial_value(distance(locations[3],houses[0]),2.0)
 problem.set_initial_value(distance(locations[4],houses[1]),2.0)
 problem.set_initial_value(location_has_package(note,houses[0]),True)
 #fuel at start
-problem.set_initial_value(fuel(deliverybot),15.0)
+# problem.set_initial_value(fuel(deliverybot),15.0)
 #goal
 problem.add_goal(location_has_package(note,houses[1]))
 # problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
 
-with OneshotPlanner(names=['tamer', 'tamer', 'pyperplan'],
-                    params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}, {}]) as planner:
-    plan = planner.solve(problem).plan
-    print("%s returned: %s" % (planner.name, plan))
+print(problem.kind)
+# with OneshotPlanner(names=['tamer', 'tamer', 'pyperplan'],
+#                     params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}, {}]) as planner:
+#     plan = planner.solve(problem).plan
+#     print("%s returned: %s" % (planner.name, plan))
 # print(problem.kind)
-# with OneshotPlanner(name='pyperplan') as planner:
-#     result = planner.solve(problem)
-#     print("%s returned: %s" % (planner.name, result.plan))
+
+
+with OneshotPlanner(problem_kind=problem.kind) as planner:
+    result = planner.solve(problem)
+    # print("%s returned: %s" % (planner.name, result.plan))
