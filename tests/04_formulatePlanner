@@ -97,8 +97,15 @@ problem.set_initial_value(distance(locations[4],houses[1]),2.0)
 problem.set_initial_value(location_has_package(note,houses[0]),True)
 #fuel at start
 problem.set_initial_value(fuel(deliverybot),15.0)
+#goal
+problem.add_goal(location_has_package(note,houses[1]))
+# problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
 
-problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
-
-print(problem)
-print(problem.kind)
+with OneshotPlanner(names=['tamer', 'tamer', 'pyperplan'],
+                    params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}, {}]) as planner:
+    plan = planner.solve(problem).plan
+    print("%s returned: %s" % (planner.name, plan))
+# print(problem.kind)
+# with OneshotPlanner(name='pyperplan') as planner:
+#     result = planner.solve(problem)
+#     print("%s returned: %s" % (planner.name, result.plan))
