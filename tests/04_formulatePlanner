@@ -63,6 +63,7 @@ drop.add_effect(EndTiming(),location_has_package(p, l), True)
 fillfuel = DurativeAction('fllfuel', r = robot, l = location)
 r = fillfuel.parameter('r')
 l = fillfuel.parameter('l')
+fillfuel.set_fixed_duration(1)
 fillfuel.add_condition(StartTiming(), location_is_pump(l))
 fillfuel.add_effect(EndTiming(), fuel(r), Real(Fraction(100,1)))
 
@@ -77,7 +78,7 @@ problem.add_fluent(delivery_time, default_initial_value = 100000.0)
 problem.add_fluent(robot_has_package, default_initial_value = False)
 problem.add_fluent(location_has_package, default_initial_value = False)
 problem.add_fluent(location_is_pump, default_initial_value = False)
-problem.add_fluent(fuel, default_initial_value = 0.0)
+problem.add_fluent(fuel, default_initial_value = 10000.0)
 
 # --------------------------------------------- Set specific values
 #objects of problem
@@ -104,17 +105,15 @@ problem.set_initial_value(location_has_package(note,houses[0]),True)
 #fuel at start
 # problem.set_initial_value(fuel(deliverybot),15.0)
 #goal
-problem.add_goal(location_has_package(note,houses[1]))
-# problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
+# problem.add_goal(location_has_package(note,houses[1]))
+problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
 
 print(problem.kind)
-# with OneshotPlanner(names=['tamer', 'tamer', 'pyperplan'],
-#                     params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}, {}]) as planner:
-#     plan = planner.solve(problem).plan
-#     print("%s returned: %s" % (planner.name, plan))
-# print(problem.kind)
+with OneshotPlanner(names=['tamer', 'tamer'],
+                    params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}]) as planner:
+    plan = planner.solve(problem).plan
+    print("%s returned: %s" % (planner.name, plan))
 
-
-with OneshotPlanner(problem_kind=problem.kind) as planner:
-    result = planner.solve(problem)
-    # print("%s returned: %s" % (planner.name, result.plan))
+# with OneshotPlanner(problem_kind=problem.kind) as planner:
+#     result = planner.solve(problem)
+#     print("%s returned: %s" % (planner.name, result.plan))
