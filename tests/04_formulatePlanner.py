@@ -13,7 +13,7 @@ from unified_planning.io.pddl_reader import PDDLReader
 
 #constants
 FULLTANK = 100
-LOCATION_DISTANCE = 1.0
+LOCATION_DISTANCE = 1
 MOVE_TIME = 1.0
 PICKUP_TIME = 1.0
 DROP_TIME = 1.0
@@ -52,8 +52,10 @@ move.add_effect(StartTiming(), is_occupied(l_from), False)
 move.add_effect(EndTiming(), robot_at(r, l_to), True)
 move.add_effect(StartTiming(), is_occupied(l_to), True)
 def decrease_fuel_fun(problem, state, actual_params):
+    cost = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
+    print(type(cost))
     fuelCurrent = state.get_value(fuel(actual_params.get(r))).constant_value()
-    return [Int(fuelCurrent-1)]
+    return [Int(fuelCurrent-cost)]
 move.set_simulated_effect(StartTiming(),SimulatedEffect([fuel(r)], decrease_fuel_fun))
 # move.add_decrease_effect(EndTiming(),fuel(r),distance(l_from, l_to))
 
@@ -110,10 +112,10 @@ problem.add_objects(locations + [deliverybot] + [note])
 problem.set_initial_value(is_connected(locations[0],locations[1]),True)
 problem.set_initial_value(is_connected(locations[1],locations[2]),True)
 problem.set_initial_value(is_connected(locations[2],locations[3]),True)
-problem.set_initial_value(distance(locations[0],locations[1]),1.0)
-problem.set_initial_value(distance(locations[1],locations[2]),1.0)
-problem.set_initial_value(distance(locations[2],locations[3]),1.0)
-problem.set_initial_value(distance(locations[3],locations[2]),1.0)
+problem.set_initial_value(distance(locations[0],locations[1]),1)
+problem.set_initial_value(distance(locations[1],locations[2]),1)
+problem.set_initial_value(distance(locations[2],locations[3]),1)
+problem.set_initial_value(distance(locations[3],locations[2]),1)
 #connect pump to grid
 problem.set_initial_value(location_is_pump(locations[0]),True)
 #robot at start
