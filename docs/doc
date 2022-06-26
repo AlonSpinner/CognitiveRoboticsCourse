@@ -1,0 +1,28 @@
+-------------------------------------progress:
+(1) I need to define the problem.pddl and domain.pddl files, hopefully from python
+	for that I need to use a python parser -> pddl or understand how to do it myself
+
+(2) I need a solver that works on those files
+	
+We'll start with only fluents (numbers with "+", "-", "*" and "/" operations)
+After which we will try to add durative actions
+
+Both solver and parser need to have the capabilties for fluents and durative actions
+
+-------------------------------------good stuff:
+https://planning.wiki
+	shows different PDDL versions and their usages
+
+https://www.youtube.com/watch?v=ch0AnXVuNN8&ab_channel=MauroVallati 
+	talk about classical planning explaining what grounding is 
+
+A good solver using julia?
+	from examples, seems to be working with only the basics. no fluents or durations
+	https://github.com/APLA-Toolbox/PythonPDDL
+
+python pddl parser with durative actions and others?
+	https://github.com/karpase/pythonpddl
+
+https://github.com/karpase/unified-planning
+	Maybe this is all I need? "The unified_planning library makes it easy to formulate planning problems and to invoke automated planners."
+		This is the source https://github.com/aiplan4eu/unified-planning
