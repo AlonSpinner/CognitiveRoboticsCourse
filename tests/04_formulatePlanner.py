@@ -13,6 +13,8 @@ PICKUP_TIME = 1.0
 DROP_TIME = 1.0
 CHARGING_TIME = 1.0
 
+def dist2chargeUse(dist) -> int:
+        return int(2 * dist)
 
 #problem types ~ objectsv
 location = UserType('location')
@@ -38,7 +40,7 @@ l_to = move.parameter('l_to')
 move.set_fixed_duration(MOVE_TIME)
 move.add_condition(StartTiming(),Or(is_connected(l_from, l_to), \
                                     is_connected(l_to, l_from)))
-move.add_condition(StartTiming(),GE(charge(r),LOCATION_DISTANCE))
+move.add_condition(StartTiming(),GE(charge(r),dist2chargeUse(LOCATION_DISTANCE)))
 move.add_condition(StartTiming(), robot_at(r, l_from))
 move.add_condition(EndTiming(), Not(is_occupied(l_to))) #at end, l_to is free
 move.add_effect(StartTiming(), robot_at(r, l_from), False)
@@ -49,7 +51,7 @@ def decrease_charge_fun(problem, state, actual_params):
         #if dist is not constant, use this:
         # dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
         dist = LOCATION_DISTANCE
-        requiredCharge = 2 * dist #simulated as some function of distance
+        requiredCharge = dist2chargeUse(dist)
         currentCharge = state.get_value(charge(actual_params.get(r))).constant_value()
         return [Int(currentCharge-requiredCharge)]
 move.set_simulated_effect(StartTiming(),SimulatedEffect([charge(r)], decrease_charge_fun))
