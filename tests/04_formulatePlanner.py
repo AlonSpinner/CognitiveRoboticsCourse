@@ -8,10 +8,15 @@ from unified_planning.shortcuts import *
         
 from unified_planning.io.pddl_writer import PDDLWriter
 from unified_planning.io.pddl_reader import PDDLReader
-
-from fractions import Fraction
-
 # --------------------------------------------- Define problem variables and actions
+
+#constants
+FULLTANK = 100.0
+MOVE_TIME = 1.0
+PICKUP_TIME = 1.0
+DROP_TIME = 1.0
+FILL_TIME = 1.0
+
 
 #problem types ~ objectsv
 location = UserType('location')
@@ -34,7 +39,7 @@ move = DurativeAction('move',  r = robot, l_from = location, l_to = location)
 r = move.parameter('r')
 l_from = move.parameter('l_from')
 l_to = move.parameter('l_to')
-move.set_fixed_duration(1.0)
+move.set_fixed_duration(MOVE_TIME)
 move.add_condition(StartTiming(),Or(is_connected(l_from, l_to), \
                                     is_connected(l_to, l_from)))
 move.add_condition(StartTiming(),GE(fuel(r),distance(l_from, l_to)))
@@ -44,13 +49,18 @@ move.add_effect(StartTiming(), robot_at(r, l_from), False)
 move.add_effect(StartTiming(), is_occupied(l_from), False)
 move.add_effect(EndTiming(), robot_at(r, l_to), True)
 move.add_effect(StartTiming(), is_occupied(l_to), True)
+def decrease_fuel_fun(problem, state, actual_params):
+    fuelCurrent = state.get_value(fuel(actual_params.get(r))).constant_value()
+    fuelLost = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
+    return [Real(fuelCurrent-fuelLost)]
+move.set_simulated_effect(EndTiming(),SimulatedEffect([distance(l_from,l_to),fuel(r)], decrease_fuel_fun))
 # move.add_decrease_effect(EndTiming(),fuel(r),distance(l_from, l_to))
 
 pickup = DurativeAction('pickup', p = package, r = robot, l = location)
 p = pickup.parameter('p')
 r = pickup.parameter('r')
 l = pickup.parameter('l')
-pickup.set_fixed_duration(1)
+pickup.set_fixed_duration(PICKUP_TIME)
 pickup.add_condition(StartTiming(),robot_at(r, l))
 pickup.add_condition(StartTiming(),location_has_package(p, l))
 pickup.add_effect(StartTiming(),location_has_package(p, l), False)
@@ -60,7 +70,7 @@ drop = DurativeAction('drop', p = package, r = robot, l = location)
 p = drop.parameter('p')
 r = drop.parameter('r')
 l = drop.parameter('l')
-drop.set_fixed_duration(1)
+drop.set_fixed_duration(DROP_TIME)
 drop.add_condition(StartTiming(),robot_at(r, l))
 drop.add_condition(StartTiming(),robot_has_package(p, r))
 drop.add_effect(StartTiming(),robot_has_package(p, r), False)
@@ -69,10 +79,10 @@ drop.add_effect(EndTiming(),location_has_package(p, l), True)
 fillfuel = DurativeAction('fllfuel', r = robot, l = location)
 r = fillfuel.parameter('r')
 l = fillfuel.parameter('l')
-fillfuel.set_fixed_duration(1)
+fillfuel.set_fixed_duration(FILL_TIME)
 fillfuel.add_condition(StartTiming(), location_is_pump(l))
 fillfuel.add_condition(StartTiming(), robot_at(r, l))
-fillfuel.add_effect(EndTiming(), fuel(r), Real(Fraction(100,1)))
+fillfuel.add_effect(EndTiming(), fuel(r), FULLTANK)
 
 problem = Problem('maildelivery')
 problem.add_action(move)
@@ -116,12 +126,12 @@ problem.set_initial_value(fuel(deliverybot),0.0)
 problem.add_goal(location_has_package(note,locations[2]))
 # problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
 
-# print(problem.kind)
+print(problem.kind)
 # with OneshotPlanner(names=['tamer', 'tamer'],
 #                     params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}]) as planner:
 #     plan = planner.solve(problem).plan
 
-print(problem)
+# print(problem)
 
 with OneshotPlanner(problem_kind=problem.kind) as planner:
     result = planner.solve(problem)
@@ -129,4 +139,6 @@ with OneshotPlanner(problem_kind=problem.kind) as planner:
 if result.plan is not None:
         for action in result.plan.timed_actions:
                 print(action[1])
-t = 5
+else:
+        print('unable to produce plan')
+# t = 5
