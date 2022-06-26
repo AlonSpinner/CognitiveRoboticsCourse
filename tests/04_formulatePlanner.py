@@ -4,6 +4,7 @@ from unified_planning.shortcuts import UserType, BoolType, RealType, \
         StartTiming, EndTiming, GlobalStartTiming, GlobalEndTiming, Real, GE, Or, TimeInterval
     
 from unified_planning.shortcuts import *
+unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 
         
 from unified_planning.io.pddl_writer import PDDLWriter
@@ -11,7 +12,8 @@ from unified_planning.io.pddl_reader import PDDLReader
 # --------------------------------------------- Define problem variables and actions
 
 #constants
-FULLTANK = 100.0
+FULLTANK = 100
+LOCATION_DISTANCE = 1.0
 MOVE_TIME = 1.0
 PICKUP_TIME = 1.0
 DROP_TIME = 1.0
@@ -32,7 +34,7 @@ delivery_time = Fluent('delivery_time', RealType(), p = package)
 robot_has_package = Fluent('robot_has_package', BoolType(), p = package, r = robot)
 location_has_package = Fluent('location_has_package', BoolType(), p = package, l = location)
 location_is_pump = Fluent('location_is_pump', BoolType(), l = location)
-fuel = Fluent('fuel', RealType(), r = robot)
+fuel = Fluent('fuel', IntType(), r = robot)
 
 #actions
 move = DurativeAction('move',  r = robot, l_from = location, l_to = location)
@@ -42,7 +44,7 @@ l_to = move.parameter('l_to')
 move.set_fixed_duration(MOVE_TIME)
 move.add_condition(StartTiming(),Or(is_connected(l_from, l_to), \
                                     is_connected(l_to, l_from)))
-move.add_condition(StartTiming(),GE(fuel(r),distance(l_from, l_to)))
+move.add_condition(StartTiming(),GE(fuel(r),LOCATION_DISTANCE))
 move.add_condition(StartTiming(), robot_at(r, l_from))
 move.add_condition(EndTiming(), is_occupied(l_to))
 move.add_effect(StartTiming(), robot_at(r, l_from), False)
@@ -51,9 +53,8 @@ move.add_effect(EndTiming(), robot_at(r, l_to), True)
 move.add_effect(StartTiming(), is_occupied(l_to), True)
 def decrease_fuel_fun(problem, state, actual_params):
     fuelCurrent = state.get_value(fuel(actual_params.get(r))).constant_value()
-    fuelLost = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
-    return [Real(fuelCurrent-fuelLost)]
-move.set_simulated_effect(EndTiming(),SimulatedEffect([distance(l_from,l_to),fuel(r)], decrease_fuel_fun))
+    return [Int(fuelCurrent-1)]
+move.set_simulated_effect(StartTiming(),SimulatedEffect([fuel(r)], decrease_fuel_fun))
 # move.add_decrease_effect(EndTiming(),fuel(r),distance(l_from, l_to))
 
 pickup = DurativeAction('pickup', p = package, r = robot, l = location)
@@ -97,7 +98,7 @@ problem.add_fluent(delivery_time, default_initial_value = 100000.0)
 problem.add_fluent(robot_has_package, default_initial_value = False)
 problem.add_fluent(location_has_package, default_initial_value = False)
 problem.add_fluent(location_is_pump, default_initial_value = False)
-problem.add_fluent(fuel, default_initial_value = 0.0)
+problem.add_fluent(fuel, default_initial_value = 0)
 
 # --------------------------------------------- Set specific values
 #objects of problem
@@ -121,7 +122,7 @@ problem.set_initial_value(is_occupied(locations[0]),True)
 #connect houses to grid and place package in house 0
 problem.set_initial_value(location_has_package(note,locations[3]),True)
 #fuel at start
-problem.set_initial_value(fuel(deliverybot),0.0)
+problem.set_initial_value(fuel(deliverybot),1)
 #goal
 problem.add_goal(location_has_package(note,locations[2]))
 # problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
