@@ -118,7 +118,7 @@ problem.set_initial_value(location_is_dock(locations[0]),True)
 #robot at start
 problem.set_initial_value(robot_at(deliverybot,locations[0]),True)
 problem.set_initial_value(is_occupied(locations[0]),True)
-#connect houses to grid and place package in house 0
+#place packages
 problem.set_initial_value(location_has_package(note,locations[3]),True)
 #fuel at start
 problem.set_initial_value(charge(deliverybot),1)

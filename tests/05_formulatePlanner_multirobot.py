@@ -115,7 +115,7 @@ problem.add_fluent(charge, default_initial_value = 0) #unsolvable problem withou
 
 # --------------------------------------------- Set specific values
 #objects of problem
-locations = [Object(f"l{i}", location) for i in range(4)]
+locations = [Object(f"l{i}", location) for i in range(5)]
 deliverybots = [Object(f"r{i}",robot) for i in range(2)]
 note = Object("p",package)
 problem.add_objects(locations + deliverybots + [note])
@@ -123,24 +123,25 @@ problem.add_objects(locations + deliverybots + [note])
 problem.set_initial_value(is_connected(locations[0],locations[1]),True)
 problem.set_initial_value(is_connected(locations[1],locations[2]),True)
 problem.set_initial_value(is_connected(locations[2],locations[3]),True)
+problem.set_initial_value(is_connected(locations[3],locations[4]),True)
 problem.set_initial_value(distance(locations[0],locations[1]),1)
 problem.set_initial_value(distance(locations[1],locations[2]),1)
 problem.set_initial_value(distance(locations[2],locations[3]),1)
-problem.set_initial_value(distance(locations[3],locations[2]),1)
+problem.set_initial_value(distance(locations[3],locations[4]),1)
 #connect pump to grid
-problem.set_initial_value(location_is_dock(locations[0]),True)
+problem.set_initial_value(location_is_dock(locations[1]),True)
 #robot at start
 problem.set_initial_value(robot_at(deliverybots[0],locations[0]),True)
-problem.set_initial_value(robot_at(deliverybots[1],locations[3]),True)
+problem.set_initial_value(robot_at(deliverybots[1],locations[2]),True)
 problem.set_initial_value(is_occupied(locations[0]),True)
-problem.set_initial_value(is_occupied(locations[3]),True)
-#connect houses to grid and place package in house 0
+problem.set_initial_value(is_occupied(locations[2]),True)
+#place packages
 problem.set_initial_value(location_has_package(note,locations[3]),True)
 #fuel at start
-problem.set_initial_value(charge(deliverybots[0]),1)
-problem.set_initial_value(charge(deliverybots[1]),10)
+problem.set_initial_value(charge(deliverybots[0]),10)
+problem.set_initial_value(charge(deliverybots[1]),0)
 #goal
-problem.add_timed_goal(StartTiming(10.0), location_has_package(note,locations[2]))
+problem.add_timed_goal(StartTiming(10.0), location_has_package(note,locations[4]))
 
 print(problem.kind)
 
