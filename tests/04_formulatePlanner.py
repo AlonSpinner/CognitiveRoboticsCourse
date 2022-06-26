@@ -125,11 +125,15 @@ problem.set_initial_value(charge(deliverybot),1)
 #goal
 problem.add_timed_goal(StartTiming(10.0), location_has_package(note,locations[2]))
 
-with OneshotPlanner(names=['tamer', 'tamer'],
-                    params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}]) as planner:
-    result = planner.solve(problem)
+print(problem.kind)
+
+# with OneshotPlanner(names=['tamer', 'tamer'],
+#                     params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}]) as planner:
+#     result = planner.solve(problem)
 # with OneshotPlanner(problem_kind=problem.kind) as planner:
 #     result = planner.solve(problem)
+with OneshotPlanner(name='tamer') as planner:
+    result = planner.solve(problem)
 
 if result.plan is not None:
         for action in result.plan.timed_actions:
