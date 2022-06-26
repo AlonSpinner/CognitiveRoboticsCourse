@@ -10,8 +10,7 @@ unified_planning.shortcuts.get_env().credits_stream = None #removes the printing
 from unified_planning.io.pddl_writer import PDDLWriter
 from unified_planning.io.pddl_reader import PDDLReader
 # --------------------------------------------- Define problem variables and actions
-
-#constants
+#constants (time can be float, but otherwise stick to ints and bools to avoid segmentation faults)
 FULLTANK = 100
 LOCATION_DISTANCE = 1
 MOVE_TIME = 1.0
@@ -25,12 +24,12 @@ location = UserType('location')
 robot = UserType('robot')
 package = UserType('package')
 
-#problem variables that are changed by actions on objects
+#problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
 robot_at = Fluent('robot_at', BoolType(), r = robot, l = location)
 is_connected = Fluent('is_connected', BoolType(), l_from = location, l_to = location)
 is_occupied = Fluent('is_occupied', BoolType(), l = location)
-distance = Fluent('distance', RealType(), l_from = location, l_to = location)
-delivery_time = Fluent('delivery_time', RealType(), p = package)
+distance = Fluent('distance', IntType(), l_from = location, l_to = location)
+delivery_time = Fluent('delivery_time', IntType(), p = package)
 robot_has_package = Fluent('robot_has_package', BoolType(), p = package, r = robot)
 location_has_package = Fluent('location_has_package', BoolType(), p = package, l = location)
 location_is_pump = Fluent('location_is_pump', BoolType(), l = location)
@@ -51,13 +50,11 @@ move.add_effect(StartTiming(), robot_at(r, l_from), False)
 move.add_effect(StartTiming(), is_occupied(l_from), False)
 move.add_effect(EndTiming(), robot_at(r, l_to), True)
 move.add_effect(StartTiming(), is_occupied(l_to), True)
-def decrease_fuel_fun(problem, state, actual_params):
+def decrease_charge_fun(problem, state, actual_params):
     cost = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
-    print(type(cost))
     fuelCurrent = state.get_value(fuel(actual_params.get(r))).constant_value()
     return [Int(fuelCurrent-cost)]
-move.set_simulated_effect(StartTiming(),SimulatedEffect([fuel(r)], decrease_fuel_fun))
-# move.add_decrease_effect(EndTiming(),fuel(r),distance(l_from, l_to))
+move.set_simulated_effect(StartTiming(),SimulatedEffect([fuel(r)], decrease_charge_fun))
 
 pickup = DurativeAction('pickup', p = package, r = robot, l = location)
 p = pickup.parameter('p')
@@ -95,8 +92,8 @@ problem.add_action(fillfuel)
 problem.add_fluent(robot_at, default_initial_value = False)
 problem.add_fluent(is_connected, default_initial_value = False)
 problem.add_fluent(is_occupied, default_initial_value = False)
-problem.add_fluent(distance, default_initial_value = 1.0)
-problem.add_fluent(delivery_time, default_initial_value = 100000.0)
+problem.add_fluent(distance, default_initial_value = 1)
+problem.add_fluent(delivery_time, default_initial_value = 100000)
 problem.add_fluent(robot_has_package, default_initial_value = False)
 problem.add_fluent(location_has_package, default_initial_value = False)
 problem.add_fluent(location_is_pump, default_initial_value = False)
