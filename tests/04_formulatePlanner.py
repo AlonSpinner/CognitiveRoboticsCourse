@@ -74,7 +74,7 @@ drop.add_condition(StartTiming(),robot_has_package(p, r))
 drop.add_effect(StartTiming(),robot_has_package(p, r), False)
 drop.add_effect(EndTiming(),location_has_package(p, l), True)
 
-fillcharge = DurativeAction('fllfuel', r = robot, l = location)
+fillcharge = DurativeAction('fillcharge', r = robot, l = location)
 r = fillcharge.parameter('r')
 l = fillcharge.parameter('l')
 fillcharge.set_fixed_duration(CHARGING_TIME)
