@@ -1,14 +1,9 @@
 import unified_planning
-from unified_planning.shortcuts import UserType, BoolType, RealType, \
-        Fluent, DurativeAction, InstantaneousAction, SimulatedEffect, Problem, Object,\
-        StartTiming, EndTiming, GlobalStartTiming, GlobalEndTiming, Real, GE, Or, TimeInterval
-    
-from unified_planning.shortcuts import *
+from unified_planning.shortcuts import UserType, BoolType, IntType, Int,\
+        Fluent, DurativeAction, InstantaneousAction, SimulatedEffect, Problem, Object, OneshotPlanner,\
+        StartTiming, EndTiming,  GE, Or
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 
-        
-from unified_planning.io.pddl_writer import PDDLWriter
-from unified_planning.io.pddl_reader import PDDLReader
 # --------------------------------------------- Define problem variables and actions
 #constants (time can be float, but otherwise stick to ints and bools to avoid segmentation faults)
 FULLTANK = 100
@@ -51,9 +46,12 @@ move.add_effect(StartTiming(), is_occupied(l_from), False)
 move.add_effect(EndTiming(), robot_at(r, l_to), True)
 move.add_effect(StartTiming(), is_occupied(l_to), True)
 def decrease_charge_fun(problem, state, actual_params):
-    cost = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
-    fuelCurrent = state.get_value(charge(actual_params.get(r))).constant_value()
-    return [Int(fuelCurrent-cost)]
+        #if dist is not constant, use this:
+        # dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
+        dist = LOCATION_DISTANCE
+        requiredCharge = 2 * dist #simulated as some function of distance
+        currentCharge = state.get_value(charge(actual_params.get(r))).constant_value()
+        return [Int(currentCharge-requiredCharge)]
 move.set_simulated_effect(StartTiming(),SimulatedEffect([charge(r)], decrease_charge_fun))
 
 pickup = DurativeAction('pickup', p = package, r = robot, l = location)
@@ -76,28 +74,28 @@ drop.add_condition(StartTiming(),robot_has_package(p, r))
 drop.add_effect(StartTiming(),robot_has_package(p, r), False)
 drop.add_effect(EndTiming(),location_has_package(p, l), True)
 
-fillfuel = DurativeAction('fllfuel', r = robot, l = location)
-r = fillfuel.parameter('r')
-l = fillfuel.parameter('l')
-fillfuel.set_fixed_duration(CHARGING_TIME)
-fillfuel.add_condition(StartTiming(), location_is_dock(l))
-fillfuel.add_condition(StartTiming(), robot_at(r, l))
-fillfuel.add_effect(EndTiming(), charge(r), FULLTANK)
+fillcharge = DurativeAction('fllfuel', r = robot, l = location)
+r = fillcharge.parameter('r')
+l = fillcharge.parameter('l')
+fillcharge.set_fixed_duration(CHARGING_TIME)
+fillcharge.add_condition(StartTiming(), location_is_dock(l))
+fillcharge.add_condition(StartTiming(), robot_at(r, l))
+fillcharge.add_effect(EndTiming(), charge(r), FULLTANK)
 
 problem = Problem('maildelivery')
 problem.add_action(move)
 problem.add_action(pickup)
 problem.add_action(drop)
-problem.add_action(fillfuel)
+problem.add_action(fillcharge)
 problem.add_fluent(robot_at, default_initial_value = False)
 problem.add_fluent(is_connected, default_initial_value = False)
 problem.add_fluent(is_occupied, default_initial_value = False)
-problem.add_fluent(distance, default_initial_value = 1)
-problem.add_fluent(delivery_time, default_initial_value = 100000)
+problem.add_fluent(distance, default_initial_value = LOCATION_DISTANCE)
+problem.add_fluent(delivery_time, default_initial_value = 0) #unsolvable problem without initating this value
 problem.add_fluent(robot_has_package, default_initial_value = False)
 problem.add_fluent(location_has_package, default_initial_value = False)
 problem.add_fluent(location_is_dock, default_initial_value = False)
-problem.add_fluent(charge, default_initial_value = 0)
+problem.add_fluent(charge, default_initial_value = 0) #unsolvable problem without initating this value
 
 # --------------------------------------------- Set specific values
 #objects of problem
@@ -123,22 +121,16 @@ problem.set_initial_value(location_has_package(note,locations[3]),True)
 #fuel at start
 problem.set_initial_value(charge(deliverybot),1)
 #goal
-problem.add_goal(location_has_package(note,locations[2]))
-# problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
+problem.add_timed_goal(StartTiming(10.0), location_has_package(note,locations[2]))
 
-print(problem.kind)
-# with OneshotPlanner(names=['tamer', 'tamer'],
-#                     params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}]) as planner:
-#     plan = planner.solve(problem).plan
-
-# print(problem)
-
-with OneshotPlanner(problem_kind=problem.kind) as planner:
+with OneshotPlanner(names=['tamer', 'tamer'],
+                    params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}]) as planner:
     result = planner.solve(problem)
+# with OneshotPlanner(problem_kind=problem.kind) as planner:
+#     result = planner.solve(problem)
 
 if result.plan is not None:
         for action in result.plan.timed_actions:
                 print(action[1])
 else:
-        print('unable to produce plan')
-# t = 5
+        print('unable to produce a plan')
