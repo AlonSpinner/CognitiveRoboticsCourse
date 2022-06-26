@@ -16,7 +16,7 @@ LOCATION_DISTANCE = 1
 MOVE_TIME = 1.0
 PICKUP_TIME = 1.0
 DROP_TIME = 1.0
-FILL_TIME = 1.0
+CHARGING_TIME = 1.0
 
 
 #problem types ~ objectsv
@@ -32,8 +32,8 @@ distance = Fluent('distance', IntType(), l_from = location, l_to = location)
 delivery_time = Fluent('delivery_time', IntType(), p = package)
 robot_has_package = Fluent('robot_has_package', BoolType(), p = package, r = robot)
 location_has_package = Fluent('location_has_package', BoolType(), p = package, l = location)
-location_is_pump = Fluent('location_is_pump', BoolType(), l = location)
-fuel = Fluent('fuel', IntType(), r = robot)
+location_is_dock = Fluent('location_is_dock', BoolType(), l = location)
+charge = Fluent('charge', IntType(0,100), r = robot)
 
 #actions
 move = DurativeAction('move',  r = robot, l_from = location, l_to = location)
@@ -43,7 +43,7 @@ l_to = move.parameter('l_to')
 move.set_fixed_duration(MOVE_TIME)
 move.add_condition(StartTiming(),Or(is_connected(l_from, l_to), \
                                     is_connected(l_to, l_from)))
-move.add_condition(StartTiming(),GE(fuel(r),LOCATION_DISTANCE))
+move.add_condition(StartTiming(),GE(charge(r),LOCATION_DISTANCE))
 move.add_condition(StartTiming(), robot_at(r, l_from))
 move.add_condition(EndTiming(), is_occupied(l_to))
 move.add_effect(StartTiming(), robot_at(r, l_from), False)
@@ -52,9 +52,9 @@ move.add_effect(EndTiming(), robot_at(r, l_to), True)
 move.add_effect(StartTiming(), is_occupied(l_to), True)
 def decrease_charge_fun(problem, state, actual_params):
     cost = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
-    fuelCurrent = state.get_value(fuel(actual_params.get(r))).constant_value()
+    fuelCurrent = state.get_value(charge(actual_params.get(r))).constant_value()
     return [Int(fuelCurrent-cost)]
-move.set_simulated_effect(StartTiming(),SimulatedEffect([fuel(r)], decrease_charge_fun))
+move.set_simulated_effect(StartTiming(),SimulatedEffect([charge(r)], decrease_charge_fun))
 
 pickup = DurativeAction('pickup', p = package, r = robot, l = location)
 p = pickup.parameter('p')
@@ -79,10 +79,10 @@ drop.add_effect(EndTiming(),location_has_package(p, l), True)
 fillfuel = DurativeAction('fllfuel', r = robot, l = location)
 r = fillfuel.parameter('r')
 l = fillfuel.parameter('l')
-fillfuel.set_fixed_duration(FILL_TIME)
-fillfuel.add_condition(StartTiming(), location_is_pump(l))
+fillfuel.set_fixed_duration(CHARGING_TIME)
+fillfuel.add_condition(StartTiming(), location_is_dock(l))
 fillfuel.add_condition(StartTiming(), robot_at(r, l))
-fillfuel.add_effect(EndTiming(), fuel(r), FULLTANK)
+fillfuel.add_effect(EndTiming(), charge(r), FULLTANK)
 
 problem = Problem('maildelivery')
 problem.add_action(move)
@@ -96,8 +96,8 @@ problem.add_fluent(distance, default_initial_value = 1)
 problem.add_fluent(delivery_time, default_initial_value = 100000)
 problem.add_fluent(robot_has_package, default_initial_value = False)
 problem.add_fluent(location_has_package, default_initial_value = False)
-problem.add_fluent(location_is_pump, default_initial_value = False)
-problem.add_fluent(fuel, default_initial_value = 0)
+problem.add_fluent(location_is_dock, default_initial_value = False)
+problem.add_fluent(charge, default_initial_value = 0)
 
 # --------------------------------------------- Set specific values
 #objects of problem
@@ -114,14 +114,14 @@ problem.set_initial_value(distance(locations[1],locations[2]),1)
 problem.set_initial_value(distance(locations[2],locations[3]),1)
 problem.set_initial_value(distance(locations[3],locations[2]),1)
 #connect pump to grid
-problem.set_initial_value(location_is_pump(locations[0]),True)
+problem.set_initial_value(location_is_dock(locations[0]),True)
 #robot at start
 problem.set_initial_value(robot_at(deliverybot,locations[0]),True)
 problem.set_initial_value(is_occupied(locations[0]),True)
 #connect houses to grid and place package in house 0
 problem.set_initial_value(location_has_package(note,locations[3]),True)
 #fuel at start
-problem.set_initial_value(fuel(deliverybot),1)
+problem.set_initial_value(charge(deliverybot),1)
 #goal
 problem.add_goal(location_has_package(note,locations[2]))
 # problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
