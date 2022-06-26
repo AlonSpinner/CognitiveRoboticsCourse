@@ -1,7 +1,7 @@
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType, RealType, \
         Fluent, DurativeAction, InstantaneousAction, SimulatedEffect, Problem, Object,\
-        StartTiming, EndTiming, GlobalStartTiming, GlobalEndTiming, Real, GT, Or
+        StartTiming, EndTiming, GlobalStartTiming, GlobalEndTiming, Real, GE, Or, TimeInterval
     
 from unified_planning.shortcuts import *
 
@@ -34,11 +34,10 @@ move = DurativeAction('move',  r = robot, l_from = location, l_to = location)
 r = move.parameter('r')
 l_from = move.parameter('l_from')
 l_to = move.parameter('l_to')
-# move.set_duration_constraint(distance(l_from, l_to))
-move.set_fixed_duration(1)
+move.set_fixed_duration(1.0)
 move.add_condition(StartTiming(),Or(is_connected(l_from, l_to), \
                                     is_connected(l_to, l_from)))
-# move.add_condition(StartTiming(),GT(fuel(r),distance(l_from, l_to)))
+move.add_condition(StartTiming(),GE(fuel(r),distance(l_from, l_to)))
 move.add_condition(StartTiming(), robot_at(r, l_from))
 move.add_condition(EndTiming(), is_occupied(l_to))
 move.add_effect(StartTiming(), robot_at(r, l_from), False)
@@ -72,6 +71,7 @@ r = fillfuel.parameter('r')
 l = fillfuel.parameter('l')
 fillfuel.set_fixed_duration(1)
 fillfuel.add_condition(StartTiming(), location_is_pump(l))
+fillfuel.add_condition(StartTiming(), robot_at(r, l))
 fillfuel.add_effect(EndTiming(), fuel(r), Real(Fraction(100,1)))
 
 problem = Problem('maildelivery')
@@ -87,7 +87,7 @@ problem.add_fluent(delivery_time, default_initial_value = 100000.0)
 problem.add_fluent(robot_has_package, default_initial_value = False)
 problem.add_fluent(location_has_package, default_initial_value = False)
 problem.add_fluent(location_is_pump, default_initial_value = False)
-problem.add_fluent(fuel, default_initial_value = 10000.0)
+problem.add_fluent(fuel, default_initial_value = 0.0)
 
 # --------------------------------------------- Set specific values
 #objects of problem
@@ -99,6 +99,10 @@ problem.add_objects(locations + [deliverybot] + [note])
 problem.set_initial_value(is_connected(locations[0],locations[1]),True)
 problem.set_initial_value(is_connected(locations[1],locations[2]),True)
 problem.set_initial_value(is_connected(locations[2],locations[3]),True)
+problem.set_initial_value(distance(locations[0],locations[1]),1.0)
+problem.set_initial_value(distance(locations[1],locations[2]),1.0)
+problem.set_initial_value(distance(locations[2],locations[3]),1.0)
+problem.set_initial_value(distance(locations[3],locations[2]),1.0)
 #connect pump to grid
 problem.set_initial_value(location_is_pump(locations[0]),True)
 #robot at start
@@ -107,19 +111,22 @@ problem.set_initial_value(is_occupied(locations[0]),True)
 #connect houses to grid and place package in house 0
 problem.set_initial_value(location_has_package(note,locations[3]),True)
 #fuel at start
-# problem.set_initial_value(fuel(deliverybot),15.0)
+problem.set_initial_value(fuel(deliverybot),0.0)
 #goal
 problem.add_goal(location_has_package(note,locations[2]))
 # problem.add_timed_goal(StartTiming(150.0), location_has_package(note,houses[1]))
 
-print(problem.kind)
-with OneshotPlanner(names=['tamer', 'tamer'],
-                    params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}]) as planner:
-    plan = planner.solve(problem).plan
+# print(problem.kind)
+# with OneshotPlanner(names=['tamer', 'tamer'],
+#                     params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}]) as planner:
+#     plan = planner.solve(problem).plan
 
-if plan is not None:
-        for action in plan.timed_actions:
+print(problem)
+
+with OneshotPlanner(problem_kind=problem.kind) as planner:
+    result = planner.solve(problem)
+
+if result.plan is not None:
+        for action in result.plan.timed_actions:
                 print(action[1])
-# with OneshotPlanner(problem_kind=problem.kind) as planner:
-#     result = planner.solve(problem)
-#     print("%s returned: %s" % (planner.name, result.plan))
+t = 5
