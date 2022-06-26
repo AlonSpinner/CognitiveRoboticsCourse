@@ -1,6 +1,6 @@
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType, IntType, Int,\
-        Fluent, DurativeAction, InstantaneousAction, SimulatedEffect, Problem, Object, OneshotPlanner,\
+        Fluent, DurativeAction, SimulatedEffect, Problem, Object, OneshotPlanner,\
         StartTiming, EndTiming,  GE, Or, Not
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 

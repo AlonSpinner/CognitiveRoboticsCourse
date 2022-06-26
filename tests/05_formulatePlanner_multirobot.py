@@ -1,7 +1,7 @@
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType, IntType, Int,\
         Fluent, DurativeAction, InstantaneousAction, SimulatedEffect, Problem, Object, OneshotPlanner,\
-        StartTiming, EndTiming, GE, LE, Equals, Or, Not, LT
+        StartTiming, EndTiming, GE, Equals, Or, Not
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 
 # --------------------------------------------- Define problem variables and actions
@@ -9,8 +9,6 @@ unified_planning.shortcuts.get_env().credits_stream = None #removes the printing
 FULLTANK = 100
 LOCATION_DISTANCE = 1
 MOVE_TIME = 1.0
-PICKUP_TIME = 1.0
-DROP_TIME = 1.0
 CHARGING_TIME = 1.0
 
 def dist2chargeUse(dist) -> int:
