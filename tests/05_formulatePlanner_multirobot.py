@@ -1,7 +1,7 @@
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType, IntType, Int,\
         Fluent, DurativeAction, InstantaneousAction, SimulatedEffect, Problem, Object, OneshotPlanner,\
-        StartTiming, EndTiming, GE, Equals, Or, Not
+        StartTiming, EndTiming, GE, LE, Equals, Or, Not, LT
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 
 # --------------------------------------------- Define problem variables and actions
@@ -90,10 +90,11 @@ r_taker = givecharge.parameter('r_taker')
 l_giver = givecharge.parameter('l_giver')
 l_taker = givecharge.parameter('l_taker')
 givecharge.set_fixed_duration(CHARGING_TIME)
+givecharge.add_condition(StartTiming(),LE(charge(r_taker), Int(10)))
 givecharge.add_condition(StartTiming(),robot_at(r_giver, l_giver))
 givecharge.add_condition(StartTiming(),robot_at(r_taker, l_taker))
-# givecharge.add_condition(StartTiming(),Equals(distance(l_giver,l_taker),LOCATION_DISTANCE))
-givecharge.add_condition(StartTiming(),Equals(l_giver,l_taker))
+givecharge.add_condition(StartTiming(),LT(distance(l_giver,l_taker), Int(2 *LOCATION_DISTANCE)))
+# givecharge.add_condition(StartTiming(),Equals(l_giver,l_taker))
 def fun(problem, state, actual_params):                
         r_giver_charge = state.get_value(charge(actual_params.get(r_giver))).constant_value()
         r_taker_charge = state.get_value(charge(actual_params.get(r_taker))).constant_value()
