@@ -21,7 +21,7 @@ def build_env():
 
     landmarks = sorted(houses + docks + intersections)
 
-    connectivityList = [[0,1],[1,2],[2,4],[1,3],[3,5],[4,6]]
+    connectivityList = [[0,1],[1,2],[2,4],[3,4],[1,3],[3,5],[4,6]]
 
     p0 = package(0,5,6,100,landmarks[5].xy)
     p1 = package(1,6,5,100,landmarks[6].xy)
