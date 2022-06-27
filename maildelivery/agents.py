@@ -1,7 +1,7 @@
 import gtsam
 from dataclasses import dataclass
-from maildelivery.enviorment import enviorment, landmark, package
-import maildelivery.plotting as plotting
+from maildelivery.world import enviorment, landmark, package
+import matplotlib.pyplot as plt
 import numpy as np
 
 CONTROL_THETA_THRESHOLD = np.radians(0.001)
@@ -35,7 +35,6 @@ class drop(action):
     lm: landmark
     time_start : float = 0
     time_end : float = 0
-
 
 class robot:
     def __init__(self,pose0, id) -> None:
@@ -85,7 +84,18 @@ class robot:
             return
 
     def plot(self,ax):
-        return(plotting.plot_robot(ax,self.pose))
+        return(plot_robot(ax,self.pose))
+
+#---------------------------------------------------------------------------
+#--------------------------------PLOTTING FUNCTIONS-------------------------
+#---------------------------------------------------------------------------
+
+def plot_robot(ax , pose : gtsam.Pose2, scale = 20, color = 'b'):
+        u = np.cos(pose.theta())
+        v = np.sin(pose.theta())
+        graphics_quiver = ax.quiver(pose.x(),pose.y(),u,v, color = color, scale = scale, width = 0.02)
+        graphics_circle = ax.add_patch(plt.Circle((pose.x(),pose.y()),0.1,fill = False, color = 'b'))
+        return [graphics_quiver,graphics_circle]
 
 
 

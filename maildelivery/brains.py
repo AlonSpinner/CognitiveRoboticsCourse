@@ -1,5 +1,5 @@
 from maildelivery.agents import move, pickup, drop, robot
-from maildelivery.enviorment import enviorment
+from maildelivery.world import enviorment
 
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType,\

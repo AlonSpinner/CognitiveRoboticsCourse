@@ -1,4 +1,4 @@
-from maildelivery.enviorment import enviorment,landmark, package
+from maildelivery.world import enviorment,landmark, package
 from maildelivery.agents import robot
 import maildelivery.plotting as plotting
 from maildelivery.brains import planner0, ROBOT_INDEX_SHIFT
