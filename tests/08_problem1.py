@@ -1,4 +1,4 @@
-from maildelivery.datatypes import beacon, landmark, move, package, pickup, drop
+from maildelivery.datatypes import landmark, move, package, pickup, drop
 
 from maildelivery.map import Map
 from maildelivery.robot import robot
@@ -131,10 +131,6 @@ def createPlan(env : Map, robots : list[robot]):
     
     return result.plan
 
-m = createMap()
-r = robot(gtsam.Pose2(m.landmarks[0].xy[0],m.landmarks[0].xy[1],landmark.angle(m.landmarks[0],m.landmarks[1])),0)
-plan = createPlan(m,[r])
-
 def parse_actions(actions):
     parsed_actions = []
     for a in actions:
@@ -156,7 +152,12 @@ def parse_actions(actions):
                 int(str(a.actual_parameters[0])[1:]), #package id
                 int(str(a.actual_parameters[2])[1:]) #landmark id
                 ))
-    return parse_actions
+    return parsed_actions
+
+m = createMap()
+r = robot(gtsam.Pose2(m.landmarks[0].xy[0],m.landmarks[0].xy[1],landmark.angle(m.landmarks[0],m.landmarks[1])),0)
+plan = createPlan(m,[r])
+parsed_actions = parse_actions(plan.actions)
 
 _, ax = plotting.spawnWorld()
 m.plot(ax)

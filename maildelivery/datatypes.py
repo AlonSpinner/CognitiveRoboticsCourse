@@ -48,17 +48,27 @@ class goto(cmd):
 
 @dataclass(frozen = True)
 class move(cmd):
-    odom : gtsam.Pose2
+    robot_id : int
+    lm_from_id : int
+    lm_to_id : int
+    time_start : float = 0
+    time_end : float = 0
 
 @dataclass(frozen = True)
 class pickup(cmd):
-    p : package
-    lm : landmark
+    robot_id : int
+    p_id : package
+    lm_id : landmark
+    time_start : float = 0
+    time_end : float = 0
 
 @dataclass(frozen = True)
 class drop(cmd):
-    p : package
-    lm : landmark
+    robot_id : int
+    p_id : package
+    lm_id : landmark
+    time_start : float = 0
+    time_end : float = 0
 
 
 
