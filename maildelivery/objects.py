@@ -1,18 +1,34 @@
 from dataclasses import dataclass
 import gtsam
 from maildelivery.datatypes import cmd, move, pickup, drop
+from maildelivery.objects import robot
 import maildelivery.plotting as plotting
 import numpy as np
+
+CONTROL_THETA_THRESHOLD = np.radians(0.001)
+CONTROL_DIST_THRESHOLD = 0.001
 
 class robot:
     def __init__(self,pose0, id) -> None:
         self.pose : gtsam.Pose2 = pose0
         self.max_forward : float = 1.0
         self.max_rotate : float = np.pi/4
-        self.reachDelta : float = 0.001
         self.id : int = id
         self.last_landmark : int = 0
         self.goal_landmark : int = 0
+
+
+    def control(self, _cmd : move):
+        #given r and goto command, produce proper move command
+        e_theta = self.pose.bearing(_cmd.lm_to_xy).theta()
+        if abs(e_theta) > CONTROL_THETA_THRESHOLD:
+            u = np.sign(e_theta)*min(abs(e_theta),self.max_rotate)
+            self.pose = self.pose.compose((gtsam.Pose2(0,0,u)))
+
+        e_dist = self.pose.range(_cmd.lm_to_xy)
+        if e_dist > CONTROL_DIST_THRESHOLD:
+            u = min(e_dist,self.max_forward)
+            self.pose = self.pose.compose((gtsam.Pose2(u,0,0)))
 
     def act(self, _cmd : cmd):
         if _cmd.robot_id != self.id:

@@ -9,23 +9,7 @@ from unified_planning.shortcuts import UserType, BoolType,\
         Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 
-CONTROL_THETA_THRESHOLD = np.radians(0.001)
-CONTROL_DIST_THRESHOLD = 0.001
 ROBOT_INDEX_SHIFT = 1000
-
-def control(r :robot, cmd : move):
-    #given r and goto command, produce proper move command
-    e_theta = r.pose.bearing(cmd.lm_to_xy).theta()
-    if abs(e_theta) > CONTROL_THETA_THRESHOLD:
-        u = np.sign(e_theta)*min(abs(e_theta),r.max_rotate)
-        return move(gtsam.Pose2(0,0,u))
-
-    e_dist = r.pose.range(cmd.lm_to_xy)
-    if e_dist > CONTROL_DIST_THRESHOLD:
-        u = min(e_dist,r.max_forward)
-        return move(gtsam.Pose2(u, 0, 0))
-    
-    return False
 
 class planner0:
     '''

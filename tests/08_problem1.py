@@ -3,17 +3,14 @@ from maildelivery.datatypes import move, pickup, drop
 from maildelivery.enviorment import enviorment
 from maildelivery.objects import robot, landmark, package
 import maildelivery.plotting as plotting
+from maildelivery.brains import planner0
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 import gtsam
 
-import unified_planning
-from unified_planning.shortcuts import UserType, BoolType,\
-        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not
-unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
-
-def buildEnv():
+def build_env():
     docks = [landmark(0,np.array([0,0]),'dock')]
 
     x1 = landmark(1,np.array([1,0]),'intersection')
@@ -36,10 +33,11 @@ def buildEnv():
     m = enviorment([], landmarks, connectivityList, packages)
     return m
 
-env = createMap()
+env = build_env()
 r = robot(gtsam.Pose2(env.landmarks[0].xy[0],env.landmarks[0].xy[1],landmark.angle(env.landmarks[0],env.landmarks[1])),0)
-plan = createPlan(env,[r])
-parsed_actions = parse_actions(plan.actions, env)
+planner = planner0()
+plan = planner.create_plan(env,[r])
+parsed_actions = planner.parse_actions(plan.actions, env)
 
 _, ax = plotting.spawnWorld()
 m.plot(ax)
