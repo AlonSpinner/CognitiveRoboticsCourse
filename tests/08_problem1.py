@@ -1,13 +1,10 @@
-from maildelivery.datatypes import move, pickup, drop
-
 from maildelivery.enviorment import enviorment
 from maildelivery.objects import robot, landmark, package
 import maildelivery.plotting as plotting
-from maildelivery.brains import planner0
+from maildelivery.brains import planner0, ROBOT_INDEX_SHIFT
 
 import numpy as np
 import matplotlib.pyplot as plt
-
 import gtsam
 
 def build_env():
@@ -30,31 +27,41 @@ def build_env():
     p1 = package(1,6,5,100)
     packages = [p0,p1]
 
-    m = enviorment([], landmarks, connectivityList, packages)
-    return m
+    env = enviorment(landmarks, connectivityList, packages)
+    return env
 
+#buld enviorment
 env = build_env()
-r = robot(gtsam.Pose2(env.landmarks[0].xy[0],env.landmarks[0].xy[1],landmark.angle(env.landmarks[0],env.landmarks[1])),0)
+
+#spawn robot
+x0 = env.landmarks[0].xy[0]
+y0 = env.landmarks[0].xy[1]
+theta0 = landmark.angle(env.landmarks[0],env.landmarks[1])
+r = robot(gtsam.Pose2(x0,y0,theta0),0 + ROBOT_INDEX_SHIFT)
+
+#ask for plan
 planner = planner0()
 plan = planner.create_plan(env,[r])
 parsed_actions = planner.parse_actions(plan.actions, env)
 
+#plot initial state
 _, ax = plotting.spawnWorld()
-m.plot(ax)
+env.plot(ax)
 graphics_r = r.plot(ax)
-
-# odom = gtsam.Pose2(0.4,0,0)
-# cmd = move(odom)
-
 plt.ion()
 
+#roll simulation
 for action in parsed_actions:
-    r.act(action)
 
-    graphics_r.remove()
-    graphics_r = r.plot(ax)
-    plt.pause(0.5)
+    status = False
+    while not(status):
+        status = r.act(action)
+        #update plot
+        graphics_r.remove()
+        graphics_r = r.plot(ax)
+        plt.pause(0.5)
 
+#dont close window in the end
 plt.show()
 
 

@@ -1,5 +1,3 @@
-import numpy as np
-import gtsam
 from maildelivery.datatypes import move, pickup, drop
 from maildelivery.objects import robot
 from maildelivery.enviorment import enviorment
@@ -98,7 +96,7 @@ class planner0:
         # robot at start
         for r in robots:
             self.problem.set_initial_value(self.deliverybot_at(
-                                                    deliverybots[r.id],
+                                                    deliverybots[r.id - ROBOT_INDEX_SHIFT],
                                                     locations[r.last_landmark]),
                                                     True)
             self.problem.set_initial_value(self.is_occupied(
@@ -106,7 +104,7 @@ class planner0:
                                                 True) 
         #place packages
         for p in env.packages:
-            if p.id < 1000:
+            if p.id < ROBOT_INDEX_SHIFT:
                 self.problem.set_initial_value(self.location_has_mail(
                                                             notes[p.id],
                                                             locations[p.owner]),
@@ -114,7 +112,7 @@ class planner0:
             else:
                 self.problem.set_initial_value(self.deliveybot_has_mail(
                                                 notes[p.id],
-                                                deliverybots[p.owner-1000]),
+                                                deliverybots[p.owner-ROBOT_INDEX_SHIFT]),
                                                 True)
         #goal
         for p in env.packages:
@@ -125,7 +123,7 @@ class planner0:
         
         return result.plan
 
-    def parse_actions(actions : list[unified_planning.plans.plan.ActionInstance], env : enviorment):
+    def parse_actions(self, actions : list[unified_planning.plans.plan.ActionInstance], env : enviorment):
         parsed_actions = []
         for a in actions:
             if a.action.name == 'move':
@@ -138,13 +136,13 @@ class planner0:
                 parsed_actions.append(drop(
                     int(str(a.actual_parameters[1])[1:]), #robot id
                     int(str(a.actual_parameters[0])[1:]), #package id
-                    env.landmarks[int(str(a.actual_parameters[2])[1:])] #landmark xy
+                    env.landmarks[int(str(a.actual_parameters[2])[1:])].xy #landmark xy
                     )) 
             elif a.action.name == 'pickup':
                 parsed_actions.append(pickup(
                     int(str(a.actual_parameters[1])[1:]), #robot id
                     int(str(a.actual_parameters[0])[1:]), #package id
-                    env.landmarks[int(str(a.actual_parameters[2])[1:])] #landmark xy
+                    env.landmarks[int(str(a.actual_parameters[2])[1:])].xy #landmark xy
                     ))
         return parsed_actions
         

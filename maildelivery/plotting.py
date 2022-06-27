@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
-from maildelivery.datatypes import beacon, landmark
+from maildelivery.objects import landmark
 import gtsam
 
 def spawnWorld(xrange = None, yrange = None):
@@ -41,19 +41,6 @@ def plot_dock(ax: plt.Axes, h :landmark, markerShape = 's', markerSize = 80, col
     g.set_facecolor('none')
     graphics.append(g)
     graphics.append(ax.text(h.xy[0],h.xy[1],h.id, color = color))
-    return graphics
-
-def plot_beacon(ax: plt.Axes, b : beacon, markerShape = 'o', markerSize = 10, color = 'g'):
-    graphics = []
-    graphics.append(ax.scatter(b.xy[0],b.xy[1], marker = markerShape, c = color, s = markerSize))
-    ellip = Ellipse(xy=b.xy, 
-                    width=b.r, 
-                    height=b.r, 
-                    angle=0,
-                    facecolor = 'none', 
-                    edgecolor = color)
-    ax.add_patch(ellip)
-    graphics.append(ellip)    
     return graphics
 
 def plot_robot(ax , pose : gtsam.Pose2, scale = 9, color = 'b'):

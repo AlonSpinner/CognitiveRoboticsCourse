@@ -12,9 +12,6 @@ class enviorment:
     def plot(self,ax : plt.Axes = None):
         if ax == None:
             fig , ax = plotting.spawnWorld()
-
-        for b in self.beacons:
-            plotting.plot_beacon(ax,b)
         for lm in self.landmarks:
             if lm.type == "house":
                 plotting.plot_house(ax,lm)
