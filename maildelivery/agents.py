@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 import gtsam
-from maildelivery.datatypes import action, move, pickup, drop
+from dataclasses import dataclass
+from maildelivery.enviorment import enviorment, landmark, package
 import maildelivery.plotting as plotting
 import numpy as np
 
@@ -8,11 +8,40 @@ CONTROL_THETA_THRESHOLD = np.radians(0.001)
 CONTROL_DIST_THRESHOLD = 0.001
 REACH_DELTA = 0.01
 
+@dataclass(frozen = True)
+class action:
+    robot_id : int #to be overwritten
+
+@dataclass(frozen = True)
+class move(action):
+    robot_id : int
+    lm_from : landmark
+    lm_to : landmark
+    time_start : float = 0
+    time_end : float = 0
+
+@dataclass(frozen = True)
+class pickup(action):
+    robot_id : int
+    p : package
+    lm: landmark
+    time_start : float = 0
+    time_end : float = 0
+
+@dataclass(frozen = True)
+class drop(action):
+    robot_id : int
+    p : package
+    lm: landmark
+    time_start : float = 0
+    time_end : float = 0
+
+
 class robot:
     def __init__(self,pose0, id) -> None:
         self.pose : gtsam.Pose2 = pose0
         self.id : int = id
-        self.max_forward : float = 1.0
+        self.max_forward : float = 0.25
         self.max_rotate : float = np.pi/4
         self.last_landmark : int = 0
         self.goal_landmark : int = 0
@@ -20,22 +49,24 @@ class robot:
     def sense(self): #gps like sensor
         return self.pose.translation()
 
-    def act(self, a : action):
+    def act(self, a : action, env : enviorment): #perform action on self or enviorment
         if a.robot_id != self.id:
             raise('command given to wrong robot')
-        if type(a) == move:
+        if type(a) is move:
             self.motion_control(a)
-            if np.linalg.norm(self.sense() - a.lm_to_xy) < REACH_DELTA:
+            if np.linalg.norm(self.sense() - a.lm_to.xy) < REACH_DELTA:
                 return True
             else:
                 return False
-        elif type(a) == pickup:
-            if np.linalg.norm(self.sense() - a.lm_xy) < REACH_DELTA:
+        elif type(a) is pickup:
+            if np.linalg.norm(self.sense() - a.lm.xy) < REACH_DELTA:
+                env.packages[a.p.id].owner = self.id #put robot as owner of package
                 return True
             else:
                 return False
-        elif type(a) == drop:
-            if np.linalg.norm(self.sense() - a.lm_xy) < REACH_DELTA:
+        elif type(a) is drop:
+            if np.linalg.norm(self.sense() - a.lm.xy) < REACH_DELTA:
+                env.packages[a.p.id].owner = a.lm.id #put the landmark as owner of package
                 return True
             else:
                 return False
@@ -56,28 +87,8 @@ class robot:
     def plot(self,ax):
         return(plotting.plot_robot(ax,self.pose))
 
-@dataclass(frozen = True, order = True)
-class landmark:
-    id : int
-    xy : np.ndarray((2))
-    type : str
 
-    def angle(lm1,lm2): #akeen to lm2 - lm1
-        dy = lm2.xy[1]-lm1.xy[1]
-        dx = lm2.xy[0]-lm1.xy[0]
-        return np.arctan2(dy,dx)
 
-    def distance(lm1,lm2):
-        dy = lm2.xy[1]-lm1.xy[1]
-        dx = lm2.xy[0]-lm1.xy[0]
-        return (dx**2 + dy**2)**0.5
-
-@dataclass(frozen = False, order = True)
-class package:
-    id : int
-    owner : int #landmark id  or robot == ROBOT_INDEX_SHIFT + robot id
-    goal : int 
-    deliverytime : float
 
 
     

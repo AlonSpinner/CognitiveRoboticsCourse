@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 import maildelivery.plotting as plotting
-from maildelivery.objects import landmark, package
 import matplotlib.pyplot as plt
+import numpy as np
 
 class enviorment:    
     def __init__(self,landmarks,connectivityList, packages = None):
@@ -32,6 +33,30 @@ class enviorment:
                 i = 1 - c.index(lm.id)
                 adjacent.append(c[i])
         return adjacent
+
+@dataclass(frozen = True, order = True) #ordered so they can be sorted!
+class landmark:
+    id : int
+    xy : np.ndarray((2))
+    type : str
+
+    def angle(lm1,lm2): #akeen to lm2 - lm1
+        dy = lm2.xy[1]-lm1.xy[1]
+        dx = lm2.xy[0]-lm1.xy[0]
+        return np.arctan2(dy,dx)
+
+    def distance(lm1,lm2):
+        dy = lm2.xy[1]-lm1.xy[1]
+        dx = lm2.xy[0]-lm1.xy[0]
+        return (dx**2 + dy**2)**0.5
+
+@dataclass(frozen = False, order = True) #NOT FROZEN
+class package:
+    id : int
+    owner : int #landmark id  or robot == ROBOT_INDEX_SHIFT + robot id
+    goal : int 
+    deliverytime : float
+    xy : np.ndarray((2))
 
 
 

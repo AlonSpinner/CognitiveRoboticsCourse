@@ -1,5 +1,5 @@
-from maildelivery.enviorment import enviorment
-from maildelivery.objects import robot, landmark, package
+from maildelivery.enviorment import enviorment,landmark, package
+from maildelivery.agents import robot
 import maildelivery.plotting as plotting
 from maildelivery.brains import planner0, ROBOT_INDEX_SHIFT
 
@@ -57,7 +57,7 @@ for action in parsed_actions:
     while not(status):
         status = r.act(action)
         #update plot
-        graphics_r.remove()
+        [g.remove() for g in graphics_r]
         graphics_r = r.plot(ax)
         plt.pause(0.5)
 

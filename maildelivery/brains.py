@@ -1,5 +1,4 @@
-from maildelivery.datatypes import move, pickup, drop
-from maildelivery.objects import robot
+from maildelivery.agents import move, pickup, drop, robot
 from maildelivery.enviorment import enviorment
 
 import unified_planning
@@ -80,7 +79,6 @@ class planner0:
         self.deliveybot_has_mail = deliveybot_has_mail
         self.location_has_mail =location_has_mail
 
-    
     def create_plan(self, env : enviorment, robots : list[robot]):
         locations = [Object(f"l{id}", self.location) for id in [lm.id for lm in env.landmarks]]
         deliverybots = [Object(f"r{id}", self.deliverybot) for id in [bot.id for bot in robots]]
@@ -129,20 +127,20 @@ class planner0:
             if a.action.name == 'move':
                 parsed_actions.append(move(
                     int(str(a.actual_parameters[0])[1:]), #robot id
-                    env.landmarks[int(str(a.actual_parameters[1])[1:])].xy, #landmark_from xy
-                    env.landmarks[int(str(a.actual_parameters[2])[1:])].xy, #landmark_to xy
+                    env.landmarks[int(str(a.actual_parameters[1])[1:])], #landmark_from
+                    env.landmarks[int(str(a.actual_parameters[2])[1:])], #landmark_to
                     )) 
             elif a.action.name == 'drop':
                 parsed_actions.append(drop(
                     int(str(a.actual_parameters[1])[1:]), #robot id
-                    int(str(a.actual_parameters[0])[1:]), #package id
-                    env.landmarks[int(str(a.actual_parameters[2])[1:])].xy #landmark xy
+                    env.packages[int(str(a.actual_parameters[0])[1:])], #package
+                    env.landmarks[int(str(a.actual_parameters[2])[1:])] #landmark
                     )) 
             elif a.action.name == 'pickup':
                 parsed_actions.append(pickup(
                     int(str(a.actual_parameters[1])[1:]), #robot id
-                    int(str(a.actual_parameters[0])[1:]), #package id
-                    env.landmarks[int(str(a.actual_parameters[2])[1:])].xy #landmark xy
+                    env.packages[int(str(a.actual_parameters[0])[1:])], #package
+                    env.landmarks[int(str(a.actual_parameters[2])[1:])] #landmark
                     ))
         return parsed_actions
         
