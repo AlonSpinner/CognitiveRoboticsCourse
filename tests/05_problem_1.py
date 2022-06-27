@@ -50,7 +50,7 @@ ax = env.plot()
 r.plot(ax)
 for p in env.packages:
     p.plot(ax)
-plt.pause(0.1)
+plt.draw()
 
 #roll simulation
 for action in parsed_actions:
@@ -66,6 +66,7 @@ for action in parsed_actions:
         plt.pause(0.1)
 
 #dont close window in the end
+ax.set_title('finished!')
 plt.ioff()
 plt.show()
 
