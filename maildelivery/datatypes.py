@@ -1,13 +1,12 @@
 from dataclasses import dataclass
 import numpy as np
-import gtsam
 #----------------------------- COMMANDS
 @dataclass(frozen = True)
-class cmd:
+class action:
     robot_id : int #to be overwritten
 
 @dataclass(frozen = True)
-class move(cmd):
+class move(action):
     robot_id : int
     lm_from_xy : np.ndarray
     lm_to_xy : np.ndarray
@@ -15,7 +14,7 @@ class move(cmd):
     time_end : float = 0
 
 @dataclass(frozen = True)
-class pickup(cmd):
+class pickup(action):
     robot_id : int
     p_id : int
     lm_xy : np.ndarray
@@ -23,7 +22,7 @@ class pickup(cmd):
     time_end : float = 0
 
 @dataclass(frozen = True)
-class drop(cmd):
+class drop(action):
     robot_id : int
     p_id : int
     lm_xy : np.ndarray
