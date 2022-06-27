@@ -1,4 +1,4 @@
-from maildelivery.world import enviorment,landmark, package, plot_spawnWorld
+from maildelivery.world import enviorment,landmark, package, plot_package, plot_env, plot_spawnWorld
 from maildelivery.agents import robot, plot_robot
 from maildelivery.brains import planner0, ROBOT_INDEX_SHIFT
 
@@ -19,7 +19,8 @@ def build_env():
     h6 = landmark(6,np.array([2,2]),'house')
     houses = [h5,h6]
 
-    landmarks = houses + docks + intersections
+    landmarks = sorted(houses + docks + intersections)
+
     connectivityList = [[0,1],[1,2],[2,4],[1,3],[3,5],[4,6]]
 
     p0 = package(0,5,6,100,landmarks[5].xy)
@@ -44,21 +45,29 @@ plan = planner.create_plan(env,[r])
 parsed_actions = planner.parse_actions(plan.actions, env)
 
 #plot initial state
-_, ax = plot_spawnWorld()
-env.plot(ax)
-graphics_r = r.plot(ax)
 plt.ion()
+_, ax = plot_spawnWorld()
+plot_env(ax,env)
+graphics_r = plot_robot(ax,r)
 
+for p in env.packages:
+    plot_package(ax, p)
+
+plt.pause(0.1)
 #roll simulation
 for action in parsed_actions:
 
     status = False
     while not(status):
         status = r.act(action, env)
+        
         #update plot
         [g.remove() for g in graphics_r]
-        graphics_r = r.plot(ax)
-        plt.pause(0.5)
+        graphics_r = plot_robot(ax,r)
+        
+        for p in r.owned_packages:
+            p.replot(ax)
+        plt.pause(0.1)
 
 #dont close window in the end
 plt.show()

@@ -44,6 +44,7 @@ class robot:
         self.max_rotate : float = np.pi/4
         self.last_landmark : int = 0
         self.goal_landmark : int = 0
+        self.owned_packages : list[package] = []
 
     def sense(self): #gps like sensor
         return self.pose.translation()
@@ -53,6 +54,9 @@ class robot:
             raise('command given to wrong robot')
         if type(a) is move:
             self.motion_control(a)
+            for p in self.owned_packages:
+                p.xy = self.pose.translation()
+
             if np.linalg.norm(self.sense() - a.lm_to.xy) < REACH_DELTA:
                 return True
             else:
@@ -60,12 +64,14 @@ class robot:
         elif type(a) is pickup:
             if np.linalg.norm(self.sense() - a.lm.xy) < REACH_DELTA:
                 env.packages[a.p.id].owner = self.id #put robot as owner of package
+                self.owned_packages.append(a.p)
                 return True
             else:
                 return False
         elif type(a) is drop:
             if np.linalg.norm(self.sense() - a.lm.xy) < REACH_DELTA:
                 env.packages[a.p.id].owner = a.lm.id #put the landmark as owner of package
+                self.owned_packages.remove(a.p)
                 return True
             else:
                 return False
@@ -83,14 +89,12 @@ class robot:
             self.pose = self.pose.compose((gtsam.Pose2(u,0,0)))
             return
 
-    def plot(self,ax):
-        return(plot_robot(ax,self.pose))
-
 #---------------------------------------------------------------------------
 #--------------------------------PLOTTING FUNCTIONS-------------------------
 #---------------------------------------------------------------------------
 
-def plot_robot(ax , pose : gtsam.Pose2, scale = 20, color = 'b'):
+def plot_robot(ax , r : robot, scale = 20, color = 'b'):
+        pose = r.pose
         u = np.cos(pose.theta())
         v = np.sin(pose.theta())
         graphics_quiver = ax.quiver(pose.x(),pose.y(),u,v, color = color, scale = scale, width = 0.02)
