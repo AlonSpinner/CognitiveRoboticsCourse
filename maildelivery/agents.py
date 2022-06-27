@@ -71,13 +71,13 @@ class robot:
                 return False
 
     def motion_control(self, action : move):
-        e_theta = self.pose.bearing(action.lm_to_xy).theta()
+        e_theta = self.pose.bearing(action.lm_to.xy).theta()
         if abs(e_theta) > CONTROL_THETA_THRESHOLD:
             u = np.sign(e_theta)*min(abs(e_theta),self.max_rotate)
             self.pose = self.pose.compose((gtsam.Pose2(0,0,u)))
             return
 
-        e_dist = self.pose.range(action.lm_to_xy)
+        e_dist = self.pose.range(action.lm_to.xy)
         if e_dist > CONTROL_DIST_THRESHOLD:
             u = min(e_dist,self.max_forward)
             self.pose = self.pose.compose((gtsam.Pose2(u,0,0)))

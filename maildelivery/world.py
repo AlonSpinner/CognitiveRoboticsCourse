@@ -61,7 +61,7 @@ class enviorment:
 #--------------------------------PLOTTING FUNCTIONS-------------------------
 #---------------------------------------------------------------------------
 
-def spawnWorld(xrange = None, yrange = None):
+def plot_spawnWorld(xrange = None, yrange = None):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.set_xlabel('x'); ax.set_ylabel('y'); 

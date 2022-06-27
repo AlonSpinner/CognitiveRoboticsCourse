@@ -1,6 +1,5 @@
-from maildelivery.world import enviorment,landmark, package
-from maildelivery.agents import robot
-import maildelivery.plotting as plotting
+from maildelivery.world import enviorment,landmark, package, plot_spawnWorld
+from maildelivery.agents import robot, plot_robot
 from maildelivery.brains import planner0, ROBOT_INDEX_SHIFT
 
 import numpy as np
@@ -23,8 +22,8 @@ def build_env():
     landmarks = houses + docks + intersections
     connectivityList = [[0,1],[1,2],[2,4],[1,3],[3,5],[4,6]]
 
-    p0 = package(0,5,6,100)
-    p1 = package(1,6,5,100)
+    p0 = package(0,5,6,100,landmarks[5].xy)
+    p1 = package(1,6,5,100,landmarks[6].xy)
     packages = [p0,p1]
 
     env = enviorment(landmarks, connectivityList, packages)
@@ -45,7 +44,7 @@ plan = planner.create_plan(env,[r])
 parsed_actions = planner.parse_actions(plan.actions, env)
 
 #plot initial state
-_, ax = plotting.spawnWorld()
+_, ax = plot_spawnWorld()
 env.plot(ax)
 graphics_r = r.plot(ax)
 plt.ion()
@@ -55,7 +54,7 @@ for action in parsed_actions:
 
     status = False
     while not(status):
-        status = r.act(action)
+        status = r.act(action, env)
         #update plot
         [g.remove() for g in graphics_r]
         graphics_r = r.plot(ax)
