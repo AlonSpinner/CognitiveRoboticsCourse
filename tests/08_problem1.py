@@ -1,5 +1,5 @@
-from maildelivery.world import enviorment,landmark, package, plot_package, plot_env, plot_spawnWorld
-from maildelivery.agents import robot, plot_robot
+from maildelivery.world import enviorment,landmark, package
+from maildelivery.agents import robot
 from maildelivery.brains import planner0, ROBOT_INDEX_SHIFT
 
 import numpy as np
@@ -46,14 +46,12 @@ parsed_actions = planner.parse_actions(plan.actions, env)
 
 #plot initial state
 plt.ion()
-_, ax = plot_spawnWorld()
-plot_env(ax,env)
-graphics_r = plot_robot(ax,r)
-
+ax = env.plot()
+r.plot(ax)
 for p in env.packages:
-    plot_package(ax, p)
-
+    p.plot(ax)
 plt.pause(0.1)
+
 #roll simulation
 for action in parsed_actions:
 
@@ -61,15 +59,14 @@ for action in parsed_actions:
     while not(status):
         status = r.act(action, env)
         
-        #update plot
-        [g.remove() for g in graphics_r]
-        graphics_r = plot_robot(ax,r)
-        
+        #update plot        
+        r.plot(ax)
         for p in r.owned_packages:
-            p.replot(ax)
+            p.plot(ax)
         plt.pause(0.1)
 
 #dont close window in the end
+plt.ioff()
 plt.show()
 
 

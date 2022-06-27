@@ -45,6 +45,7 @@ class robot:
         self.last_landmark : int = 0
         self.goal_landmark : int = 0
         self.owned_packages : list[package] = []
+        self.graphics : list = []
 
     def sense(self): #gps like sensor
         return self.pose.translation()
@@ -88,6 +89,11 @@ class robot:
             u = min(e_dist,self.max_forward)
             self.pose = self.pose.compose((gtsam.Pose2(u,0,0)))
             return
+
+    def plot(self,ax):
+        if self.graphics is not None:
+            [g.remove() for g in self.graphics]
+        self.graphics = plot_robot(ax,self)
 
 #---------------------------------------------------------------------------
 #--------------------------------PLOTTING FUNCTIONS-------------------------

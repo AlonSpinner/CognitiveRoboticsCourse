@@ -27,9 +27,10 @@ class package:
     xy : np.ndarray((2))
     graphics : list = None
 
-    def replot(self,ax):
-        [g.remove() for g in self.graphics]
-        graphics = plot_package(ax,self)
+    def plot(self,ax): #this is a moving object.. so we need a method to replot it
+        if self.graphics is not None:
+            [g.remove() for g in self.graphics] 
+        self.graphics = plot_package(ax,self)
 
 class enviorment:    
     def __init__(self,landmarks, connectivityList, packages = None):
@@ -46,23 +47,25 @@ class enviorment:
                 adjacent.append(c[i])
         return adjacent
 
+    def plot(self, ax : plt.Axes = None):
+        if ax is None:
+            _, ax = plot_spawnWorld(xrange = None, yrange = None)
+        for lm in self.landmarks:
+            if lm.type == "house":
+                plot_house(ax,lm)
+            elif lm.type == "dock":
+                plot_dock(ax,lm)
+            else:
+                plot_intersection(ax,lm)    
+        for c in self.connectivityList:
+            lm1 = self.landmarks[c[0]]
+            lm2 = self.landmarks[c[1]]
+            plot_road(ax,lm1,lm2)
+        return ax
+
 #---------------------------------------------------------------------------
 #--------------------------------PLOTTING FUNCTIONS-------------------------
 #---------------------------------------------------------------------------
-
-def plot_env(ax : plt.Axes, env: enviorment):
-    for lm in env.landmarks:
-        if lm.type == "house":
-            plot_house(ax,lm)
-        elif lm.type == "dock":
-            plot_dock(ax,lm)
-        else:
-            plot_intersection(ax,lm)    
-    for c in env.connectivityList:
-        lm1 = env.landmarks[c[0]]
-        lm2 = env.landmarks[c[1]]
-        plot_road(ax,lm1,lm2)
-    return ax
 
 def plot_spawnWorld(xrange = None, yrange = None):
     fig = plt.figure()
@@ -81,31 +84,26 @@ def plot_road(ax : plt.Axes,lm1 : landmark, lm2 : landmark):
     return ax.plot(x,y,color = 'k')
 
 def plot_intersection(ax: plt.Axes,x : landmark, markerShape = 'x', markerSize = 50, color = 'r'):
-    graphics = []
-    graphics.append(ax.scatter(x.xy[0],x.xy[1], marker = markerShape, c = color, s = markerSize))
-    graphics.append(ax.text(x.xy[0],x.xy[1],x.id, color = color))
-    return graphics
+    g1 = ax.scatter(x.xy[0],x.xy[1], marker = markerShape, c = color, s = markerSize)
+    g2 = ax.text(x.xy[0],x.xy[1],x.id, color = color)
+    return [g1,g2]
 
 def plot_house(ax: plt.Axes, h :landmark, markerShape = 's', markerSize = 80, color = 'k'):
-    graphics = []
-    g = ax.scatter(h.xy[0],h.xy[1], marker = markerShape, edgecolors = color, s = markerSize)
-    g.set_facecolor('none')
-    graphics.append(g)
-    graphics.append(ax.text(h.xy[0],h.xy[1],h.id, color = color))
-    return graphics
+    g1 = ax.scatter(h.xy[0],h.xy[1], marker = markerShape, edgecolors = color, s = markerSize)
+    g1.set_facecolor('none')
+    g2 = ax.text(h.xy[0],h.xy[1],h.id, color = color)
+    return [g1,g2]
 
 def plot_dock(ax: plt.Axes, h :landmark, markerShape = 's', markerSize = 80, color = 'b'):
-    graphics = []
-    g = ax.scatter(h.xy[0],h.xy[1], marker = markerShape, edgecolors = color, s = markerSize)
-    g.set_facecolor('none')
-    graphics.append(g)
-    graphics.append(ax.text(h.xy[0],h.xy[1],h.id, color = color))
-    return graphics
+    g1 = ax.scatter(h.xy[0],h.xy[1], marker = markerShape, edgecolors = color, s = markerSize)
+    g1.set_facecolor('none')
+    g2 = ax.text(h.xy[0],h.xy[1],h.id, color = color)
+    return [g1,g2]
 
 def plot_package(ax: plt.Axes, p :package, markerShape = 'o', markerSize = 30, color = 'orange'):
     g1 = ax.scatter(p.xy[0],p.xy[1], marker = markerShape, color = color, edgecolors = color, s = markerSize)
     g2 = ax.text(p.xy[0],p.xy[1],p.id, color = color)
-    p.graphics = [g1,g2] #attach graphics to package
+    return [g1,g2] #attach graphics to package
 
 
 
