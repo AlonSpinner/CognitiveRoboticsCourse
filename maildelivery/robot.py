@@ -1,6 +1,6 @@
 import gtsam
-from maildelivery.datatypes import landmark, package, mvnormal
-from maildelivery.datatypes import goto, move, pickup, drop
+from maildelivery.datatypes import landmark, package
+from maildelivery.datatypes import cmd, move, pickup, drop
 import maildelivery.plotting as plotting
 import numpy as np
 
@@ -13,6 +13,17 @@ class robot:
         self.id : int = id
         self.last_landmark : int = 0
         self.goal_landmark : int = 0
+
+    def act(self, _cmd : cmd):
+        if _cmd.robot_id != self.id:
+            raise('command given to wrong robot')
+        if type(_cmd) == move:
+            return self.move(_cmd)
+        elif type(_cmd) == pickup:
+            return self.pickup(_cmd)
+        elif type(_cmd) == drop:
+            return self.drop(_cmd)
+
 
     def pickup(self, cmd: pickup):
         lm = cmd.lm
