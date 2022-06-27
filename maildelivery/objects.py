@@ -1,5 +1,5 @@
+from dataclasses import dataclass
 import gtsam
-from maildelivery.datatypes import landmark, package
 from maildelivery.datatypes import cmd, move, pickup, drop
 import maildelivery.plotting as plotting
 import numpy as np
@@ -55,6 +55,30 @@ class robot:
 
     def plot(self,ax):
         return(plotting.plot_robot(ax,self.pose))
+
+@dataclass(frozen = True, order = True)
+class landmark:
+    id : int
+    xy : np.ndarray((2))
+    type : str
+
+    def angle(lm1,lm2): #akeen to lm2 - lm1
+        dy = lm2.xy[1]-lm1.xy[1]
+        dx = lm2.xy[0]-lm1.xy[0]
+        return np.arctan2(dy,dx)
+
+    def distance(lm1,lm2):
+        dy = lm2.xy[1]-lm1.xy[1]
+        dx = lm2.xy[0]-lm1.xy[0]
+        return (dx**2 + dy**2)**0.5
+
+@dataclass(frozen = False, order = True)
+class package:
+    id : int
+    owner : int #landmark id  or robot == ROBOT_INDEX_SHIFT + robot id
+    goal : int 
+    deliverytime : float
+
 
     
         

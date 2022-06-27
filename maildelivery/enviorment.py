@@ -1,6 +1,10 @@
 import maildelivery.plotting as plotting
-from maildelivery.datatypes import landmark, package
+from maildelivery.objects import robot, landmark, package
+from maildelivery.datatypes import move, pickup, drop
 import matplotlib.pyplot as plt
+import numpy as np
+
+REACH_DELTA = 0.001
 
 class enviorment:    
     def __init__(self,beacons,landmarks,connectivityList, packages = None):
@@ -35,6 +39,25 @@ class enviorment:
                 i = 1 - c.index(lm.id)
                 adjacent.append(c[i])
         return adjacent
+
+    def has_reached(r: robot, _cmd : move):
+        if np.linalg.norm(r.pose.range(_cmd.lm_to_xy)) < REACH_DELTA:
+            return True
+        else:
+            return False
+
+    def can_pickup(r : robot, _cmd : pickup):
+        if np.linalg.norm(r.pose.range(_cmd.lm_xy)) < REACH_DELTA:
+            return True
+        else:
+            return False
+
+    def can_drop(r : robot, _cmd : drop):
+        if np.linalg.norm(r.pose.range(_cmd.lm_xy)) < REACH_DELTA:
+            return True
+        else:
+            return False
+
 
 
 
