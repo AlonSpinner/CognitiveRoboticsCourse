@@ -1,4 +1,4 @@
-from maildelivery.datatypes import beacon, landmark, move, package
+from maildelivery.datatypes import beacon, landmark, move, package, pickup, drop
 
 from maildelivery.map import Map
 from maildelivery.robot import robot
@@ -9,9 +9,8 @@ import matplotlib.pyplot as plt
 import gtsam
 
 import unified_planning
-from unified_planning.shortcuts import UserType, BoolType, IntType, Int,\
-        Fluent, InstantaneousAction, SimulatedEffect, Problem, Object, OneshotPlanner,\
-        StartTiming, EndTiming,  GE, Or, Not
+from unified_planning.shortcuts import UserType, BoolType,\
+        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 
 def createMap():
@@ -37,68 +36,127 @@ def createMap():
     m = Map([], landmarks, connectivityList, packages)
     return m
 
-def createPlan(m : Map, deliverybots : list[robot]):
-    location = UserType('location')
-    deliveybot = UserType('deliveybot')
-    mail = UserType('mail')
+def createPlan(env : Map, robots : list[robot]):
+    #planner has to use different name as to not to confuse with names of modules
+    location = UserType('location') # <-> landmark
+    deliverybot = UserType('deliveybot') #<-> robot
+    mail = UserType('mail') #<-> package
 
     #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
-    deliveybot_at = Fluent('deliveybot_at', BoolType(), r = deliveybot, l = location)
+    deliverybot_at = Fluent('deliverybot_at', BoolType(), r = deliverybot, l = location)
     is_connected = Fluent('is_connected', BoolType(), l_from = location, l_to = location)
     is_occupied = Fluent('is_occupied', BoolType(), l = location)
-    deliveybot_has_mail = Fluent('deliveybot_has_mail', BoolType(), p = mail, r = deliveybot)
-    location_has_mail = Fluent('location_has_package', BoolType(), p = mail, l = location)
+    deliveybot_has_mail = Fluent('deliveybot_has_mail', BoolType(), p = mail, r = deliverybot)
+    location_has_mail = Fluent('location_has_mail', BoolType(), p = mail, l = location)
 
-    move = InstantaneousAction('move',  r = deliveybot, l_from = location, l_to = location)
-    r = move.parameter('r')
-    l_from = move.parameter('l_from')
-    l_to = move.parameter('l_to')
-    move.add_precondition(Or(is_connected(l_from, l_to), \
+    _move = InstantaneousAction('move',  r = deliverybot, l_from = location, l_to = location)
+    r = _move.parameter('r')
+    l_from = _move.parameter('l_from')
+    l_to = _move.parameter('l_to')
+    _move.add_precondition(Or(is_connected(l_from, l_to), \
                                         is_connected(l_to, l_from)))
-    move.add_precondition(deliveybot_at(r, l_from))
-    move.add_precondition(Not(is_occupied(l_to))) #at end, l_to is free
-    move.add_effect(deliveybot_at(r, l_from), False)
-    move.add_effect(is_occupied(l_from), False)
-    move.add_effect(deliveybot_at(r, l_to), True)
-    move.add_effect(is_occupied(l_to), True)
+    _move.add_precondition(deliverybot_at(r, l_from))
+    _move.add_precondition(Not(is_occupied(l_to))) #at end, l_to is free
+    _move.add_effect(deliverybot_at(r, l_from), False)
+    _move.add_effect(is_occupied(l_from), False)
+    _move.add_effect(deliverybot_at(r, l_to), True)
+    _move.add_effect(is_occupied(l_to), True)
 
-    pickup = InstantaneousAction('pickup', p = mail, r = deliveybot, l = location)
-    p = pickup.parameter('p')
-    r = pickup.parameter('r')
-    l = pickup.parameter('l')
-    pickup.add_precondition(deliveybot_at(r, l))
-    pickup.add_precondition(location_has_mail(p, l))
-    pickup.add_effect(location_has_mail(p, l), False)
-    pickup.add_effect(deliveybot_has_mail(p, r), True)
+    _pickup = InstantaneousAction('pickup', m = mail, r = deliverybot, l = location)
+    m = _pickup.parameter('m')
+    r = _pickup.parameter('r')
+    l = _pickup.parameter('l')
+    _pickup.add_precondition(deliverybot_at(r, l))
+    _pickup.add_precondition(location_has_mail(m, l))
+    _pickup.add_effect(location_has_mail(m, l), False)
+    _pickup.add_effect(deliveybot_has_mail(m, r), True)
 
-    drop = InstantaneousAction('drop', p = mail, r = deliveybot, l = location)
-    p = drop.parameter('p')
-    r = drop.parameter('r')
-    l = drop.parameter('l')
-    drop.add_precondition(deliveybot_at(r, l))
-    drop.add_precondition(deliveybot_has_mail(p, r))
-    drop.add_effect(deliveybot_has_mail(p, r), False)
-    drop.add_effect(location_has_mail(p, l), True)
+    _drop = InstantaneousAction('drop', m = mail, r = deliverybot, l = location)
+    m = _drop.parameter('m')
+    r = _drop.parameter('r')
+    l = _drop.parameter('l')
+    _drop.add_precondition(deliverybot_at(r, l))
+    _drop.add_precondition(deliveybot_has_mail(m, r))
+    _drop.add_effect(deliveybot_has_mail(m, r), False)
+    _drop.add_effect(location_has_mail(m, l), True)
 
     problem = Problem('maildelivery')
-    problem.add_action(move)
-    problem.add_action(pickup)
-    problem.add_action(drop)
-    problem.add_fluent(deliveybot_at, default_initial_value = False)
+    problem.add_action(_move)
+    problem.add_action(_pickup)
+    problem.add_action(_drop)
+    problem.add_fluent(deliverybot_at, default_initial_value = False)
     problem.add_fluent(is_connected, default_initial_value = False)
     problem.add_fluent(is_occupied, default_initial_value = False)
     problem.add_fluent(deliveybot_has_mail, default_initial_value = False)
     problem.add_fluent(location_has_mail, default_initial_value = False)
 
     #objects of problem
-    locations = [Object(f"l{i}", location) for i in range(4)]
-    deliverybot = Object("r",robot)
-    note = Object("p",package)
-    problem.add_objects(locations + [deliverybot] + [note])
+    locations = [Object(f"l{id}", location) for id in [lm.id for lm in env.landmarks]]
+    deliverybots = [Object(f"r{id}", deliverybot) for id in [bot.id for bot in robots]]
+    notes = [Object(f"m{id}", mail) for id in [p.id for p in env.packages]]
+    problem.add_objects(locations + deliverybots + notes)
+
+    for c in env.connectivityList:
+        problem.set_initial_value(is_connected(
+                                    locations[c[0]],
+                                    locations[c[1]]),
+                                    True)
+    # robot at start
+    for r in robots:
+        problem.set_initial_value(deliverybot_at(
+                                                deliverybots[r.id],
+                                                locations[r.last_landmark]),
+                                                True)
+        problem.set_initial_value(is_occupied(
+                                             locations[r.last_landmark]),
+                                             True) 
+    #place packages
+    for p in env.packages:
+        if p.id < 1000:
+            problem.set_initial_value(location_has_mail(
+                                                        notes[p.id],
+                                                        locations[p.owner]),
+                                                        True)
+        else:
+            problem.set_initial_value(deliveybot_has_mail(
+                                            notes[p.id],
+                                            deliverybots[p.owner-1000]),
+                                            True)
+    #goal
+    for p in env.packages:
+        problem.add_goal(location_has_mail(notes[p.id],locations[p.goal]))
+
+    with OneshotPlanner(problem_kind = problem.kind) as planner:
+        result = planner.solve(problem)
+    
+    return result.plan
 
 m = createMap()
-r = robot(gtsam.Pose2(m.landmarks[0].xy[0],m.landmarks[0].xy[1],landmark.angle(m.landmarks[0],m.landmarks[1])))
-createPlan(m,[r])
+r = robot(gtsam.Pose2(m.landmarks[0].xy[0],m.landmarks[0].xy[1],landmark.angle(m.landmarks[0],m.landmarks[1])),0)
+plan = createPlan(m,[r])
+
+def parse_actions(actions):
+    parsed_actions = []
+    for a in actions:
+        if a.action.name == 'move':
+            parsed_actions.append(move(
+                int(str(a.actual_parameters[0])[1:]), #robot id
+                int(str(a.actual_parameters[1])[1:]), #landmark_from id
+                int(str(a.actual_parameters[2])[1:]) #landmark_to id
+                )) 
+        elif a.action.name == 'drop':
+            parsed_actions.append(drop(
+                int(str(a.actual_parameters[1])[1:]), #robot id
+                int(str(a.actual_parameters[0])[1:]), #package id
+                int(str(a.actual_parameters[2])[1:]) #landmark id
+                )) 
+        elif a.action.name == 'pickup':
+            parsed_actions.append(pickup(
+                int(str(a.actual_parameters[1])[1:]), #robot id
+                int(str(a.actual_parameters[0])[1:]), #package id
+                int(str(a.actual_parameters[2])[1:]) #landmark id
+                ))
+    return parse_actions
 
 _, ax = plotting.spawnWorld()
 m.plot(ax)
@@ -107,13 +165,13 @@ m.plot(ax)
 # odom = gtsam.Pose2(0.4,0,0)
 # cmd = move(odom)
 
-# with plt.ion():
-#     for _ in range(5):
-#         r.move(cmd)
+# plt.ion():
+    # for _ in range(len(plan.actions)):
+    #     r.move(cmd)
 
-#         graphics_r.remove()
-#         graphics_r = r.plot(ax)
-#         plt.pause(0.5)
+    #     graphics_r.remove()
+    #     graphics_r = r.plot(ax)
+    #     plt.pause(0.5)
 
 plt.show()
 

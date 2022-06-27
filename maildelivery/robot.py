@@ -5,11 +5,14 @@ import maildelivery.plotting as plotting
 import numpy as np
 
 class robot:
-    def __init__(self,pose0) -> None:
+    def __init__(self,pose0, id) -> None:
         self.pose : gtsam.Pose2 = pose0
-        self.max_forward = 1.0
-        self.max_rotate = np.pi/4
-        self.reachDelta = 0.001
+        self.max_forward : float = 1.0
+        self.max_rotate : float = np.pi/4
+        self.reachDelta : float = 0.001
+        self.id : int = id
+        self.last_landmark : int = 0
+        self.goal_landmark : int = 0
 
     def pickup(self, cmd: pickup):
         lm = cmd.lm
