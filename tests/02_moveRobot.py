@@ -52,13 +52,13 @@ graphics_r = r.plot(ax)
 odom = gtsam.Pose2(0.4,0,0)
 cmd = move(odom)
 
-with plt.ion():
-    for _ in range(5):
-        r.move(cmd)
+plt.ion()
+for _ in range(5):
+    r.move(cmd)
 
-        graphics_r.remove()
-        graphics_r = r.plot(ax)
-        plt.pause(0.5)
+    graphics_r.remove()
+    graphics_r = r.plot(ax)
+    plt.pause(0.5)
 
 
 

@@ -35,6 +35,14 @@ def plot_house(ax: plt.Axes, h :landmark, markerShape = 's', markerSize = 80, co
     graphics.append(ax.text(h.xy[0],h.xy[1],h.id, color = color))
     return graphics
 
+def plot_dock(ax: plt.Axes, h :landmark, markerShape = 's', markerSize = 80, color = 'b'):
+    graphics = []
+    g = ax.scatter(h.xy[0],h.xy[1], marker = markerShape, edgecolors = color, s = markerSize)
+    g.set_facecolor('none')
+    graphics.append(g)
+    graphics.append(ax.text(h.xy[0],h.xy[1],h.id, color = color))
+    return graphics
+
 def plot_beacon(ax: plt.Axes, b : beacon, markerShape = 'o', markerSize = 10, color = 'g'):
     graphics = []
     graphics.append(ax.scatter(b.xy[0],b.xy[1], marker = markerShape, c = color, s = markerSize))

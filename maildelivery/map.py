@@ -6,7 +6,7 @@ class Map:
     def __init__(self,beacons,landmarks,connectivityList, packages = None):
         #instance attributes
         self.beacons : list[beacon] = beacons
-        self.landmarks : list[landmark]  = landmarks
+        self.landmarks : list[landmark]  = sorted(landmarks)
         self.connectivityList : list[(int,int)]  = connectivityList
         self.packages : list[package] = packages
 
@@ -19,6 +19,8 @@ class Map:
         for lm in self.landmarks:
             if lm.type == "house":
                 plotting.plot_house(ax,lm)
+            elif lm.type == "dock":
+                plotting.plot_dock(ax,lm)
             else:
                 plotting.plot_intersection(ax,lm)    
         for c in self.connectivityList:

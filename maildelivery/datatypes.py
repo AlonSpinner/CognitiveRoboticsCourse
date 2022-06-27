@@ -27,8 +27,9 @@ class beacon:
 @dataclass(frozen = False, order = True)
 class package:
     id : int
-    location : int #landmark or robot == 1000
-    timeLeft : float
+    owner : int #landmark id  or robot == 1000 + robot id
+    goal : int 
+    deliverytime : float
 
 @dataclass()
 class mvnormal:

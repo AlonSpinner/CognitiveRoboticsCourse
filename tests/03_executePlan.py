@@ -35,7 +35,7 @@ def createMap():
     landmarks = houses + intersections
     connectivityList = [[0,8],[8,1],[8,5],[5,2],[5,3],[2,9],[5,6],[6,4],[4,10],[10,3],[9,3],[4,7],[7,1]]
 
-    packages = [package(0,5,100)]
+    packages = [package(0,5,4,100)]
 
     m = Map(beacons, landmarks, connectivityList, packages)
     return m
@@ -60,36 +60,36 @@ _, ax = plotting.spawnWorld()
 m.plot(ax)
 graphics_r = r.plot(ax)
 
-with plt.ion():
-    for cmd in plan:
-        if type(cmd) == goto:
-            #move until movecmd == false
-            movecmd = brains.control(r,cmd)
-            while movecmd:
-                r.move(movecmd)
-                
-                graphics_r.remove()
-                graphics_r = r.plot(ax)
-                plt.pause(0.5)
-
-                movecmd = brains.control(r,cmd)
-            continue
+plt.ion()
+for cmd in plan:
+    if type(cmd) == goto:
+        #move until movecmd == false
+        movecmd = brains.control(r,cmd)
+        while movecmd:
+            r.move(movecmd)
             
-        if type(cmd) == pickup:
-            r.pickup(cmd)
-            ax.set_title(f'picked up package {cmd.p.id}')
-            plt.pause(2)
-            ax.set_title('')
+            graphics_r.remove()
+            graphics_r = r.plot(ax)
+            plt.pause(0.5)
 
-        if type(cmd) == drop:
-            r.drop(cmd)
-            ax.set_title(f'droped off package {cmd.p.id}')
-            plt.pause(2)
-            ax.set_title('')
+            movecmd = brains.control(r,cmd)
+        continue
+        
+    if type(cmd) == pickup:
+        r.pickup(cmd)
+        ax.set_title(f'picked up package {cmd.p.id}')
+        plt.pause(2)
+        ax.set_title('')
 
-        graphics_r.remove()
-        graphics_r = r.plot(ax)
-        plt.pause(0.5)
+    if type(cmd) == drop:
+        r.drop(cmd)
+        ax.set_title(f'droped off package {cmd.p.id}')
+        plt.pause(2)
+        ax.set_title('')
+
+    graphics_r.remove()
+    graphics_r = r.plot(ax)
+    plt.pause(0.5)
 
 
 
