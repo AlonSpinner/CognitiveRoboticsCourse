@@ -21,7 +21,7 @@ def build_env():
 
     landmarks = sorted(houses + docks + intersections)
 
-    connectivityList = [[0,1],[1,2],[2,4],[1,3],[3,5],[4,6],[0,3]]
+    connectivityList = [[0,1],[1,2],[2,4],[1,3],[3,5],[4,6],[3,4]]
 
     p0 = package(0,5,6,100,landmarks[5].xy)
     p1 = package(1,6,5,100,landmarks[6].xy)
@@ -34,17 +34,17 @@ def build_env():
 env = build_env()
 
 #spawn robots
-x0 = env.landmarks[2].xy[0]
-y0 = env.landmarks[2].xy[1]
-theta0 = landmark.angle(env.landmarks[2],env.landmarks[6])
+x0 = env.landmarks[4].xy[0]
+y0 = env.landmarks[4].xy[1]
+theta0 = landmark.angle(env.landmarks[4],env.landmarks[3])
 r0 = robot(gtsam.Pose2(x0,y0,theta0),0 + ROBOT_INDEX_SHIFT)
-r0.last_landmark = 2
+r0.last_landmark = 4
 
-x0 = env.landmarks[1].xy[0]
-y0 = env.landmarks[1].xy[1]
-theta0 = landmark.angle(env.landmarks[1],env.landmarks[3])
+x0 = env.landmarks[3].xy[0]
+y0 = env.landmarks[3].xy[1]
+theta0 = landmark.angle(env.landmarks[3],env.landmarks[4])
 r1 = robot(gtsam.Pose2(x0,y0,theta0),1 + ROBOT_INDEX_SHIFT)
-r1.last_landmark = 1
+r1.last_landmark = 3
 
 r = [r0,r1]
 
@@ -73,7 +73,7 @@ for action in parsed_actions:
             ri.plot(ax)
             for p in ri.owned_packages:
                 p.plot(ax)
-        plt.pause(0.3)
+        plt.pause(0.1)
 
 #dont close window in the end
 ax.set_title('finished!')
