@@ -2,6 +2,8 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
 
+TEXT_OFFSET = 0.03
+
 @dataclass(frozen = True, order = True) #ordered so they can be sorted!
 class landmark:
     id : int
@@ -85,24 +87,24 @@ def plot_road(ax : plt.Axes,lm1 : landmark, lm2 : landmark):
 
 def plot_intersection(ax: plt.Axes,x : landmark, markerShape = 'x', markerSize = 50, color = 'r'):
     g1 = ax.scatter(x.xy[0],x.xy[1], marker = markerShape, c = color, s = markerSize)
-    g2 = ax.text(x.xy[0],x.xy[1],x.id, color = color)
+    g2 = ax.text(x.xy[0]+TEXT_OFFSET,x.xy[1]+TEXT_OFFSET,x.id, color = color)
     return [g1,g2]
 
 def plot_house(ax: plt.Axes, h :landmark, markerShape = 's', markerSize = 80, color = 'k'):
     g1 = ax.scatter(h.xy[0],h.xy[1], marker = markerShape, edgecolors = color, s = markerSize)
     g1.set_facecolor('none')
-    g2 = ax.text(h.xy[0],h.xy[1],h.id, color = color)
+    g2 = ax.text(h.xy[0]+TEXT_OFFSET,h.xy[1]+TEXT_OFFSET,h.id, color = color)
     return [g1,g2]
 
 def plot_dock(ax: plt.Axes, h :landmark, markerShape = 's', markerSize = 80, color = 'b'):
     g1 = ax.scatter(h.xy[0],h.xy[1], marker = markerShape, edgecolors = color, s = markerSize)
     g1.set_facecolor('none')
-    g2 = ax.text(h.xy[0],h.xy[1],h.id, color = color)
+    g2 = ax.text(h.xy[0]+TEXT_OFFSET,h.xy[1]+TEXT_OFFSET,h.id, color = color)
     return [g1,g2]
 
 def plot_package(ax: plt.Axes, p :package, markerShape = 'o', markerSize = 30, color = 'orange'):
     g1 = ax.scatter(p.xy[0],p.xy[1], marker = markerShape, color = color, edgecolors = color, s = markerSize)
-    g2 = ax.text(p.xy[0],p.xy[1],p.id, color = color)
+    g2 = ax.text(p.xy[0]+TEXT_OFFSET,p.xy[1]+TEXT_OFFSET,p.id, color = color)
     return [g1,g2] #attach graphics to package
 
 
