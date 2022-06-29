@@ -51,7 +51,10 @@ class enviorment:
 
     def plot(self, ax : plt.Axes = None):
         if ax is None:
-            _, ax = plot_spawnWorld(xrange = None, yrange = None)
+            fig, ax = plot_spawnWorld(xrange = None, yrange = None)
+        else:
+            fig = ax.get_figure()
+            
         for lm in self.landmarks:
             if lm.type == "house":
                 plot_house(ax,lm)
@@ -63,7 +66,7 @@ class enviorment:
             lm1 = self.landmarks[c[0]]
             lm2 = self.landmarks[c[1]]
             plot_road(ax,lm1,lm2)
-        return ax
+        return fig, ax
 
 #---------------------------------------------------------------------------
 #--------------------------------PLOTTING FUNCTIONS-------------------------

@@ -1,0 +1,23 @@
+In an ubuntu 18.04 system
+
+$ conda create --name maildelivery python = 3.10
+$ conda activate maildelivery
+$ git pull https://github.com/AlonSpinner/maildelivery
+$ cd maildelivery 
+$ pip install -e . #edit mode
+
+$ git pull https://github.com/aiplan4eu/unified-planning
+$ cd unified-planning
+$ pip install . #install unified planning inside the enviorment
+
+$ pip install numpy
+$ pip install matplotlib
+$ pip install command
+
+DO THIS for docker:
+https://docs.docker.com/engine/install/linux-postinstall/
+	$ sudo groupadd docker
+	$ sudo usermod -aG docker $USER
+	$ newgrp docker
+
+$ sudo docker pull karpase/planning

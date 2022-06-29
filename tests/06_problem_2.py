@@ -4,7 +4,12 @@ from maildelivery.brains import planner0, ROBOT_INDEX_SHIFT
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import PillowWriter
 import gtsam
+import os
+
+MOVIE = False
+
 
 def build_env():
     docks = [landmark(0,np.array([0,0]),'dock')]
@@ -55,11 +60,16 @@ parsed_actions = planner.parse_actions(plan.actions, env)
 
 #plot initial state
 plt.ion()
-ax = env.plot()
+fig, ax = env.plot()
 [ri.plot(ax) for ri in r]
 for p in env.packages:
     p.plot(ax)
 plt.draw()
+
+#ready movie
+if MOVIE:
+    moviewriter = PillowWriter(fps = 5)
+    moviewriter.setup(fig,'06_movie.gif',dpi = 100)
 
 #roll simulation
 for action in parsed_actions:
@@ -73,10 +83,15 @@ for action in parsed_actions:
             ri.plot(ax)
             for p in ri.owned_packages:
                 p.plot(ax)
+        
+        if MOVIE:
+            moviewriter.grab_frame()
         plt.pause(0.1)
 
 #dont close window in the end
 ax.set_title('finished!')
+if MOVIE:
+    moviewriter.finish()
 plt.ioff()
 plt.show()
 

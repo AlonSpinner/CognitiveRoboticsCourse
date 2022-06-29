@@ -46,7 +46,7 @@ parsed_actions = planner.parse_actions(plan.actions, env)
 
 #plot initial state
 plt.ion()
-ax = env.plot()
+_, ax = env.plot()
 r.plot(ax)
 for p in env.packages:
     p.plot(ax)
