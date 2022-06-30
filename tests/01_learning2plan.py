@@ -13,8 +13,8 @@ PICKUP_TIME = 1.0
 DROP_TIME = 1.0
 CHARGING_TIME = 1.0
 
-def dist2chargeUse(dist) -> int:
-        return int(2 * dist)
+def dist2chargeUse(dist):# -> int:
+        return 2 * dist
 
 #problem types ~ objectsv
 location = UserType('location')
@@ -32,6 +32,8 @@ location_has_package = Fluent('location_has_package', BoolType(), p = package, l
 location_is_dock = Fluent('location_is_dock', BoolType(), l = location)
 charge = Fluent('charge', IntType(0,100), r = robot)
 
+
+
 #actions
 move = DurativeAction('move',  r = robot, l_from = location, l_to = location)
 r = move.parameter('r')
@@ -40,7 +42,10 @@ l_to = move.parameter('l_to')
 move.set_fixed_duration(MOVE_TIME)
 move.add_condition(StartTiming(),Or(is_connected(l_from, l_to), \
                                     is_connected(l_to, l_from)))
-move.add_condition(StartTiming(),GE(charge(r),dist2chargeUse(LOCATION_DISTANCE)))
+
+t = distance(l_from,l_to)
+
+move.add_condition(StartTiming(),GE(charge(r),dist2chargeUse(distance(l_from,l_to))))
 move.add_condition(StartTiming(), robot_at(r, l_from))
 move.add_condition(EndTiming(), Not(is_occupied(l_to))) #at end, l_to is free
 move.add_effect(StartTiming(), robot_at(r, l_from), False)
