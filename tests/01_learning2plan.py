@@ -3,6 +3,7 @@ from unified_planning.shortcuts import UserType, BoolType, IntType, Int,\
         Fluent, DurativeAction, SimulatedEffect, Problem, Object, OneshotPlanner,\
         StartTiming, EndTiming,  GE, Or, Not
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
+from unified_planning.io.pddl_writer import PDDLWriter
 
 # --------------------------------------------- Define problem variables and actions
 #constants (time can be float, but otherwise stick to ints and bools to avoid segmentation faults)
@@ -31,8 +32,6 @@ robot_has_package = Fluent('robot_has_package', BoolType(), p = package, r = rob
 location_has_package = Fluent('location_has_package', BoolType(), p = package, l = location)
 location_is_dock = Fluent('location_is_dock', BoolType(), l = location)
 charge = Fluent('charge', IntType(0,100), r = robot)
-
-
 
 #actions
 move = DurativeAction('move',  r = robot, l_from = location, l_to = location)
@@ -128,7 +127,13 @@ problem.set_initial_value(location_has_package(note,locations[3]),True)
 #fuel at start
 problem.set_initial_value(charge(deliverybot),1)
 #goal
-problem.add_timed_goal(StartTiming(10.0), location_has_package(note,locations[2]))
+# problem.add_timed_goal(StartTiming(10.0), location_has_package(note,locations[2]))
+problem.add_goal(location_has_package(note,locations[2]))
+
+#will only work without timed goal
+w = PDDLWriter(problem)
+print(w.get_domain())
+print(w.get_problem())
 
 print(problem.kind)
 
