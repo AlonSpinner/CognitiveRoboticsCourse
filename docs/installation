@@ -10,11 +10,8 @@ $ git pull https://github.com/aiplan4eu/unified-planning
 $ cd unified-planning
 $ pip install . 
 $ pip install . install --pre unified-planning[tamer] install --pre unified-planning[tamer]
-$ pip install . install --pre unified-planning[tamer] install --pre unified-planning[pyperplan]
-$ pip install . install --pre unified-planning[tamer] install --pre unified-planning[enhsp]
-$ git clone https://github.com/aiplan4eu/up-fmap
-$ pip install up-fmap/
-
+$ pip install . install --pre unified-planning[pyperplan]
+$ pip install . install --pre unified-planning[enhsp]
 
 $ pip install numpy
 $ pip install matplotlib

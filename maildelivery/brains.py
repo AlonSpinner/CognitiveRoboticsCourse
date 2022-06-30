@@ -115,7 +115,9 @@ class planner0:
         for p in env.packages:
             self.problem.add_goal(self.location_has_package(_packages[p.id],_locations[p.goal]))
 
-        with OneshotPlanner(problem_kind = self.problem.kind) as planner:
+        # with OneshotPlanner(problem_kind = self.problem.kind) as planner:
+        #     result = planner.solve(self.problem)
+        with OneshotPlanner(name='tamer') as planner:
             result = planner.solve(self.problem)
         
         return result.plan
