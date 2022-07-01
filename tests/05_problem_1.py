@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,landmark, package
 from maildelivery.agents import robot
-from maildelivery.brains import planner0, ROBOT_INDEX_SHIFT
+from maildelivery.brains import planner0
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,8 +23,8 @@ def build_env():
 
     connectivityList = [[0,1],[1,2],[2,4],[3,4],[1,3],[3,5],[4,6]]
 
-    p0 = package(0,5,6,100,landmarks[5].xy)
-    p1 = package(1,6,5,100,landmarks[6].xy)
+    p0 = package(0,5,'landmark',6,100,landmarks[5].xy)
+    p1 = package(1,6,'landmark',5,100,landmarks[6].xy)
     packages = [p0,p1]
 
     env = enviorment(landmarks, connectivityList, packages)
@@ -37,7 +37,7 @@ env = build_env()
 x0 = env.landmarks[0].xy[0]
 y0 = env.landmarks[0].xy[1]
 theta0 = landmark.angle(env.landmarks[0],env.landmarks[1])
-r = robot(gtsam.Pose2(x0,y0,theta0),0 + ROBOT_INDEX_SHIFT)
+r = robot(gtsam.Pose2(x0,y0,theta0),0)
 
 #ask for plan
 planner = planner0()

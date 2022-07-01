@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,landmark, package
 from maildelivery.agents import robot
-from maildelivery.brains import planner0, ROBOT_INDEX_SHIFT
+from maildelivery.brains import planner0
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,8 +28,8 @@ def build_env():
 
     connectivityList = [[0,1],[1,2],[2,4],[1,3],[3,5],[4,6],[3,4]]
 
-    p0 = package(0,5,6,100,landmarks[5].xy)
-    p1 = package(1,6,5,100,landmarks[6].xy)
+    p0 = package(0,5,'landmark',6,100,landmarks[5].xy)
+    p1 = package(1,6,'landmark',5,100,landmarks[6].xy)
     packages = [p0,p1]
 
     env = enviorment(landmarks, connectivityList, packages)
@@ -42,13 +42,13 @@ env = build_env()
 x0 = env.landmarks[4].xy[0]
 y0 = env.landmarks[4].xy[1]
 theta0 = landmark.angle(env.landmarks[4],env.landmarks[3])
-r0 = robot(gtsam.Pose2(x0,y0,theta0),0 + ROBOT_INDEX_SHIFT)
+r0 = robot(gtsam.Pose2(x0,y0,theta0),0)
 r0.last_landmark = 4
 
 x0 = env.landmarks[3].xy[0]
 y0 = env.landmarks[3].xy[1]
 theta0 = landmark.angle(env.landmarks[3],env.landmarks[4])
-r1 = robot(gtsam.Pose2(x0,y0,theta0),1 + ROBOT_INDEX_SHIFT)
+r1 = robot(gtsam.Pose2(x0,y0,theta0),1)
 r1.last_landmark = 3
 
 r = [r0,r1]
@@ -76,7 +76,7 @@ for action in parsed_actions:
 
     status = False
     while not(status):
-        status = r[action.robot_id - ROBOT_INDEX_SHIFT].act(action, env)
+        status = r[action.robot_id].act(action, env)
         
         #update plot        
         for ri in r:

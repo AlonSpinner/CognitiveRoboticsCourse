@@ -6,8 +6,6 @@ from unified_planning.shortcuts import UserType, BoolType,\
         Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 
-ROBOT_INDEX_SHIFT = 1000
-
 class planner0:
     '''
     planner0: multirobot, instant actions, no charging
@@ -18,11 +16,11 @@ class planner0:
         _package = UserType('package')
 
         #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
-        robot_at = Fluent('deliverybot_at', BoolType(), r = _robot, l = _location)
+        robot_at = Fluent('robot_at', BoolType(), r = _robot, l = _location)
         is_connected = Fluent('is_connected', BoolType(), l_from = _location, l_to = _location)
         is_occupied = Fluent('is_occupied', BoolType(), l = _location)
-        robot_has_package = Fluent('deliveybot_has_mail', BoolType(), p = _package, r = _robot)
-        location_has_package = Fluent('location_has_mail', BoolType(), p = _package, l = _location)
+        robot_has_package = Fluent('robot_has_package', BoolType(), p = _package, r = _robot)
+        location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
 
         _move = InstantaneousAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
@@ -37,23 +35,23 @@ class planner0:
         _move.add_effect(robot_at(r, l_to), True)
         _move.add_effect(is_occupied(l_to), True)
 
-        _pickup = InstantaneousAction('pickup', m = _package, r = _robot, l = _location)
-        m = _pickup.parameter('m')
+        _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
+        p = _pickup.parameter('p')
         r = _pickup.parameter('r')
         l = _pickup.parameter('l')
         _pickup.add_precondition(robot_at(r, l))
-        _pickup.add_precondition(location_has_package(m, l))
-        _pickup.add_effect(location_has_package(m, l), False)
-        _pickup.add_effect(robot_has_package(m, r), True)
+        _pickup.add_precondition(location_has_package(p, l))
+        _pickup.add_effect(location_has_package(p, l), False)
+        _pickup.add_effect(robot_has_package(p, r), True)
 
-        _drop = InstantaneousAction('drop', m = _package, r = _robot, l = _location)
-        m = _drop.parameter('m')
+        _drop = InstantaneousAction('drop', p = _package, r = _robot, l = _location)
+        p = _drop.parameter('p')
         r = _drop.parameter('r')
         l = _drop.parameter('l')
         _drop.add_precondition(robot_at(r, l))
-        _drop.add_precondition(robot_has_package(m, r))
-        _drop.add_effect(robot_has_package(m, r), False)
-        _drop.add_effect(location_has_package(m, l), True)
+        _drop.add_precondition(robot_has_package(p, r))
+        _drop.add_effect(robot_has_package(p, r), False)
+        _drop.add_effect(location_has_package(p, l), True)
 
         problem = Problem('maildelivery')
         problem.add_action(_move)
@@ -81,7 +79,7 @@ class planner0:
     def create_plan(self, env : enviorment, robots : list[robot]):
         _locations = [Object(f"l{id}", self._location) for id in [lm.id for lm in env.landmarks]]
         _robots = [Object(f"r{id}", self._robot) for id in [bot.id for bot in robots]]
-        _packages = [Object(f"m{id}", self._package) for id in [p.id for p in env.packages]]
+        _packages = [Object(f"p{id}", self._package) for id in [p.id for p in env.packages]]
         self.problem.add_objects(_locations + _robots + _packages)
 
         #locations connectivity
@@ -93,7 +91,7 @@ class planner0:
         # robot at start
         for r in robots:
             self.problem.set_initial_value(self.robot_at(
-                                                    _robots[r.id - ROBOT_INDEX_SHIFT],
+                                                    _robots[r.id],
                                                     _locations[r.last_landmark]),
                                                     True)
             self.problem.set_initial_value(self.is_occupied(
@@ -101,15 +99,15 @@ class planner0:
                                                 True) 
         #place packages
         for p in env.packages:
-            if p.id < ROBOT_INDEX_SHIFT:
+            if p.owner_type == 'landmark':
                 self.problem.set_initial_value(self.location_has_package(
                                                             _packages[p.id],
                                                             _locations[p.owner]),
                                                             True)
-            else:
+            elif p.owner_type == 'robot':
                 self.problem.set_initial_value(self.robot_has_package(
                                                 _packages[p.id],
-                                                _robots[p.owner-ROBOT_INDEX_SHIFT]),
+                                                _robots[p.owner]),
                                                 True)
         #goal
         for p in env.packages:

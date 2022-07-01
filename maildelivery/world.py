@@ -23,8 +23,9 @@ class landmark:
 @dataclass(frozen = False, order = True) #NOT FROZEN
 class package:
     id : int
-    owner : int #landmark id  or robot == ROBOT_INDEX_SHIFT + robot id
-    goal : int 
+    owner : int #id of owner
+    owner_type : str  #'landmark' or 'robot'
+    goal : int  #id of location
     deliverytime : float
     xy : np.ndarray((2))
     graphics : list = None

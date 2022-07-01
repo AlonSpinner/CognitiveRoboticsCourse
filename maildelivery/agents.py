@@ -65,6 +65,7 @@ class robot:
         elif type(a) is pickup:
             if np.linalg.norm(self.sense() - a.lm.xy) < REACH_DELTA:
                 env.packages[a.p.id].owner = self.id #put robot as owner of package
+                env.packages[a.p.id].owner_type = 'robot'
                 self.owned_packages.append(a.p)
                 return True
             else:
@@ -72,6 +73,7 @@ class robot:
         elif type(a) is drop:
             if np.linalg.norm(self.sense() - a.lm.xy) < REACH_DELTA:
                 env.packages[a.p.id].owner = a.lm.id #put the landmark as owner of package
+                env.packages[a.p.id].owner_type = 'landmark'
                 self.owned_packages.remove(a.p)
                 return True
             else:
