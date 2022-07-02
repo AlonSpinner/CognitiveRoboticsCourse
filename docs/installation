@@ -11,7 +11,7 @@ $ cd unified-planning
 $ pip install . 
 $ pip install . install --pre unified-planning[tamer] install --pre unified-planning[tamer]
 $ pip install . install --pre unified-planning[pyperplan]
-$ pip install . install --pre unified-planning[enhsp]
+# $ pip install . install --pre unified-planning[enhsp]
 
 $ pip install numpy
 $ pip install matplotlib

@@ -77,7 +77,7 @@ class planner0:
         self.location_has_package =location_has_package
 
     def create_plan(self, env : enviorment, robots : list[robot]):
-        _locations = [Object(f"l{id}", self._location) for id in [lm.id for lm in env.landmarks]]
+        _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
         _robots = [Object(f"r{id}", self._robot) for id in [bot.id for bot in robots]]
         _packages = [Object(f"p{id}", self._package) for id in [p.id for p in env.packages]]
         self.problem.add_objects(_locations + _robots + _packages)
@@ -92,14 +92,14 @@ class planner0:
         for r in robots:
             self.problem.set_initial_value(self.robot_at(
                                                     _robots[r.id],
-                                                    _locations[r.last_landmark]),
+                                                    _locations[r.last_location]),
                                                     True)
             self.problem.set_initial_value(self.is_occupied(
-                                                _locations[r.last_landmark]),
+                                                _locations[r.last_location]),
                                                 True) 
         #place packages
         for p in env.packages:
-            if p.owner_type == 'landmark':
+            if p.owner_type == 'location':
                 self.problem.set_initial_value(self.location_has_package(
                                                             _packages[p.id],
                                                             _locations[p.owner]),
@@ -126,20 +126,20 @@ class planner0:
             if a.action.name == 'move':
                 parsed_actions.append(move(
                     int(str(a.actual_parameters[0])[1:]), #robot id
-                    env.landmarks[int(str(a.actual_parameters[1])[1:])], #landmark_from
-                    env.landmarks[int(str(a.actual_parameters[2])[1:])], #landmark_to
+                    env.locations[int(str(a.actual_parameters[1])[1:])], #locations_from
+                    env.locations[int(str(a.actual_parameters[2])[1:])], #locations_to
                     )) 
             elif a.action.name == 'drop':
                 parsed_actions.append(drop(
                     int(str(a.actual_parameters[1])[1:]), #robot id
                     env.packages[int(str(a.actual_parameters[0])[1:])], #package
-                    env.landmarks[int(str(a.actual_parameters[2])[1:])] #landmark
+                    env.locations[int(str(a.actual_parameters[2])[1:])] #location
                     )) 
             elif a.action.name == 'pickup':
                 parsed_actions.append(pickup(
                     int(str(a.actual_parameters[1])[1:]), #robot id
                     env.packages[int(str(a.actual_parameters[0])[1:])], #package
-                    env.landmarks[int(str(a.actual_parameters[2])[1:])] #landmark
+                    env.locations[int(str(a.actual_parameters[2])[1:])] #location
                     ))
         return parsed_actions
         

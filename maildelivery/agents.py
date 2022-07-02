@@ -1,6 +1,6 @@
 import gtsam
 from dataclasses import dataclass
-from maildelivery.world import enviorment, landmark, package
+from maildelivery.world import enviorment, location, package
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -15,8 +15,8 @@ class action:
 @dataclass(frozen = True)
 class move(action):
     robot_id : int
-    lm_from : landmark
-    lm_to : landmark
+    loc_from : location
+    loc_to : location
     time_start : float = 0
     time_end : float = 0
 
@@ -24,7 +24,7 @@ class move(action):
 class pickup(action):
     robot_id : int
     p : package
-    lm: landmark
+    loc: location
     time_start : float = 0
     time_end : float = 0
 
@@ -32,7 +32,7 @@ class pickup(action):
 class drop(action):
     robot_id : int
     p : package
-    lm: landmark
+    loc: location
     time_start : float = 0
     time_end : float = 0
 
@@ -42,8 +42,8 @@ class robot:
         self.id : int = id
         self.max_forward : float = 0.25
         self.max_rotate : float = np.pi/4
-        self.last_landmark : int = 0
-        self.goal_landmark : int = 0
+        self.last_location : int = 0
+        self.goal_location : int = 0
         self.owned_packages : list[package] = []
         self.graphics : list = []
 
@@ -58,12 +58,12 @@ class robot:
             for p in self.owned_packages:
                 p.xy = self.pose.translation()
 
-            if np.linalg.norm(self.sense() - a.lm_to.xy) < REACH_DELTA:
+            if np.linalg.norm(self.sense() - a.loc_to.xy) < REACH_DELTA:
                 return True
             else:
                 return False
         elif type(a) is pickup:
-            if np.linalg.norm(self.sense() - a.lm.xy) < REACH_DELTA:
+            if np.linalg.norm(self.sense() - a.loc.xy) < REACH_DELTA:
                 env.packages[a.p.id].owner = self.id #put robot as owner of package
                 env.packages[a.p.id].owner_type = 'robot'
                 self.owned_packages.append(a.p)
@@ -71,8 +71,8 @@ class robot:
             else:
                 return False
         elif type(a) is drop:
-            if np.linalg.norm(self.sense() - a.lm.xy) < REACH_DELTA:
-                env.packages[a.p.id].owner = a.lm.id #put the landmark as owner of package
+            if np.linalg.norm(self.sense() - a.loc.xy) < REACH_DELTA:
+                env.packages[a.p.id].owner = a.loc.id #put the landmark as owner of package
                 env.packages[a.p.id].owner_type = 'landmark'
                 self.owned_packages.remove(a.p)
                 return True
@@ -80,13 +80,13 @@ class robot:
                 return False
 
     def motion_control(self, action : move):
-        e_theta = self.pose.bearing(action.lm_to.xy).theta()
+        e_theta = self.pose.bearing(action.loc_to.xy).theta()
         if abs(e_theta) > CONTROL_THETA_THRESHOLD:
             u = np.sign(e_theta)*min(abs(e_theta),self.max_rotate)
             self.pose = self.pose.compose((gtsam.Pose2(0,0,u)))
             return
 
-        e_dist = self.pose.range(action.lm_to.xy)
+        e_dist = self.pose.range(action.loc_to.xy)
         if e_dist > CONTROL_DIST_THRESHOLD:
             u = min(e_dist,self.max_forward)
             self.pose = self.pose.compose((gtsam.Pose2(u,0,0)))

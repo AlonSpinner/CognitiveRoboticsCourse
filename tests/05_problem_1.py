@@ -1,4 +1,4 @@
-from maildelivery.world import enviorment,landmark, package
+from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot
 from maildelivery.brains import planner0
 
@@ -7,24 +7,24 @@ import matplotlib.pyplot as plt
 import gtsam
 
 def build_env():
-    docks = [landmark(0,np.array([0,0]),'dock')]
+    docks = [location(0,np.array([0,0]),'dock')]
 
-    x1 = landmark(1,np.array([1,0]),'intersection')
-    x2 = landmark(2,np.array([2,0]),'intersection')
-    x3 = landmark(3,np.array([1,1]),'intersection')
-    x4 = landmark(4,np.array([2,1]),'intersection')
+    x1 = location(1,np.array([1,0]),'intersection')
+    x2 = location(2,np.array([2,0]),'intersection')
+    x3 = location(3,np.array([1,1]),'intersection')
+    x4 = location(4,np.array([2,1]),'intersection')
     intersections = [x1,x2,x3,x4]
 
-    h5 = landmark(5,np.array([1,2]),'house')
-    h6 = landmark(6,np.array([2,2]),'house')
+    h5 = location(5,np.array([1,2]),'house')
+    h6 = location(6,np.array([2,2]),'house')
     houses = [h5,h6]
 
     landmarks = sorted(houses + docks + intersections)
 
     connectivityList = [[0,1],[1,2],[2,4],[3,4],[1,3],[3,5],[4,6]]
 
-    p0 = package(0,5,'landmark',6,100,landmarks[5].xy)
-    p1 = package(1,6,'landmark',5,100,landmarks[6].xy)
+    p0 = package(0,5,'location',6,100,landmarks[5].xy)
+    p1 = package(1,6,'location',5,100,landmarks[6].xy)
     packages = [p0,p1]
 
     env = enviorment(landmarks, connectivityList, packages)
@@ -34,9 +34,9 @@ def build_env():
 env = build_env()
 
 #spawn robot
-x0 = env.landmarks[0].xy[0]
-y0 = env.landmarks[0].xy[1]
-theta0 = landmark.angle(env.landmarks[0],env.landmarks[1])
+x0 = env.locations[0].xy[0]
+y0 = env.locations[0].xy[1]
+theta0 = location.angle(env.locations[0],env.locations[1])
 r = robot(gtsam.Pose2(x0,y0,theta0),0)
 
 #ask for plan

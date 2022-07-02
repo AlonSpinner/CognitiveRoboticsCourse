@@ -5,7 +5,7 @@ import numpy as np
 TEXT_OFFSET = 0.03
 
 @dataclass(frozen = True, order = True) #ordered so they can be sorted!
-class landmark:
+class location:
     id : int
     xy : np.ndarray((2))
     type : str
@@ -24,7 +24,7 @@ class landmark:
 class package:
     id : int
     owner : int #id of owner
-    owner_type : str  #'landmark' or 'robot'
+    owner_type : str  #'location' or 'robot'
     goal : int  #id of location
     deliverytime : float
     xy : np.ndarray((2))
@@ -36,13 +36,13 @@ class package:
         self.graphics = plot_package(ax,self)
 
 class enviorment:    
-    def __init__(self,landmarks, connectivityList, packages = None):
+    def __init__(self,locations, connectivityList, packages = None):
         #instance attributes
-        self.landmarks : list[landmark]  = landmarks #must be a sorted list
+        self.locations : list[location]  = locations #must be a sorted list
         self.connectivityList : list[(int,int)]  = connectivityList
         self.packages : list[package] = packages
 
-    def find_adjacent(self,lm : landmark):
+    def find_adjacent(self,lm : location):
         adjacent = []
         for c in self.connectivityList:
             if lm.id in c:
@@ -56,17 +56,17 @@ class enviorment:
         else:
             fig = ax.get_figure()
             
-        for lm in self.landmarks:
-            if lm.type == "house":
-                plot_house(ax,lm)
-            elif lm.type == "dock":
-                plot_dock(ax,lm)
+        for loc in self.locations:
+            if loc.type == "house":
+                plot_house(ax,loc)
+            elif loc.type == "dock":
+                plot_dock(ax,loc)
             else:
-                plot_intersection(ax,lm)    
+                plot_intersection(ax,loc)    
         for c in self.connectivityList:
-            lm1 = self.landmarks[c[0]]
-            lm2 = self.landmarks[c[1]]
-            plot_road(ax,lm1,lm2)
+            loc1 = self.locations[c[0]]
+            loc2 = self.locations[c[1]]
+            plot_road(ax,loc1,loc2)
         return fig, ax
 
 #---------------------------------------------------------------------------
@@ -84,23 +84,23 @@ def plot_spawnWorld(xrange = None, yrange = None):
 
     return fig, ax
 
-def plot_road(ax : plt.Axes,lm1 : landmark, lm2 : landmark):
-    x = lm1.xy[0], lm2.xy[0]
-    y = lm1.xy[1], lm2.xy[1]
+def plot_road(ax : plt.Axes,loc1 : location, loc2 : location):
+    x = loc1.xy[0], loc2.xy[0]
+    y = loc1.xy[1], loc2.xy[1]
     return ax.plot(x,y,color = 'k')
 
-def plot_intersection(ax: plt.Axes,x : landmark, markerShape = 'x', markerSize = 50, color = 'r'):
+def plot_intersection(ax: plt.Axes,x : location, markerShape = 'x', markerSize = 50, color = 'r'):
     g1 = ax.scatter(x.xy[0],x.xy[1], marker = markerShape, c = color, s = markerSize)
     g2 = ax.text(x.xy[0]+TEXT_OFFSET,x.xy[1]+TEXT_OFFSET,x.id, color = color)
     return [g1,g2]
 
-def plot_house(ax: plt.Axes, h :landmark, markerShape = 's', markerSize = 80, color = 'k'):
+def plot_house(ax: plt.Axes, h :location, markerShape = 's', markerSize = 80, color = 'k'):
     g1 = ax.scatter(h.xy[0],h.xy[1], marker = markerShape, edgecolors = color, s = markerSize)
     g1.set_facecolor('none')
     g2 = ax.text(h.xy[0]+TEXT_OFFSET,h.xy[1]+TEXT_OFFSET,h.id, color = color)
     return [g1,g2]
 
-def plot_dock(ax: plt.Axes, h :landmark, markerShape = 's', markerSize = 80, color = 'b'):
+def plot_dock(ax: plt.Axes, h :location, markerShape = 's', markerSize = 80, color = 'b'):
     g1 = ax.scatter(h.xy[0],h.xy[1], marker = markerShape, edgecolors = color, s = markerSize)
     g1.set_facecolor('none')
     g2 = ax.text(h.xy[0]+TEXT_OFFSET,h.xy[1]+TEXT_OFFSET,h.id, color = color)

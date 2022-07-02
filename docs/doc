@@ -26,3 +26,24 @@ python pddl parser with durative actions and others?
 https://github.com/karpase/unified-planning
 	Maybe this is all I need? "The unified_planning library makes it easy to formulate planning problems and to invoke automated planners."
 		This is the source https://github.com/aiplan4eu/unified-planning
+
+
+Thoughts:
+Robots need to deliver packages
+pddl 2.1 does not support timed goals, only durative actions
+I do want to have multi-robot capabilties, and need only 1 "trick" up my sleeve
+We can have two seperate kinds of robots. chargebots and Deliverybots
+
+Maybe this:
+1) Learning Goal distribution + Charge State: 
+	Solve a multi-robot plan with instantinous actions and no charge problems.
+	We want to be as efficent as possible. That is, we want the robots to be as busy as they can.
+	Robots should 'compete' over who transfered most packages. For each pickup + drop they get rewarded
+
+2) We now need to check that this plan can be done with durative actions.
+	We do this by going over all N robots and making sure they dont intersect.
+
+2) Fixing Charge State: charging robots are doing their job 'on the fly'. They do not interrupt the deliverybots.
+	They do not change their plan
+
+3) 
