@@ -42,10 +42,29 @@ Maybe this:
 	OR we can add a minimization over planlength / fuel used
 		THIS SHOULD BE THE MOST COMPLICATED PART OF THE JOURNEY
 
-2) We now need to check that this plan can be done with durative actions. We don't want any trapped robots
-	We do this by going over all N robots and making sure they dont intersect. (Tamer has problem validation)
-	We might need to fix the plan if they do intersect by adding a 'wait' action.. even though this is very unlikely.
+	PROBLEM KIND: Instant Actions, Minimization (Not sure which solver does minimization...), Bool Fluents
 
-3) Fixing Charge State: charging robots are doing their job 'on the fly'. They do not interrupt the deliverybots.
-	We can add 'fly' capabilties to them if we want, and they can dock to refuel.
-	After we fueled a 'deadbot' we can replan.
+
+2) Fixing Charge State: charging robots are doing their job 'on the fly'. They do not interrupt the deliverybots.
+	our chargingdrones can literly fly from point to point and they charge the deliverybots so they can perform continous actions.
+	To plan the chargingdrones route, we treat deliverybots as locations in a graph with different distances depending on where they are at planning time.
+	We can create different move actions per distance, so they take different amount of times (~grounding)
+
+	The specified goal is to have these deliverybots 'charged-up' before they reach low charge, and return to the dock.
+	That is to say, each delivery bot has been visited.
+
+	a charging-drone can hold X batteries
+
+	We assume the deliverybots lose charge at a constant rate, so we can estimate when they will reach low charge before a plan is written down.
+
+	Because we plan at a specific time, and assume the distances between robots are constant, the plan may not always be smart. Thus, we replan after each battery was provided.
+	Still, there can be a time where some deliverybot goes low on charge. At the point, the drone should replan course and start by fueling said deliverybot. We don't need a planner for that.
+
+	problem: we want the time to a be a function of distance. We can create multiple actions, one for each edge in the distance graph (n^2-n actions), which may be horrible for the solver.
+	...or we can somehow create an adpative time for the action?
+
+
+	PROBLEM KIND: DurativeActions (move), Int Fluents, Bool Fluents, Timed Goals
+
+	3) The nice thing about this idea is that it completely seperates (1) from (2).
+		We can work with an incomplete (1) where minimization did not happen.
