@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot
-from maildelivery.brains import planner0
+from maildelivery.brains.brains0 import brain
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,7 +40,7 @@ theta0 = location.angle(env.locations[0],env.locations[1])
 r = robot(gtsam.Pose2(x0,y0,theta0),0)
 
 #ask for plan
-planner = planner0()
+planner = brain()
 plan = planner.create_plan(env,[r])
 parsed_actions = planner.parse_actions(plan.actions, env)
 

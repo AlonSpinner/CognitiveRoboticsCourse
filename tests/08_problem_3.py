@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot
-from maildelivery.brains.brains0 import brain
+from maildelivery.brains.brains1 import brain
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -69,7 +69,7 @@ plt.draw()
 #ready movie
 if MOVIE:
     moviewriter = PillowWriter(fps = 5)
-    moviewriter.setup(fig,'06_movie.gif',dpi = 100)
+    moviewriter.setup(fig,'08_movie.gif',dpi = 100)
 
 #roll simulation
 for action in parsed_actions:

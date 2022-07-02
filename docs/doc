@@ -39,11 +39,13 @@ Maybe this:
 	Solve a multi-robot plan with instantinous actions and no charge problems.
 	We want to be as efficent as possible. That is, we want the robots to be as busy as they can.
 	Robots should 'compete' over who transfered most packages. For each pickup + drop they get rewarded
+	OR we can add a minimization over planlength / fuel used
+		THIS SHOULD BE THE MOST COMPLICATED PART OF THE JOURNEY
 
-2) We now need to check that this plan can be done with durative actions.
-	We do this by going over all N robots and making sure they dont intersect.
+2) We now need to check that this plan can be done with durative actions. We don't want any trapped robots
+	We do this by going over all N robots and making sure they dont intersect. (Tamer has problem validation)
+	We might need to fix the plan if they do intersect by adding a 'wait' action.. even though this is very unlikely.
 
-2) Fixing Charge State: charging robots are doing their job 'on the fly'. They do not interrupt the deliverybots.
-	They do not change their plan
-
-3) 
+3) Fixing Charge State: charging robots are doing their job 'on the fly'. They do not interrupt the deliverybots.
+	We can add 'fly' capabilties to them if we want, and they can dock to refuel.
+	After we fueled a 'deadbot' we can replan.

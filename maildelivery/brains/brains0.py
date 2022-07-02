@@ -6,9 +6,9 @@ from unified_planning.shortcuts import UserType, BoolType,\
         Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 
-class planner0:
+class brain:
     '''
-    planner0: multirobot, instant actions, no charging
+    multirobot, instant actions, no charging
     '''
     def __init__(self) -> None:
         _location = UserType('_location')
