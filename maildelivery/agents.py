@@ -44,7 +44,7 @@ class robot:
         self.pose : gtsam.Pose2 = pose0
         self.id : int = id
         self.max_forward : float = 0.25
-        self.max_rotate : float = np.pi/4
+        self.max_rotate : float = np.pi #np.pi/4
         self.last_location : int = 0
         self.goal_location : int = 0
         self.owned_packages : list[package] = []
