@@ -112,6 +112,12 @@ class drone:
         self.max_rotate : float = np.pi #np.pi/4
         self.batteries : int = 0
         self.graphics : list = []
+        self.width : float = 0.02
+
+    def plot(self,ax):
+        if self.graphics is not None:
+            [g.remove() for g in self.graphics]
+        self.graphics = plot_drone(ax,self)
 
 
 #---------------------------------------------------------------------------
@@ -127,7 +133,19 @@ def plot_robot(ax , r : robot, scale = 20, color = 'b'):
         return [graphics_quiver,graphics_circle]
 
 def plot_drone(ax, d : drone, scale = 20, color = 'r'):
-    pass
+        pose = d.pose
+        
+        p_ego = d.width * np.array([[-1,-1],
+                             [1,-1],
+                             [1,1],
+                             [-1,1]])
+
+        graphics = []
+        for p in p_ego:
+            graphics.append(ax.add_patch(plt.Circle(pose.transformFrom(p),d.width,fill = True, color = 'r')))
+        return graphics
+
+        
 
 
 

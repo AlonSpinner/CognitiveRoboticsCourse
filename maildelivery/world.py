@@ -111,7 +111,7 @@ def plot_dock(ax: plt.Axes, h :location, markerShape = 's', markerSize = 80, col
 
 def plot_package(ax: plt.Axes, p :package, markerShape = 'o', markerSize = 30, color = 'orange'):
     g1 = ax.scatter(p.xy[0],p.xy[1], marker = markerShape, color = color, edgecolors = color, s = markerSize)
-    g2 = ax.text(p.xy[0]+TEXT_OFFSET,p.xy[1]+TEXT_OFFSET,p.id, color = color)
+    g2 = ax.text(p.xy[0]-2*TEXT_OFFSET,p.xy[1]+TEXT_OFFSET,p.id, color = color)
     return [g1,g2] #attach graphics to package
 
 
