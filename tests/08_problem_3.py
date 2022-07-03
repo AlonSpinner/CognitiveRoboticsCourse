@@ -82,9 +82,11 @@ def build_env():
     x_b,h_b, c_b, n_b = build_leftconnected_block(n_a, np.array([X_D,0]))    
     x_c,h_c, c_c, n_c = build_leftconnected_block(n_a + n_b, np.array([2 * X_D,0]))   
 
+    dock = location(n_a+n_b+n_c, np.array([1.5*X_D,1.5*X_D]),'dock')
+
     locations = sorted(x_a + h_a + \
                         x_b + h_b + \
-                        x_c + h_c)
+                        x_c + h_c + [dock])
     connectivityList = c_a + \
                         connectFromLeft(x_a,x_b,h_b) + c_b + \
                         connectFromLeft(x_b,x_c,h_c) + c_c
