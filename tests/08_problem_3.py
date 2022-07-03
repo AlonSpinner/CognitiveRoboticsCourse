@@ -64,18 +64,30 @@ def build_leftconnected_block(base_ind : int, bottomleft_xy : np.ndarray):
     return x, h, c, n
 
 def connectFromLeft(x_left,x_right,h_right):
-    return [[x_left[1].id,x_right[0].id]] + \
-            [[x_left[2].id,x_right[1].id]] + \
-            [[x_left[1].id,h_right[0].id]] + \
-            [[x_left[2].id,h_right[3].id]]
+    if len(x_left) == 4:
+        return [[x_left[1].id,x_right[0].id]] + \
+                [[x_left[2].id,x_right[1].id]] + \
+                [[x_left[1].id,h_right[0].id]] + \
+                [[x_left[2].id,h_right[3].id]]
+
+    elif len(x_left) == 2:
+        return [[x_left[0].id,x_right[0].id]] + \
+        [[x_left[1].id,x_right[1].id]] + \
+        [[x_left[0].id,h_right[0].id]] + \
+        [[x_left[1].id,h_right[3].id]]
 
 
 def build_env():
     x_a, h_a, c_a, n_a = build_block(0, np.array([0,0]))
     x_b,h_b, c_b, n_b = build_leftconnected_block(n_a, np.array([X_D,0]))    
+    x_c,h_c, c_c, n_c = build_leftconnected_block(n_a + n_b, np.array([2 * X_D,0]))   
 
-    locations = sorted(x_a + h_a + x_b + h_b)
-    connectivityList = c_a + connectFromLeft(x_a,x_b,h_b) + c_b
+    locations = sorted(x_a + h_a + \
+                        x_b + h_b + \
+                        x_c + h_c)
+    connectivityList = c_a + \
+                        connectFromLeft(x_a,x_b,h_b) + c_b + \
+                        connectFromLeft(x_b,x_c,h_c) + c_c
 
     p0 = package(0,h_a[2].id,'location',h_a[0].id,100, h_a[2].xy)
     p1 = package(1,h_a[0].id,'location',h_a[2].id,100, h_a[0].xy)
