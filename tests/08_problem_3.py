@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot
-from maildelivery.brains.brains1 import brain
+from maildelivery.brains.brains0 import brain
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,44 +10,60 @@ import os
 
 MOVIE = False
 
+def build_block(base_ind : int, bottomleft_xy : np.ndarray):
+    x_d = 1.0
+    h_d = 0.4
+
+    x_bl = location(base_ind + 0,bottomleft_xy + np.array([0,0]),'intersection')
+    x_br = location(base_ind + 1,bottomleft_xy + np.array([x_d,0]),'intersection')
+    x_tr = location(base_ind + 2,bottomleft_xy + np.array([x_d,x_d]),'intersection')
+    x_tl = location(base_ind + 3,bottomleft_xy + np.array([0,x_d]),'intersection')
+    x = [x_bl,x_br,x_tr,x_tl]
+
+    h_bl = location(base_ind + 4, bottomleft_xy + np.array([h_d,h_d]),'house')
+    h_br = location(base_ind + 5, bottomleft_xy + np.array([x_d - h_d, h_d]),'house')
+    h_tr = location(base_ind + 6, bottomleft_xy + np.array([x_d - h_d, x_d - h_d]),'house')
+    h_tl = location(base_ind + 7, bottomleft_xy + np.array([h_d, x_d - h_d]),'house')
+    h = [h_bl,h_br,h_tr,h_tl]
+
+    c = ([
+            [x_bl.id, h_bl.id],
+            [x_br.id, h_br.id],
+            [x_tr.id, h_tr.id],
+            [x_tl.id, h_tl.id],
+            [x_bl.id, x_br.id],
+            [x_br.id, x_tr.id],
+            [x_tr.id, x_tl.id],
+            [x_tl.id, x_bl.id]
+            ])
+
+    return x, h, c
 
 def build_env():
-    docks = [location(0,np.array([0,0]),'dock')]
+    x_a,h_a, c_a = build_block(0, np.array([0,0]))
 
-    x1 = location(1,np.array([1,0]),'intersection')
-    x2 = location(2,np.array([2,0]),'intersection')
-    x3 = location(3,np.array([1,1]),'intersection')
-    x4 = location(4,np.array([2,1]),'intersection')
-    intersections = [x1,x2,x3,x4]
+    locations = sorted(x_a + h_a)
 
-    h5 = location(5,np.array([1,2]),'house')
-    h6 = location(6,np.array([2,2]),'house')
-    houses = [h5,h6]
-
-    locations = sorted(houses + docks + intersections)
-
-    connectivityList = [[0,1],[1,2],[2,4],[1,3],[3,5],[4,6],[3,4]]
-
-    p0 = package(0,5,'location',6,100,locations[5].xy)
-    p1 = package(1,6,'location',5,100,locations[6].xy)
+    p0 = package(0,h_a[2].id,'location',h_a[0].id,100, h_a[2].xy)
+    p1 = package(1,h_a[0].id,'location',h_a[2].id,100, h_a[0].xy)
     packages = [p0,p1]
 
-    env = enviorment(locations, connectivityList, packages)
+    env = enviorment(locations, c_a, packages)
     return env
 
 #buld enviorment
 env = build_env()
 
 #spawn robots
-x0 = env.locations[5].xy[0]
-y0 = env.locations[5].xy[1]
-theta0 = location.angle(env.locations[5],env.locations[4])
+x0 = env.locations[4].xy[0]
+y0 = env.locations[4].xy[1]
+theta0 = 0.0
 r0 = robot(gtsam.Pose2(x0,y0,theta0),0)
-r0.last_location = 5
+r0.last_location = 4
 
 x0 = env.locations[6].xy[0]
 y0 = env.locations[6].xy[1]
-theta0 = location.angle(env.locations[6],env.locations[3])
+theta0 = 0
 r1 = robot(gtsam.Pose2(x0,y0,theta0),1)
 r1.last_location = 6
 
@@ -94,6 +110,3 @@ if MOVIE:
     moviewriter.finish()
 plt.ioff()
 plt.show()
-
-
-
