@@ -69,7 +69,8 @@ class robot:
             else:
                 return False
         elif type(a) is pickup:
-            if np.linalg.norm(self.sense() - a.loc.xy) < REACH_DELTA:
+            if np.linalg.norm(self.sense() - a.loc.xy) < REACH_DELTA and \
+                np.linalg.norm(self.sense() - a.p.xy) < REACH_DELTA: #due to multirobot we can be at location before package arives
                 env.packages[a.p.id].owner = self.id #put robot as owner of package
                 env.packages[a.p.id].owner_type = 'robot'
                 self.owned_packages.append(a.p)
@@ -78,7 +79,8 @@ class robot:
             else:
                 return False
         elif type(a) is drop:
-            if np.linalg.norm(self.sense() - a.loc.xy) < REACH_DELTA:
+            if np.linalg.norm(self.sense() - a.loc.xy) < REACH_DELTA and \
+                np.linalg.norm(self.sense() - a.p.xy) < REACH_DELTA:
                 env.packages[a.p.id].owner = a.loc.id #put the landmark as owner of package
                 env.packages[a.p.id].owner_type = 'location'
                 self.owned_packages.remove(a.p)

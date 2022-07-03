@@ -1,5 +1,5 @@
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot
+from maildelivery.agents import robot, drop, wait
 from maildelivery.brains.brains0 import brain
 
 import numpy as np
@@ -8,8 +8,9 @@ from matplotlib.animation import PillowWriter
 import gtsam
 import os
 
-MOVIE = False
-
+MOVIE = True
+dir_path = os.path.dirname(__file__)
+MOVIE_FILENAME = os.path.join(dir_path,'06_movie.gif')
 
 def build_env():
     docks = [location(0,np.array([0,0]),'dock')]
@@ -39,24 +40,28 @@ def build_env():
 env = build_env()
 
 #spawn robots
-x0 = env.locations[5].xy[0]
-y0 = env.locations[5].xy[1]
-theta0 = location.angle(env.locations[5],env.locations[4])
+l0 = 5
+x0 = env.locations[l0].xy[0]
+y0 = env.locations[l0].xy[1]
+theta0 = np.pi/2
 r0 = robot(gtsam.Pose2(x0,y0,theta0),0)
-r0.last_location = 5
+r0.last_location = l0
 
-x0 = env.locations[6].xy[0]
-y0 = env.locations[6].xy[1]
-theta0 = location.angle(env.locations[6],env.locations[3])
+l0 = 6
+x0 = env.locations[l0].xy[0]
+y0 = env.locations[l0].xy[1]
+theta0 = np.pi/2
 r1 = robot(gtsam.Pose2(x0,y0,theta0),1)
-r1.last_location = 6
+r1.last_location = l0
 
 r = [r0,r1]
+Nrobots = len(r)
 
 #ask for plan
 planner = brain()
 plan = planner.create_plan(env,r)
 parsed_actions = planner.parse_actions(plan.actions, env)
+actions_per_robot = planner.actions_per_robot(parsed_actions, Nrobots)
 
 #plot initial state
 plt.ion()
@@ -69,7 +74,7 @@ plt.draw()
 #ready movie
 if MOVIE:
     moviewriter = PillowWriter(fps = 5)
-    moviewriter.setup(fig,'06_movie.gif',dpi = 100)
+    moviewriter.setup(fig,MOVIE_FILENAME,dpi = 100)
 
 #roll simulation
 for action in parsed_actions:

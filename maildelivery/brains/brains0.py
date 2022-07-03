@@ -118,7 +118,7 @@ class brain:
 
         # with OneshotPlanner(problem_kind = self.problem.kind) as planner:
         #     result = planner.solve(self.problem)
-        with OneshotPlanner(name='tamer') as planner:
+        with OneshotPlanner(name='tamer', optimality_guarantee = True) as planner:
             result = planner.solve(self.problem)
         
         return result.plan
