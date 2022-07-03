@@ -89,9 +89,13 @@ def build_env():
                         connectFromLeft(x_a,x_b,h_b) + c_b + \
                         connectFromLeft(x_b,x_c,h_c) + c_c
 
-    p0 = package(0,h_a[2].id,'location',h_a[0].id,100, h_a[2].xy)
-    p1 = package(1,h_a[0].id,'location',h_a[2].id,100, h_a[0].xy)
-    packages = [p0,p1]
+    p0 = package(0,locations[4].id,'location',locations[6].id,100, locations[4].xy)
+    p1 = package(1,locations[6].id,'location',locations[4].id,100, locations[6].xy)
+    p2 = package(2,locations[11].id,'location',locations[18].id,100, locations[11].xy)
+    p3 = package(3,locations[19].id,'location',locations[10].id,100, locations[19].xy)
+    p4 = package(4,locations[16].id,'location',locations[5].id,100, locations[16].xy)
+    p5 = package(5,locations[13].id,'location',locations[19].id,100, locations[13].xy)
+    packages = [p0,p1,p2,p3,p4,p5]
 
     env = enviorment(locations,connectivityList , packages)
     return env
@@ -137,7 +141,7 @@ if MOVIE:
 #roll simulation
 current_action_indicies = [0 for _ in range(len(r))]
 while True:
-    current_actions = [wait for _ in range(len(r))]
+    current_actions = [wait(id) for id in range(len(r))]
     finished_all_actions = True
     
     for ri in range(len(r)):
@@ -151,22 +155,25 @@ while True:
 
     #perform current actions
     status = False #just to initialize
+    current_actions_status = np.zeros(Nrobots) #just to initialize
     while status is False:
         
-        status = True
-        for action in current_actions:
-            status = r[action.robot_id].act(action, env) and status
+        for ri, s in enumerate(current_actions_status):
+            if not s:
+                action = current_actions[ri]
+                current_actions_status[ri] = r[action.robot_id].act(action, env)
+        
+        status = bool(np.all(current_actions_status))
 
         #update plot        
         for ri in r:
             ri.plot(ax)
             for p in ri.owned_packages:
                 p.plot(ax)
-                plt.pause(0.1) 
 
         if MOVIE:
             moviewriter.grab_frame()
-        plt.pause(.1)
+        plt.pause(0.1)
 
 #dont close window in the end
 ax.set_title('finished!')

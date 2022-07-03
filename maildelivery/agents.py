@@ -70,6 +70,7 @@ class robot:
                 env.packages[a.p.id].owner = self.id #put robot as owner of package
                 env.packages[a.p.id].owner_type = 'robot'
                 self.owned_packages.append(a.p)
+                print(f'robot {self.id} picked up package {a.p.id}')
                 return True
             else:
                 return False
@@ -78,6 +79,7 @@ class robot:
                 env.packages[a.p.id].owner = a.loc.id #put the landmark as owner of package
                 env.packages[a.p.id].owner_type = 'landmark'
                 self.owned_packages.remove(a.p)
+                print(f'robot {self.id} dropped package {a.p.id}')
                 return True
             else:
                 return False
