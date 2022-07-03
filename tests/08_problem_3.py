@@ -10,7 +10,8 @@ import gtsam
 import os
 
 MOVIE = False
-MOVIE_FILENAME = '08_movie.gif'
+dir_path = os.path.dirname(__file__)
+MOVIE_FILENAME = os.path.join(dir_path,'08_movie.gif')
 X_D = 1.0
 H_D = 0.4
 
