@@ -1,13 +1,16 @@
+from turtle import distance
 from maildelivery.agents import move, pickup, drop, robot
 from maildelivery.world import enviorment
 import numpy as np
 
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType,\
-        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not
+        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not, IntType
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
+from unified_planning.engines import PlanGenerationResultStatus
 
-class brain:
+
+class robot_planner:
     '''
     multirobot, instant actions, no charging
     '''
@@ -114,11 +117,12 @@ class brain:
         for p in env.packages:
             self.problem.add_goal(self.location_has_package(_packages[p.id],_locations[p.goal]))
             for r in robots:
-                self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.last_location]))
+                self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
 
         # with OneshotPlanner(problem_kind = self.problem.kind) as planner:
         #     result = planner.solve(self.problem)
-        with OneshotPlanner(name='tamer', optimality_guarantee = True) as planner:
+        with OneshotPlanner(name='tamer',
+                optimality_guarantee=PlanGenerationResultStatus.SOLVED_OPTIMALLY) as planner:
             result = planner.solve(self.problem)
         
         return result.plan
@@ -158,4 +162,14 @@ class brain:
         
         return robots_actions
 
+class drone_planner:
+    def __init__(self) -> None:
+        _location = UserType('_location')
+        _drone = UserType('_drone')
+        _package = UserType('battery')
+
+        #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
+        drone_at = Fluent('drone_at', BoolType(), d = _drone, l = _location)
+        location_charge = Fluent('location_charge', IntType(), p = _package, l = _location)
+        distance = Fluent(distance, )
         
