@@ -1,6 +1,6 @@
 from calendar import c
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot, wait
+from maildelivery.agents import robot, wait, drop
 from maildelivery.brains.brains0 import brain
 
 import numpy as np
@@ -116,12 +116,20 @@ theta0 = 0
 r1 = robot(gtsam.Pose2(x0,y0,theta0),1)
 r1.last_location = 6
 
-r = [r0,r1]
+x0 = env.locations[12].xy[0]
+y0 = env.locations[12].xy[1]
+theta0 = 0
+r2 = robot(gtsam.Pose2(x0,y0,theta0),2)
+r2.last_location = 12
+
+r = [r0,r1,r2]
 Nrobots = len(r)
 
 #ask for plan
 planner = brain()
+print('starting to plan... this may take a mintue')
 plan = planner.create_plan(env,r)
+print('finished planning')
 parsed_actions = planner.parse_actions(plan.actions, env)
 actions_per_robot = planner.actions_per_robot(parsed_actions, Nrobots)
 
@@ -170,6 +178,9 @@ while True:
             ri.plot(ax)
             for p in ri.owned_packages:
                 p.plot(ax)
+        for a, s in zip(current_actions, current_actions_status):
+            if s and type(a) is drop:
+                a.p.plot(ax)
 
         if MOVIE:
             moviewriter.grab_frame()

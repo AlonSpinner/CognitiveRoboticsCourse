@@ -32,8 +32,11 @@ class package:
 
     def plot(self,ax): #this is a moving object.. so we need a method to replot it
         if self.graphics is not None:
-            [g.remove() for g in self.graphics] 
-        self.graphics = plot_package(ax,self)
+            [g.remove() for g in self.graphics]
+        if self.owner == self.goal and self.owner_type == 'location':
+            self.graphics = plot_package(ax,self,color = 'green')
+        else:
+            self.graphics = plot_package(ax,self,color = 'orange')
 
 class enviorment:    
     def __init__(self,locations, connectivityList, packages = None):

@@ -77,7 +77,7 @@ class robot:
         elif type(a) is drop:
             if np.linalg.norm(self.sense() - a.loc.xy) < REACH_DELTA:
                 env.packages[a.p.id].owner = a.loc.id #put the landmark as owner of package
-                env.packages[a.p.id].owner_type = 'landmark'
+                env.packages[a.p.id].owner_type = 'location'
                 self.owned_packages.remove(a.p)
                 print(f'robot {self.id} dropped package {a.p.id}')
                 return True
