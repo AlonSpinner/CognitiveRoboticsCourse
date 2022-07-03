@@ -1,5 +1,6 @@
 from maildelivery.agents import move, pickup, drop, robot
 from maildelivery.world import enviorment
+import numpy as np
 
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType,\
@@ -142,4 +143,17 @@ class brain:
                     env.locations[int(str(a.actual_parameters[2])[1:])] #location
                     ))
         return parsed_actions
+
+    def actions_per_robot(self,parsed_actions, Nrobots = None):
+        if Nrobots is None:
+            robots_inds = np.sort(np.unique([a.robot_id for a in parsed_actions]))
+        else:
+            robots_inds = list(range(Nrobots))
+        
+        robots_actions = [[] for _ in robots_inds]
+        for a in parsed_actions:
+            robots_actions[a.robot_id].append(a)
+        
+        return robots_actions
+
         

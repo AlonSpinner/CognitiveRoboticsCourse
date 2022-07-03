@@ -1,5 +1,5 @@
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot
+from maildelivery.agents import robot, wait
 from maildelivery.brains.brains0 import brain
 
 import numpy as np
@@ -68,11 +68,13 @@ r1 = robot(gtsam.Pose2(x0,y0,theta0),1)
 r1.last_location = 6
 
 r = [r0,r1]
+Nrobots = len(r)
 
 #ask for plan
 planner = brain()
 plan = planner.create_plan(env,r)
 parsed_actions = planner.parse_actions(plan.actions, env)
+actions_per_robot = planner.actions_per_robot(parsed_actions, Nrobots)
 
 #plot initial state
 plt.ion()
@@ -88,21 +90,38 @@ if MOVIE:
     moviewriter.setup(fig,'08_movie.gif',dpi = 100)
 
 #roll simulation
-for action in parsed_actions:
+current_action_indicies = [0 for _ in range(len(r))]
+while True:
+    current_actions = [wait for _ in range(len(r))]
+    finished_all_actions = True
+    
+    for ri in range(len(r)):
+        if current_action_indicies[ri] < len(actions_per_robot[ri]): #still actions to do
+            current_actions[ri] = actions_per_robot[ri][current_action_indicies[ri]]
+            current_action_indicies[ri] += 1
+            finished_all_actions = False
 
-    status = False
-    while not(status):
-        status = r[action.robot_id].act(action, env)
+    if finished_all_actions:
+        break
+
+    #perform current actions
+    status = False #just to initialize
+    while status is False:
         
+        status = True
+        for action in current_actions:
+            status = r[action.robot_id].act(action, env) and status
+
         #update plot        
         for ri in r:
             ri.plot(ax)
             for p in ri.owned_packages:
                 p.plot(ax)
-        
+                plt.pause(0.1) 
+
         if MOVIE:
             moviewriter.grab_frame()
-        plt.pause(0.1)
+        plt.pause(.1)
 
 #dont close window in the end
 ax.set_title('finished!')

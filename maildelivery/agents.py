@@ -12,6 +12,9 @@ REACH_DELTA = 0.01
 class action:
     robot_id : int #to be overwritten
 
+class wait(action):
+    robot_id : int
+
 @dataclass(frozen = True)
 class move(action):
     robot_id : int
@@ -78,6 +81,8 @@ class robot:
                 return True
             else:
                 return False
+        elif type(a) is wait:
+            return True
 
     def motion_control(self, action : move):
         e_theta = self.pose.bearing(action.loc_to.xy).theta()
