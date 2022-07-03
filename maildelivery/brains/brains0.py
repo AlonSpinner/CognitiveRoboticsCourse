@@ -113,6 +113,8 @@ class brain:
         #goal
         for p in env.packages:
             self.problem.add_goal(self.location_has_package(_packages[p.id],_locations[p.goal]))
+            for r in robots:
+                self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.last_location]))
 
         # with OneshotPlanner(problem_kind = self.problem.kind) as planner:
         #     result = planner.solve(self.problem)

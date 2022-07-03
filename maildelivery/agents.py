@@ -104,6 +104,16 @@ class robot:
             [g.remove() for g in self.graphics]
         self.graphics = plot_robot(ax,self)
 
+class drone:
+    def __init__(self, pose0, id) -> None:
+        self.pose : gtsam.Pose2 = pose0
+        self.id : int = id
+        self.max_forward : float = 0.25
+        self.max_rotate : float = np.pi #np.pi/4
+        self.batteries : int = 0
+        self.graphics : list = []
+
+
 #---------------------------------------------------------------------------
 #--------------------------------PLOTTING FUNCTIONS-------------------------
 #---------------------------------------------------------------------------
@@ -115,6 +125,9 @@ def plot_robot(ax , r : robot, scale = 20, color = 'b'):
         graphics_quiver = ax.quiver(pose.x(),pose.y(),u,v, color = color, scale = scale, width = 0.02)
         graphics_circle = ax.add_patch(plt.Circle((pose.x(),pose.y()),0.1,fill = False, color = 'b'))
         return [graphics_quiver,graphics_circle]
+
+def plot_drone(ax, d : drone, scale = 20, color = 'r'):
+    pass
 
 
 

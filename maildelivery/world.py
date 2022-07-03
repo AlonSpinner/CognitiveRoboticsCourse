@@ -60,7 +60,7 @@ class enviorment:
             fig = ax.get_figure()
             
         for loc in self.locations:
-            if loc.type == "house":
+            if loc.type == "house" or loc.type == "station":
                 plot_house(ax,loc)
             elif loc.type == "dock":
                 plot_dock(ax,loc)

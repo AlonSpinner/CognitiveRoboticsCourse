@@ -1,4 +1,3 @@
-from calendar import c
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, wait, drop
 from maildelivery.brains.brains0 import brain
@@ -9,7 +8,7 @@ from matplotlib.animation import PillowWriter
 import gtsam
 import os
 
-MOVIE = False
+MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'08_movie.gif')
 X_D = 1.0
@@ -83,14 +82,22 @@ def build_env():
     x_b,h_b, c_b, n_b = build_leftconnected_block(n_a, np.array([X_D,0]))    
     x_c,h_c, c_c, n_c = build_leftconnected_block(n_a + n_b, np.array([2 * X_D,0]))   
 
-    dock = location(n_a+n_b+n_c, np.array([1.5*X_D,1.5*X_D]),'dock')
+    i_s = n_a + n_b + n_c + np.array([0,1,2])
+    station2 = location(int(i_s[0]), x_a[2].xy + np.array([0,0.2*X_D]),'station')
+    station9 = location(int(i_s[1]), x_b[1].xy + np.array([0,0.2*X_D]),'station')
+    station15 = location(int(i_s[2]), x_c[1].xy + np.array([0,0.2*X_D]),'station')
+    stations = [station2, station9, station15]
+    n_s = 3
+
+    dock = location(n_a + n_b + n_c + n_s, np.array([1.5*X_D,1.5*X_D]),'dock')
 
     locations = sorted(x_a + h_a + \
                         x_b + h_b + \
-                        x_c + h_c + [dock])
+                        x_c + h_c + stations +[dock])
     connectivityList = c_a + \
                         connectFromLeft(x_a,x_b,h_b) + c_b + \
-                        connectFromLeft(x_b,x_c,h_c) + c_c
+                        connectFromLeft(x_b,x_c,h_c) + c_c + \
+                        [[2,station2.id]] + [[9, station9.id]] + [[15, station15.id]]
 
     p0 = package(0,locations[4].id,'location',locations[6].id,100, locations[4].xy)
     p1 = package(1,locations[6].id,'location',locations[4].id,100, locations[6].xy)
@@ -107,23 +114,26 @@ def build_env():
 env = build_env()
 
 #spawn robots
-x0 = env.locations[4].xy[0]
-y0 = env.locations[4].xy[1]
-theta0 = 0.0
+station = 20
+x0 = env.locations[station].xy[0]
+y0 = env.locations[station].xy[1]
+theta0 = np.pi/2
 r0 = robot(gtsam.Pose2(x0,y0,theta0),0)
-r0.last_location = 4
+r0.last_location = station
 
-x0 = env.locations[6].xy[0]
-y0 = env.locations[6].xy[1]
-theta0 = 0
+station = 21
+x0 = env.locations[station].xy[0]
+y0 = env.locations[station].xy[1]
+theta0 = np.pi/2
 r1 = robot(gtsam.Pose2(x0,y0,theta0),1)
-r1.last_location = 6
+r1.last_location = station
 
-x0 = env.locations[12].xy[0]
-y0 = env.locations[12].xy[1]
-theta0 = 0
+station = 22
+x0 = env.locations[station].xy[0]
+y0 = env.locations[station].xy[1]
+theta0 = np.pi/2
 r2 = robot(gtsam.Pose2(x0,y0,theta0),2)
-r2.last_location = 12
+r2.last_location = station
 
 r = [r0,r1,r2]
 Nrobots = len(r)
