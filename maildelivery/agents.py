@@ -48,7 +48,10 @@ class robot:
         self.last_location : int = 0
         self.goal_location : int = 0
         self.owned_packages : list[package] = []
+        self.max_charge : int = 100
+        self.charge : int = 100
         self.graphics : list = []
+        self.graphics_deadcharge : list = []
 
     def sense(self): #gps like sensor
         return self.pose.translation()
@@ -96,7 +99,10 @@ class robot:
         e_dist = self.pose.range(action.loc_to.xy)
         if e_dist > CONTROL_DIST_THRESHOLD:
             u = min(e_dist,self.max_forward)
-            self.pose = self.pose.compose((gtsam.Pose2(u,0,0)))
+
+            if self.charge >= abs(u):
+                self.pose = self.pose.compose((gtsam.Pose2(u,0,0)))
+                self.charge = self.charge - abs(u)
             return
 
     def plot(self,ax):
@@ -104,21 +110,68 @@ class robot:
             [g.remove() for g in self.graphics]
         self.graphics = plot_robot(ax,self)
 
+    def plot_deadcharge(self,ax):
+        self.graphics_deadcharge = plot_robot_deadcharge(ax,self)
+
+@dataclass(frozen = True)
+class chase(action):
+    robot_id : int #drone id here
+    chased_robot : robot
+
+@dataclass(frozen = True)
+class charge(action):
+    robot_id : int #drone id here
+    chased_robot : robot
+
 class drone:
     def __init__(self, pose0, id) -> None:
         self.pose : gtsam.Pose2 = pose0
         self.id : int = id
         self.max_forward : float = 0.25
         self.max_rotate : float = np.pi #np.pi/4
-        self.batteries : int = 0
+        self.batteries : int = 3
         self.graphics : list = []
         self.width : float = 0.02
+
+    def sense(self): #gps like sensor
+        return self.pose.translation()
+
+    def act(self, a : action): #perform action on self or enviorment
+        if a.robot_id != self.id:
+            raise('command given to wrong robot')
+        if type(a) is chase:
+            self.motion_control(a)
+            if np.linalg.norm(self.sense() - a.chased_robot.pose.translation()) < REACH_DELTA:
+                return True
+            else:
+                return False
+
+        elif type(a) is charge:
+            if np.linalg.norm(self.sense() - a.chased_robot.pose.translation()) < REACH_DELTA:
+                if self.batteries > 0:
+                    a.chased_robot.charge = a.chased_robot.max_charge
+                    self.batteries = self.batteries - 1
+                return True
+            else:
+                return False
+
+    def motion_control(self, action : chase):
+        e_theta = self.pose.bearing(action.chased_robot.translation()).theta()
+        if abs(e_theta) > CONTROL_THETA_THRESHOLD:
+            u = np.sign(e_theta)*min(abs(e_theta),self.max_rotate)
+            self.pose = self.pose.compose((gtsam.Pose2(0,0,u)))
+            return
+
+        e_dist = self.pose.range(action.chased_robot.translation())
+        if e_dist > CONTROL_DIST_THRESHOLD:
+            u = min(e_dist,self.max_forward)
+            self.pose = self.pose.compose((gtsam.Pose2(u,0,0)))
+            return
 
     def plot(self,ax):
         if self.graphics is not None:
             [g.remove() for g in self.graphics]
         self.graphics = plot_drone(ax,self)
-
 
 #---------------------------------------------------------------------------
 #--------------------------------PLOTTING FUNCTIONS-------------------------
@@ -129,8 +182,14 @@ def plot_robot(ax , r : robot, scale = 20, color = 'b'):
         u = np.cos(pose.theta())
         v = np.sin(pose.theta())
         graphics_quiver = ax.quiver(pose.x(),pose.y(),u,v, color = color, scale = scale, width = 0.02)
-        graphics_circle = ax.add_patch(plt.Circle((pose.x(),pose.y()),0.1,fill = False, color = 'b'))
+        graphics_circle = ax.add_patch(plt.Circle((pose.x(),pose.y()),0.1,fill = False, color = color))
         return [graphics_quiver,graphics_circle]
+
+def plot_robot_deadcharge(ax, r : robot, scale = 20, color = 'r'):
+    pose = r.pose
+    g1 = ax.add_patch(plt.Circle((pose.x(),pose.y()),0.15,fill = False, color = color))
+    g2 = ax.add_patch(plt.Circle((pose.x(),pose.y()),0.25,fill = False, color = color))
+    return [g1,g2]
 
 def plot_drone(ax, d : drone, scale = 20, color = 'r'):
         pose = d.pose
@@ -142,7 +201,7 @@ def plot_drone(ax, d : drone, scale = 20, color = 'r'):
 
         graphics = []
         for p in p_ego:
-            graphics.append(ax.add_patch(plt.Circle(pose.transformFrom(p),d.width,fill = True, color = 'r')))
+            graphics.append(ax.add_patch(plt.Circle(pose.transformFrom(p),d.width,fill = True, color = color)))
         return graphics
 
         
