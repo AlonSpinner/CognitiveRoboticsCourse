@@ -37,16 +37,16 @@ def get_plan(file = None):
 
     lines = lines[last+1:]
 
-    t = [] #time of execution
-    cmd = [] #command to execute
-    duration = [] #duration of the command
+    execution_times = []
+    actions = []
+    durations = []
 
     for l in lines:
-        t.append(float(l[:l.find(':')]))
-        cmd.append(tuple(l[l.find('(')+1:l.find(')')].split(' ')))
-        duration.append(float(l[l.find('[')+1:l.find(']')]))
+        execution_times += [ float(l[:l.find(':')]) ]
+        actions += [ tuple(l[l.find('(')+1:l.find(')')].split(' ')) ]
+        durations += [ float(l[l.find('[')+1:l.find(']')]) ]
 
-    return t, cmd, duration
+    return execution_times, actions, durations
 
 if __name__ == '__main__':
     t, cmd ,duration = get_plan()

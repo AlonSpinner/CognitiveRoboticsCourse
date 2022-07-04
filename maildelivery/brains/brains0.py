@@ -17,6 +17,10 @@ class robot_planner:
     multirobot, instant actions, no charging
     '''
     def __init__(self) -> None:
+        self.planner_name = 'optic' #can also be 'tamer' or 'up-auto'
+        self.create_domain()
+
+    def create_domain(self) -> None:
         _location = UserType('location')
         _robot = UserType('robot')
         _package = UserType('package')
@@ -124,25 +128,29 @@ class robot_planner:
             for r in robots:
                 self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
 
-    def solve_plan(self, planner_name = 'tamer'):
-        # with OneshotPlanner(problem_kind = self.problem.kind) as planner:
-        #     result = planner.solve(self.problem)
-        if planner_name == 'tamer':
+    def solve(self):
+        if self.planner_name == 'up-auto':
+            with OneshotPlanner(problem_kind = self.problem.kind) as planner:
+                result = planner.solve(self.problem)
+        elif self.planner_name == 'tamer':
             with OneshotPlanner(name='tamer',
                     optimality_guarantee=PlanGenerationResultStatus.SOLVED_OPTIMALLY) as planner:
+                #this solved optimally seems to do nothing
                 result = planner.solve(self.problem)
             return result.plan
-
-        elif planner_name == 'optic':
+        
+        elif self.planner_name == 'optic':
             w = PDDLWriter(self.problem)
             with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
                 print(w.get_domain(), file = f)
             with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
                 print(w.get_problem(), file = f)
+            
             optic_wrapper.run_optic()
-            t, cmd ,duration = optic_wrapper.get_plan()
-            a = 1
-            return t, cmd, duration
+            
+            execution_times, actions, durations = optic_wrapper.get_plan()
+
+            return execution_times, actions, durations
 
     def parse_actions(self, actions : list[unified_planning.plans.plan.ActionInstance], env : enviorment):
         parsed_actions = []

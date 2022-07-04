@@ -45,13 +45,10 @@ r.goal_location = 0
 
 #ask for plan
 planner = robot_planner()
+planner.planner_name = 'optic'
 planner.create_problem(env,[r])
-plan = planner.solve_plan(planner_name = PLANNER)
-if PLANNER == 'tamer':
-    parsed_actions = planner.parse_actions(plan.actions, env)
-elif PLANNER == 'optic':
-    a = 1
-
+execution_times, actions, durations = planner.solve()
+parsed_actions = planner.parse_actions(actions, env)
 
 #plot initial state
 plt.ion()
