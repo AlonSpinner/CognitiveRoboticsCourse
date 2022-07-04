@@ -1,3 +1,5 @@
+#work reference https://nms.kcl.ac.uk/planning/software/optic.html
+
 #!/bin/bash
 IMAGE_TAG="optic"
 CONTAINER_NAME="c-optic"
