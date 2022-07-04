@@ -17,14 +17,14 @@ class robot_planner:
     multirobot, instant actions, no charging
     '''
     def __init__(self) -> None:
-        _location = UserType('_location')
-        _robot = UserType('_robot')
-        _package = UserType('_package')
+        _location = UserType('location')
+        _robot = UserType('robot')
+        _package = UserType('package')
 
         #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
         robot_at = Fluent('robot_at', BoolType(), r = _robot, l = _location)
         is_connected = Fluent('is_connected', BoolType(), l_from = _location, l_to = _location)
-        is_occupied = Fluent('is_occupied', BoolType(), l = _location)
+        is_free = Fluent('is_free', BoolType(), l = _location)
         robot_has_package = Fluent('robot_has_package', BoolType(), p = _package, r = _robot)
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
 
@@ -34,11 +34,11 @@ class robot_planner:
         l_to = _move.parameter('l_to')
         _move.add_precondition(is_connected(l_from, l_to))
         _move.add_precondition(robot_at(r, l_from))
-        _move.add_precondition(Not(is_occupied(l_to))) #at end, l_to is free
+        _move.add_precondition((is_free(l_to))) #at end, l_to is free
         _move.add_effect(robot_at(r, l_from), False)
-        _move.add_effect(is_occupied(l_from), False)
+        _move.add_effect(is_free(l_from), True)
         _move.add_effect(robot_at(r, l_to), True)
-        _move.add_effect(is_occupied(l_to), True)
+        _move.add_effect(is_free(l_to), False)
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
         p = _pickup.parameter('p')
@@ -64,7 +64,7 @@ class robot_planner:
         problem.add_action(_drop)
         problem.add_fluent(robot_at, default_initial_value = False)
         problem.add_fluent(is_connected, default_initial_value = False)
-        problem.add_fluent(is_occupied, default_initial_value = False)
+        problem.add_fluent(is_free, default_initial_value = True)
         problem.add_fluent(robot_has_package, default_initial_value = False)
         problem.add_fluent(location_has_package, default_initial_value = False)
 
@@ -77,7 +77,7 @@ class robot_planner:
         #fluents
         self.robot_at = robot_at
         self.is_connected = is_connected
-        self.is_occupied = is_occupied
+        self.is_free = is_free
         self.robot_has_package = robot_has_package
         self.location_has_package =location_has_package
 
@@ -103,9 +103,9 @@ class robot_planner:
                                                     _robots[r.id],
                                                     _locations[r.last_location]),
                                                     True)
-            self.problem.set_initial_value(self.is_occupied(
+            self.problem.set_initial_value(self.is_free(
                                                 _locations[r.last_location]),
-                                                True) 
+                                                False) 
         #place packages
         for p in env.packages:
             if p.owner_type == 'location':
