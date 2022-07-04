@@ -1,6 +1,5 @@
 import os
 import subprocess
-import time
 
 def place_files(domain_old,problem_old):
     dir_path = os.path.join(os.path.dirname(__file__),'docker')
@@ -11,9 +10,13 @@ def place_files(domain_old,problem_old):
     subprocess.run(f"cp {problem_old} {problem_new}", shell = True)
 
 def run_optic():
+    #if this doesnt work.. check this out:
+        #https://docs.docker.com/engine/install/linux-postinstall/
+    
     dir_path = os.path.join(os.path.dirname(__file__),'docker')
-    p = subprocess.run("bash ./run.sh", cwd = dir_path)
-    time.sleep(1) #let it do the thing before allowing user to continue
+    p = subprocess.run("bash ./run.sh", cwd = dir_path, shell = True)
+    return p.returncode
+    
 
 def get_plan(file = None):
     if file is None:
