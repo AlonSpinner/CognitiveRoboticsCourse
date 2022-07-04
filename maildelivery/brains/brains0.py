@@ -152,7 +152,38 @@ class robot_planner:
 
             return execution_times, actions, durations
 
-    def parse_actions(self, actions : list[unified_planning.plans.plan.ActionInstance], env : enviorment):
+    def parse_actions(self, actions, env):
+        if self.planner_name == 'optic':
+            return self.parse_actions_optic(actions,env)
+        else:
+            return self.parse_actions_up(actions,env)
+
+    def parse_actions_optic(self, actions : list[tuple], env : enviorment):
+        parsed_actions = []
+        for a in actions:
+            name = a[0]
+            params = a[1:]
+            if name == 'move':
+                parsed_actions.append(move(
+                int(params[0][1:]), #robot id
+                env.locations[int(params[1][1:])], #locations_from
+                env.locations[int(params[2][1:])], #locations_to
+                )) 
+            elif name == 'drop':
+                parsed_actions.append(drop(
+                    int(params[1][1:]), #robot id
+                    env.packages[int(params[0][1:])], #package
+                    env.locations[int(params[2][1:])] #location
+                    )) 
+            elif name == 'pickup':
+                parsed_actions.append(pickup(
+                    int(params[1][1:]), #robot id
+                    env.packages[int(params[0][1:])], #package
+                    env.locations[int(params[2][1:])] #location
+                    ))
+        return parsed_actions
+    
+    def parse_actions_up(self, actions : list[unified_planning.plans.plan.ActionInstance], env : enviorment):
         parsed_actions = []
         for a in actions:
             if a.action.name == 'move':
