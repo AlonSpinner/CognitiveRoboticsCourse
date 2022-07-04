@@ -1,3 +1,6 @@
+#optic:
+#https://nms.kcl.ac.uk/planning/software/optic.html
+
 import os
 import subprocess
 

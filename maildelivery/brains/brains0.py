@@ -4,8 +4,9 @@ import numpy as np
 
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType,\
-        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not, IntType, PDDLWriter
+        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not, IntType
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
+from unified_planning.io.pddl_writer import PDDLWriter
 from unified_planning.engines import PlanGenerationResultStatus
 
 from maildelivery import optic_wrapper
@@ -18,7 +19,7 @@ class robot_planner:
     def __init__(self) -> None:
         _location = UserType('_location')
         _robot = UserType('_robot')
-        _package = UserType('package')
+        _package = UserType('_package')
 
         #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
         robot_at = Fluent('robot_at', BoolType(), r = _robot, l = _location)
@@ -31,8 +32,7 @@ class robot_planner:
         r = _move.parameter('r')
         l_from = _move.parameter('l_from')
         l_to = _move.parameter('l_to')
-        _move.add_precondition(Or(is_connected(l_from, l_to), \
-                                            is_connected(l_to, l_from)))
+        _move.add_precondition(is_connected(l_from, l_to))
         _move.add_precondition(robot_at(r, l_from))
         _move.add_precondition(Not(is_occupied(l_to))) #at end, l_to is free
         _move.add_effect(robot_at(r, l_from), False)
@@ -81,7 +81,7 @@ class robot_planner:
         self.robot_has_package = robot_has_package
         self.location_has_package =location_has_package
 
-    def create_plan(self, env : enviorment, robots : list[robot]):
+    def create_problem(self, env : enviorment, robots : list[robot]):
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
         _robots = [Object(f"r{id}", self._robot) for id in [bot.id for bot in robots]]
         _packages = [Object(f"p{id}", self._package) for id in [p.id for p in env.packages]]
@@ -93,6 +93,10 @@ class robot_planner:
                                         _locations[c[0]],
                                         _locations[c[1]]),
                                         True)
+            self.problem.set_initial_value(self.is_connected(
+                            _locations[c[1]],
+                            _locations[c[0]]),
+                            True)
         # robot at start
         for r in robots:
             self.problem.set_initial_value(self.robot_at(
@@ -131,10 +135,13 @@ class robot_planner:
 
         elif planner_name == 'optic':
             w = PDDLWriter(self.problem)
-            print(w.get_domain(), file = optic_wrapper.DOMAIN_PATH)
-            print(w.get_problem(), file = optic_wrapper.PROBLEM_PATH)
+            with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
+                print(w.get_domain(), file = f)
+            with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
+                print(w.get_problem(), file = f)
             optic_wrapper.run_optic()
             t, cmd ,duration = optic_wrapper.get_plan()
+            a = 1
             return t, cmd, duration
 
     def parse_actions(self, actions : list[unified_planning.plans.plan.ActionInstance], env : enviorment):
@@ -173,13 +180,14 @@ class robot_planner:
         return robots_actions
 
 class drone_planner:
-    def __init__(self) -> None:
-        _location = UserType('_location')
-        _drone = UserType('_drone')
-        _charge = UserType('charge')
+    pass
+    # def __init__(self) -> None:
+    #     _location = UserType('_location')
+    #     _drone = UserType('_drone')
+    #     _charge = UserType('charge')
 
-        #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
-        drone_at = Fluent('drone_at', BoolType(), d = _drone, l = _location)
-        location_charge = Fluent('location_charge', IntType(), p = _package, l = _location)
-        distance = Fluent(distance, )
+    #     #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
+    #     drone_at = Fluent('drone_at', BoolType(), d = _drone, l = _location)
+    #     location_charge = Fluent('location_charge', IntType(), p = _package, l = _location)
+    #     distance = Fluent(distance, )
         

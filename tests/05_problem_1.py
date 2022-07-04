@@ -6,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gtsam
 
+PLANNER = 'optic'
+
 def build_env():
     docks = [location(0,np.array([0,0]),'dock')]
 
@@ -43,8 +45,13 @@ r.goal_location = 0
 
 #ask for plan
 planner = robot_planner()
-plan = planner.create_plan(env,[r])
-parsed_actions = planner.parse_actions(plan.actions, env)
+planner.create_problem(env,[r])
+plan = planner.solve_plan(planner_name = PLANNER)
+if PLANNER == 'tamer':
+    parsed_actions = planner.parse_actions(plan.actions, env)
+elif PLANNER == 'optic':
+    a = 1
+
 
 #plot initial state
 plt.ion()

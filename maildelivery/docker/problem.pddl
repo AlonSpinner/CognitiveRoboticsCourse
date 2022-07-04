@@ -1,32 +1,11 @@
-(define (problem turtlebot1) 
-(:domain turtlebot) 
-(:objects
-r1 r2 - robot
-w1 w2 w3 w4 w5 w6 w7 w8 w9 w10 - waypoint
+(define (problem maildelivery-problem)
+ (:domain maildelivery-domain)
+ (:objects 
+   r0 - _robot
+   l0 l1 l2 l3 l4 l5 l6 - _location
+   p0 p1 - _package
+ )
+ (:init (is_connected l0 l1) (is_connected l1 l0) (is_connected l1 l2) (is_connected l2 l1) (is_connected l2 l4) (is_connected l4 l2) (is_connected l3 l4) (is_connected l4 l3) (is_connected l1 l3) (is_connected l3 l1) (is_connected l3 l5) (is_connected l5 l3) (is_connected l4 l6) (is_connected l6 l4) (robot_at r0 l0) (is_occupied l0) (location_has_package p0 l5) (location_has_package p1 l6))
+ (:goal (and (location_has_package p0 l6) (robot_at r0 l0) (location_has_package p1 l5) (robot_at r0 l0)))
 )
-
-
-		
-(:init 
-
-(docked r1)
-(robot_at r1 w1)
-(dock_at w1)
-
-(docked r2)
-(robot_at r2 w2)
-(dock_at w2)
-)
-
-(:goal (and
-  (visited w3)
-  (visited w4)
-  (visited w5)
-  (visited w7)
-  (visited w8)
-  (visited w9)
-  (docked r1)
-  (docked r2)
-
-)))
 
