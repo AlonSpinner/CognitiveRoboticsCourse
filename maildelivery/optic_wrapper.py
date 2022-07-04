@@ -1,13 +1,13 @@
 import os
 import subprocess
 
-def place_files(domain_old,problem_old):
-    dir_path = os.path.join(os.path.dirname(__file__),'docker')
+dir_path = os.path.join(os.path.dirname(__file__),'docker')
+DOMAIN_PATH = os.path.join(dir_path,"domain.pddl")
+PROBLEM_PATH = os.path.join(dir_path,"problem.pddl")
 
-    domain_new = os.path.join(dir_path,"domain.pddl")
-    problem_new = os.path.join(dir_path,"problem.pddl")
-    subprocess.run(f"cp {domain_old} {domain_new}", shell = True)
-    subprocess.run(f"cp {problem_old} {problem_new}", shell = True)
+def place_files(domain_old,problem_old):
+    subprocess.run(f"cp {domain_old} {DOMAIN_PATH}", shell = True)
+    subprocess.run(f"cp {problem_old} {PROBLEM_PATH}", shell = True)
 
 def run_optic():
     #if this doesnt work.. check this out:

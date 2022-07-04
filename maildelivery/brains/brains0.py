@@ -1,13 +1,14 @@
-from turtle import distance
 from maildelivery.agents import move, pickup, drop, robot
 from maildelivery.world import enviorment
 import numpy as np
 
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType,\
-        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not, IntType
+        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not, IntType, PDDLWriter
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 from unified_planning.engines import PlanGenerationResultStatus
+
+from maildelivery import optic_wrapper
 
 
 class robot_planner:
@@ -119,13 +120,22 @@ class robot_planner:
             for r in robots:
                 self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
 
+    def solve_plan(self, planner_name = 'tamer'):
         # with OneshotPlanner(problem_kind = self.problem.kind) as planner:
         #     result = planner.solve(self.problem)
-        with OneshotPlanner(name='tamer',
-                optimality_guarantee=PlanGenerationResultStatus.SOLVED_OPTIMALLY) as planner:
-            result = planner.solve(self.problem)
-        
-        return result.plan
+        if planner_name == 'tamer':
+            with OneshotPlanner(name='tamer',
+                    optimality_guarantee=PlanGenerationResultStatus.SOLVED_OPTIMALLY) as planner:
+                result = planner.solve(self.problem)
+            return result.plan
+
+        elif planner_name == 'optic':
+            w = PDDLWriter(self.problem)
+            print(w.get_domain(), file = optic_wrapper.DOMAIN_PATH)
+            print(w.get_problem(), file = optic_wrapper.PROBLEM_PATH)
+            optic_wrapper.run_optic()
+            t, cmd ,duration = optic_wrapper.get_plan()
+            return t, cmd, duration
 
     def parse_actions(self, actions : list[unified_planning.plans.plan.ActionInstance], env : enviorment):
         parsed_actions = []
