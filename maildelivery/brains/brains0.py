@@ -166,7 +166,7 @@ class drone_planner:
     def __init__(self) -> None:
         _location = UserType('_location')
         _drone = UserType('_drone')
-        _package = UserType('battery')
+        _charge = UserType('charge')
 
         #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
         drone_at = Fluent('drone_at', BoolType(), d = _drone, l = _location)
