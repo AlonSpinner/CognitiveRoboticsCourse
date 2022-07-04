@@ -141,12 +141,11 @@ r2.goal_location = station
 r = [r0,r1,r2]
 Nrobots = len(r)
 
-#ask for plan
 planner = robot_planner()
-print('starting to plan... this may take a mintue')
-plan = planner.create_plan(env,r)
-print('finished planning')
-parsed_actions = planner.parse_actions(plan.actions, env)
+planner.planner_name = 'optic'
+planner.create_problem(env,r)
+execution_times, actions, durations = planner.solve()
+parsed_actions = planner.parse_actions(actions, env)
 actions_per_robot = planner.actions_per_robot(parsed_actions, Nrobots)
 
 #plot initial state
