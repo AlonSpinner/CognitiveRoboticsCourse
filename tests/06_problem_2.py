@@ -61,9 +61,10 @@ Nrobots = len(r)
 
 #ask for plan
 planner = robot_planner()
-plan = planner.create_plan(env,r)
-parsed_actions = planner.parse_actions(plan.actions, env)
-actions_per_robot = planner.actions_per_robot(parsed_actions, Nrobots)
+planner.planner_name = 'optic'
+planner.create_problem(env,r)
+execution_times, actions, durations = planner.solve()
+parsed_actions = planner.parse_actions(actions, env)
 
 #plot initial state
 plt.ion()

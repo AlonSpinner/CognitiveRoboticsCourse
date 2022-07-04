@@ -1,2 +1,8 @@
 
 *.pyc
+
+maildelivery/docker/problem.pddl
+
+maildelivery/docker/plan.txt
+
+tests/06_movie.gif
