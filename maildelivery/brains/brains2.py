@@ -1,54 +1,39 @@
 from maildelivery.agents import move, pickup, drop, robot
 from maildelivery.world import enviorment
-import numpy as np
 
 import unified_planning as up
 from unified_planning.shortcuts import UserType, BoolType,\
-        Fluent, InstantaneousAction, DurativeAction, Problem, Object,\
-        OneshotPlanner, Or, Not, IntType, Int, StartTiming, EndTiming
-from unified_planning.io.pddl_writer import PDDLWriter
-from unified_planning.engines import PlanGenerationResultStatus
-from unified_planning.model.metrics import MinimizeMakespan
-
-
+        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not, Int
 up.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
-from maildelivery import optic_wrapper
 
-
-class robot_planner:
+class brain:
     '''
-    multirobot, instant actions, no charging
+    multirobot, instant actions, no charging, cost to minimize
     '''
     def __init__(self) -> None:
-        self.planner_name = 'optic' #can also be 'tamer' or 'up-auto'
-        self.create_domain()
-
-    def create_domain(self) -> None:
-        _location = UserType('location')
-        _robot = UserType('robot')
+        _location = UserType('_location')
+        _robot = UserType('_robot')
         _package = UserType('package')
 
         #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
         robot_at = Fluent('robot_at', BoolType(), r = _robot, l = _location)
         is_connected = Fluent('is_connected', BoolType(), l_from = _location, l_to = _location)
-        is_free = Fluent('is_free', BoolType(), l = _location)
+        is_occupied = Fluent('is_occupied', BoolType(), l = _location)
         robot_has_package = Fluent('robot_has_package', BoolType(), p = _package, r = _robot)
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
-        # distance_traveled = Fluent(distance_traveled, IntType(), r = _robot)
 
-        _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
-        _move.set_fixed_duration(1)
+        _move = InstantaneousAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
         l_from = _move.parameter('l_from')
         l_to = _move.parameter('l_to')
-        _move.add_condition(StartTiming(), is_connected(l_from, l_to))
-        _move.add_condition(StartTiming(), robot_at(r, l_from))
-        _move.add_condition(EndTiming(),is_free(l_to)) #at end, l_to is free
-        _move.add_effect(EndTiming(),robot_at(r, l_from), False)
-        _move.add_effect(EndTiming(),is_free(l_from), True)
-        _move.add_effect(EndTiming(),robot_at(r, l_to), True)
-        _move.add_effect(EndTiming(),is_free(l_to), False)
-        # _move.add_increase_effect(EndTiming(), distance_traveled(r), 1)
+        _move.add_precondition(Or(is_connected(l_from, l_to), \
+                                            is_connected(l_to, l_from)))
+        _move.add_precondition(robot_at(r, l_from))
+        _move.add_precondition(Not(is_occupied(l_to))) #at end, l_to is free
+        _move.add_effect(robot_at(r, l_from), False)
+        _move.add_effect(is_occupied(l_from), False)
+        _move.add_effect(robot_at(r, l_to), True)
+        _move.add_effect(is_occupied(l_to), True)
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
         p = _pickup.parameter('p')
@@ -74,11 +59,19 @@ class robot_planner:
         problem.add_action(_drop)
         problem.add_fluent(robot_at, default_initial_value = False)
         problem.add_fluent(is_connected, default_initial_value = False)
-        problem.add_fluent(is_free, default_initial_value = True)
+        problem.add_fluent(is_occupied, default_initial_value = False)
         problem.add_fluent(robot_has_package, default_initial_value = False)
         problem.add_fluent(location_has_package, default_initial_value = False)
-        
-        problem.add_quality_metric(metric =  MinimizeMakespan())
+
+        # problem.add_quality_metric(metric =  up.model.metrics.MinimizeActionCosts(
+        #                             {_move: Int(1), 
+        #                             _pickup: Int(0), 
+        #                             _drop: Int(0)
+        #                             }
+        #                             ))
+
+        problem.add_quality_metric(metric = up.model.metrics.MinimizeSequentialPlanLength())
+        # problem.add_quality_metric(metric=MinimizeMakespan())
 
         #save to self
         self.problem = problem
@@ -89,11 +82,11 @@ class robot_planner:
         #fluents
         self.robot_at = robot_at
         self.is_connected = is_connected
-        self.is_free = is_free
+        self.is_occupied = is_occupied
         self.robot_has_package = robot_has_package
         self.location_has_package =location_has_package
 
-    def create_problem(self, env : enviorment, robots : list[robot]):
+    def create_plan(self, env : enviorment, robots : list[robot]):
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
         _robots = [Object(f"r{id}", self._robot) for id in [bot.id for bot in robots]]
         _packages = [Object(f"p{id}", self._package) for id in [p.id for p in env.packages]]
@@ -105,19 +98,15 @@ class robot_planner:
                                         _locations[c[0]],
                                         _locations[c[1]]),
                                         True)
-            self.problem.set_initial_value(self.is_connected(
-                            _locations[c[1]],
-                            _locations[c[0]]),
-                            True)
         # robot at start
         for r in robots:
             self.problem.set_initial_value(self.robot_at(
                                                     _robots[r.id],
                                                     _locations[r.last_location]),
                                                     True)
-            self.problem.set_initial_value(self.is_free(
+            self.problem.set_initial_value(self.is_occupied(
                                                 _locations[r.last_location]),
-                                                False) 
+                                                True) 
         #place packages
         for p in env.packages:
             if p.owner_type == 'location':
@@ -133,66 +122,15 @@ class robot_planner:
         #goal
         for p in env.packages:
             self.problem.add_goal(self.location_has_package(_packages[p.id],_locations[p.goal]))
-        for r in robots:
-            self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
 
-    def solve(self):
-        if self.planner_name == 'up-auto':
-            with OneshotPlanner(problem_kind = self.problem.kind) as planner:
-                result = planner.solve(self.problem)
-        elif self.planner_name == 'tamer':
-            with OneshotPlanner(name='tamer',
-                    optimality_guarantee=PlanGenerationResultStatus.SOLVED_OPTIMALLY) as planner:
-                #this solved optimally seems to do nothing
-                result = planner.solve(self.problem)
-            return result.plan
+        with OneshotPlanner(problem_kind = self.problem.kind) as planner:
+            result = planner.solve(self.problem)
+        # with OneshotPlanner(name='tamer') as planner:
+        #     result = planner.solve(self.problem)
         
-        elif self.planner_name == 'optic':
-            w = PDDLWriter(self.problem)
-            with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
-                print(w.get_domain(), file = f)
-            with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
-                print(w.get_problem(), file = f)
-            print('copied pddls')
-            
-            optic_wrapper.run_optic()
-            
-            execution_times, actions, durations = optic_wrapper.get_plan()
+        return result.plan
 
-            return execution_times, actions, durations
-
-    def parse_actions(self, actions, env):
-        if self.planner_name == 'optic':
-            return self.parse_actions_optic(actions,env)
-        else:
-            return self.parse_actions_up(actions,env)
-
-    def parse_actions_optic(self, actions : list[tuple], env : enviorment):
-        parsed_actions = []
-        for a in actions:
-            name = a[0]
-            params = a[1:]
-            if name == 'move':
-                parsed_actions.append(move(
-                int(params[0][1:]), #robot id
-                env.locations[int(params[1][1:])], #locations_from
-                env.locations[int(params[2][1:])], #locations_to
-                )) 
-            elif name == 'drop':
-                parsed_actions.append(drop(
-                    int(params[1][1:]), #robot id
-                    env.packages[int(params[0][1:])], #package
-                    env.locations[int(params[2][1:])] #location
-                    )) 
-            elif name == 'pickup':
-                parsed_actions.append(pickup(
-                    int(params[1][1:]), #robot id
-                    env.packages[int(params[0][1:])], #package
-                    env.locations[int(params[2][1:])] #location
-                    ))
-        return parsed_actions
-    
-    def parse_actions_up(self, actions : list[up.plans.plan.ActionInstance], env : enviorment):
+    def parse_actions(self, actions : list[up.plans.plan.ActionInstance], env : enviorment):
         parsed_actions = []
         for a in actions:
             if a.action.name == 'move':
@@ -214,28 +152,4 @@ class robot_planner:
                     env.locations[int(str(a.actual_parameters[2])[1:])] #location
                     ))
         return parsed_actions
-
-    def actions_per_robot(self,parsed_actions, Nrobots = None):
-        if Nrobots is None:
-            robots_inds = np.sort(np.unique([a.robot_id for a in parsed_actions]))
-        else:
-            robots_inds = list(range(Nrobots))
-        
-        robots_actions = [[] for _ in robots_inds]
-        for a in parsed_actions:
-            robots_actions[a.robot_id].append(a)
-        
-        return robots_actions
-
-class drone_planner:
-    pass
-    # def __init__(self) -> None:
-    #     _location = UserType('_location')
-    #     _drone = UserType('_drone')
-    #     _charge = UserType('charge')
-
-    #     #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
-    #     drone_at = Fluent('drone_at', BoolType(), d = _drone, l = _location)
-    #     location_charge = Fluent('location_charge', IntType(), p = _package, l = _location)
-    #     distance = Fluent(distance, )
         

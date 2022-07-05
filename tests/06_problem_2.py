@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, drop, wait
-from maildelivery.brains.brains0 import robot_planner
+from maildelivery.brains.brains1 import robot_planner
 
 import numpy as np
 import matplotlib.pyplot as plt

@@ -145,6 +145,7 @@ class robot_planner:
                 print(w.get_domain(), file = f)
             with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
                 print(w.get_problem(), file = f)
+            print('copied pddls')
             
             optic_wrapper.run_optic()
             
