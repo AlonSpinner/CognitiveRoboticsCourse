@@ -4,27 +4,31 @@
 import os
 import subprocess
 
-dir_path = os.path.join(os.path.dirname(__file__),'docker')
-DOMAIN_PATH = os.path.join(dir_path,"domain.pddl")
-PROBLEM_PATH = os.path.join(dir_path,"problem.pddl")
+DIR_PATH = os.path.join(os.path.dirname(__file__))
+DOCKER_DIR_PATH = os.path.join(DIR_PATH,'docker')
+DOMAIN_PATH = os.path.join(DOCKER_DIR_PATH,"domain.pddl")
+PROBLEM_PATH = os.path.join(DOCKER_DIR_PATH,"problem.pddl")
+PLAN_PATH = os.path.join(DOCKER_DIR_PATH,"plan.txt")
 
 def place_files(domain_old,problem_old):
     subprocess.run(f"cp {domain_old} {DOMAIN_PATH}", shell = True)
     subprocess.run(f"cp {problem_old} {PROBLEM_PATH}", shell = True)
 
 def run_optic():
+    p = subprocess.run(f"./optic-rewrite-no-lp {DOMAIN_PATH} {PROBLEM_PATH} > {PLAN_PATH}", \
+         cwd = DIR_PATH, shell = True)
+    return p.returncode
+
+def run_optic_docker():
     #if this doesnt work.. check this out:
         #https://docs.docker.com/engine/install/linux-postinstall/
     
-    dir_path = os.path.join(os.path.dirname(__file__),'docker')
-    p = subprocess.run("bash ./run.sh", cwd = dir_path, shell = True)
+    p = subprocess.run("bash ./run.sh", cwd = DOCKER_DIR_PATH, shell = True)
     return p.returncode
-    
 
 def get_plan(file = None):
     if file is None:
-        dir_path = os.path.dirname(__file__)
-        file = os.path.join(dir_path,'docker','plan.txt')
+        file = PLAN_PATH
 
     with open(file) as f:
         lines = f.readlines()

@@ -8,7 +8,7 @@ from unified_planning.shortcuts import UserType, BoolType,\
         OneshotPlanner, Or, Not, IntType, Int, StartTiming, EndTiming
 from unified_planning.io.pddl_writer import PDDLWriter
 from unified_planning.engines import PlanGenerationResultStatus
-from unified_planning.model.metrics import MinimizeMakespan
+from unified_planning.model.metrics import MinimizeMakespan, MinimizeActionCosts
 
 
 up.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
@@ -34,7 +34,7 @@ class robot_planner:
         is_free = Fluent('is_free', BoolType(), l = _location)
         robot_has_package = Fluent('robot_has_package', BoolType(), p = _package, r = _robot)
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
-        # distance_traveled = Fluent(distance_traveled, IntType(), r = _robot)
+        # distance_traveled = Fluent('distance_traveled', IntType(), r = _robot)
 
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         _move.set_fixed_duration(1)
@@ -44,11 +44,10 @@ class robot_planner:
         _move.add_condition(StartTiming(), is_connected(l_from, l_to))
         _move.add_condition(StartTiming(), robot_at(r, l_from))
         _move.add_condition(EndTiming(),is_free(l_to)) #at end, l_to is free
-        _move.add_effect(EndTiming(),robot_at(r, l_from), False)
-        _move.add_effect(EndTiming(),is_free(l_from), True)
+        _move.add_effect(StartTiming(),robot_at(r, l_from), False)
+        _move.add_effect(StartTiming(),is_free(l_from), True)
         _move.add_effect(EndTiming(),robot_at(r, l_to), True)
         _move.add_effect(EndTiming(),is_free(l_to), False)
-        # _move.add_increase_effect(EndTiming(), distance_traveled(r), 1)
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
         p = _pickup.parameter('p')
@@ -78,7 +77,12 @@ class robot_planner:
         problem.add_fluent(robot_has_package, default_initial_value = False)
         problem.add_fluent(location_has_package, default_initial_value = False)
         
-        problem.add_quality_metric(metric =  MinimizeMakespan())
+        # problem.add_quality_metric(metric =  MinimizeMakespan())
+        problem.add_quality_metric(metric = MinimizeActionCosts({
+                                                                _move: Int(1),
+                                                                _pickup: Int(1),
+                                                                _drop: Int(1)
+                                                                }))
 
         #save to self
         self.problem = problem
