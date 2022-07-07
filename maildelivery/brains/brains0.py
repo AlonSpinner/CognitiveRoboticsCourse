@@ -4,12 +4,10 @@ import numpy as np
 
 import unified_planning
 from unified_planning.shortcuts import UserType, BoolType,\
-        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner, Or, Not, IntType
+        Fluent, InstantaneousAction, Problem, Object, OneshotPlanner
 unified_planning.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
-from unified_planning.io.pddl_writer import PDDLWriter
 from unified_planning.engines import PlanGenerationResultStatus
 
-from maildelivery import optic_wrapper
 
 
 class robot_planner:
@@ -138,53 +136,8 @@ class robot_planner:
                 #this solved optimally seems to do nothing
                 result = planner.solve(self.problem)
             return result.plan
-        
-        elif self.planner_name == 'optic':
-            w = PDDLWriter(self.problem)
-            with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
-                print(w.get_domain(), file = f)
-            with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
-                print(w.get_problem(), file = f)
-            print('copied pddls')
-            
-            optic_wrapper.run_optic()
-            
-            execution_times, actions, durations = optic_wrapper.get_plan()
-
-            return execution_times, actions, durations
-
-    def parse_actions(self, actions, env):
-        if self.planner_name == 'optic':
-            return self.parse_actions_optic(actions,env)
-        else:
-            return self.parse_actions_up(actions,env)
-
-    def parse_actions_optic(self, actions : list[tuple], env : enviorment):
-        parsed_actions = []
-        for a in actions:
-            name = a[0]
-            params = a[1:]
-            if name == 'move':
-                parsed_actions.append(move(
-                int(params[0][1:]), #robot id
-                env.locations[int(params[1][1:])], #locations_from
-                env.locations[int(params[2][1:])], #locations_to
-                )) 
-            elif name == 'drop':
-                parsed_actions.append(drop(
-                    int(params[1][1:]), #robot id
-                    env.packages[int(params[0][1:])], #package
-                    env.locations[int(params[2][1:])] #location
-                    )) 
-            elif name == 'pickup':
-                parsed_actions.append(pickup(
-                    int(params[1][1:]), #robot id
-                    env.packages[int(params[0][1:])], #package
-                    env.locations[int(params[2][1:])] #location
-                    ))
-        return parsed_actions
-    
-    def parse_actions_up(self, actions : list[unified_planning.plans.plan.ActionInstance], env : enviorment):
+ 
+    def parse_actions(self, actions : list[unified_planning.plans.plan.ActionInstance], env : enviorment):
         parsed_actions = []
         for a in actions:
             if a.action.name == 'move':
@@ -218,16 +171,3 @@ class robot_planner:
             robots_actions[a.robot_id].append(a)
         
         return robots_actions
-
-class drone_planner:
-    pass
-    # def __init__(self) -> None:
-    #     _location = UserType('_location')
-    #     _drone = UserType('_drone')
-    #     _charge = UserType('charge')
-
-    #     #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
-    #     drone_at = Fluent('drone_at', BoolType(), d = _drone, l = _location)
-    #     location_charge = Fluent('location_charge', IntType(), p = _package, l = _location)
-    #     distance = Fluent(distance, )
-        

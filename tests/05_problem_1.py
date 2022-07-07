@@ -95,6 +95,7 @@ while True:
 
 #dont close window in the end
 ax.set_title('finished!')
+print(f"robot has {r.charge}/{r.max_charge} charge left")
 plt.ioff()
 plt.show()
 

@@ -5,10 +5,10 @@ import numpy as np
 import unified_planning as up
 from unified_planning.shortcuts import UserType, BoolType,\
         Fluent, InstantaneousAction, DurativeAction, Problem, Object,\
-        OneshotPlanner, Or, Not, IntType, Int, StartTiming, EndTiming, GE, SimulatedEffect
+        IntType, Int, StartTiming, EndTiming, GE, SimulatedEffect
 from unified_planning.io.pddl_writer import PDDLWriter
-from unified_planning.engines import PlanGenerationResultStatus
-from unified_planning.model.metrics import MinimizeMakespan, MinimizeActionCosts, MinimizeExpressionOnFinalState, MaximizeExpressionOnFinalState
+
+#from unified_planning.model.metrics import MinimizeMakespan, MinimizeActionCosts, MinimizeExpressionOnFinalState, MaximizeExpressionOnFinalState
 
 
 up.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
@@ -21,7 +21,7 @@ class robot_planner:
     multirobot, instant actions, no charging
     '''
     def __init__(self) -> None:
-        self.f_dist2charge  = lambda dist: 2 * dist
+        self.f_dist2charge  = lambda dist: 2 * dist #some default function
         self.create_domain()
 
     def create_domain(self) -> None:

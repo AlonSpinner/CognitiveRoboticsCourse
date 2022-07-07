@@ -52,6 +52,7 @@ class robot:
         self.charge : int = 100
         self.graphics : list = []
         self.graphics_deadcharge : list = []
+        self.f_dist2charge  = lambda dist: 2 * dist #some default function
 
     def sense(self): #gps like sensor
         return self.pose.translation()
@@ -104,7 +105,7 @@ class robot:
 
             if self.charge >= abs(u):
                 self.pose = self.pose.compose((gtsam.Pose2(u,0,0)))
-                self.charge = self.charge - abs(u)
+                self.charge = self.charge - self.f_dist2charge(abs(u))
             return
 
     def plot(self,ax):
