@@ -50,7 +50,6 @@ move.add_effect(StartTiming(), is_free(l_from), True)
 move.add_effect(EndTiming(), robot_at(r, l_to), True)
 move.add_effect(EndTiming(), is_free(l_to), False)
 def decrease_charge_fun(problem, state, actual_params):
-        #if dist is not constant, use this:
         dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
         requiredCharge = dist2chargeUse(dist)
         currentCharge = state.get_value(charge(actual_params.get(r))).constant_value()
@@ -111,18 +110,18 @@ problem.set_initial_value(is_connected(locations[0],locations[1]),True)
 problem.set_initial_value(is_connected(locations[1],locations[2]),True)
 problem.set_initial_value(is_connected(locations[2],locations[3]),True)
 problem.set_initial_value(distance(locations[0],locations[1]),1)
-problem.set_initial_value(distance(locations[1],locations[2]),1)
-problem.set_initial_value(distance(locations[2],locations[3]),1)
-problem.set_initial_value(distance(locations[3],locations[2]),1)
+problem.set_initial_value(distance(locations[1],locations[2]),2)
+problem.set_initial_value(distance(locations[2],locations[3]),3)
+problem.set_initial_value(distance(locations[3],locations[2]),4)
 #connect pump to grid
-problem.set_initial_value(location_is_dock(locations[0]),True)
+problem.set_initial_value(location_is_dock(locations[1]),True)
 #robot at start
 problem.set_initial_value(robot_at(deliverybot,locations[0]),True)
 problem.set_initial_value(is_free(locations[0]),False)
 #place packages
 problem.set_initial_value(location_has_package(note,locations[3]),True)
 #fuel at start
-problem.set_initial_value(charge(deliverybot),1)
+problem.set_initial_value(charge(deliverybot), (dist2chargeUse(1)))
 #goal
 # problem.add_timed_goal(StartTiming(10.0), location_has_package(note,locations[2]))
 problem.add_goal(location_has_package(note,locations[2]))
@@ -139,6 +138,7 @@ optic_wrapper.run_optic()
 execution_times, actions, durations = optic_wrapper.get_plan()
 
 print(actions)
+print(execution_times)
 
 # with OneshotPlanner(names=['tamer', 'tamer'],
 #                     params=[{'heuristic': 'hadd'}, {'heuristic': 'hmax'}]) as planner:
