@@ -8,6 +8,7 @@ from unified_planning.shortcuts import UserType, BoolType,\
         IntType, Int, StartTiming, EndTiming, GE, SimulatedEffect
 from unified_planning.io.pddl_writer import PDDLWriter
 
+import time
 #from unified_planning.model.metrics import MinimizeMakespan, MinimizeActionCosts, MinimizeExpressionOnFinalState, MaximizeExpressionOnFinalState
 
 
@@ -196,7 +197,11 @@ class robot_planner:
             newline = part1 + part2 + part3
             optic_wrapper.add_problem_lines([newline])
         
+        start = time.time()
+        print('started solving domain+problem with optic')
         optic_wrapper.run_optic()
+        end = time.time()
+        print(f'finished solving in {end-start} seconds')
         execution_times, actions, durations = optic_wrapper.get_plan()
 
         return execution_times, actions, durations

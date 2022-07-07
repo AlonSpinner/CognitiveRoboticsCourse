@@ -5,6 +5,4 @@ maildelivery/docker/problem.pddl
 
 maildelivery/docker/plan.txt
 
-tests/06_movie.gif
-
 maildelivery/docker/domain.pddl

@@ -147,7 +147,7 @@ r2.goal_location = station
 r2.max_forward = V * DT
 r2.f_dist2charge = f_dist2charge
 
-r = [r0]#,r1,r2]
+r = [r0,r1]#,r2]
 Nrobots = len(r)
 
 #ask for plan
