@@ -201,7 +201,12 @@ class robot_planner:
             
             if len(self._robots) == 1:
                 optic_wrapper.add_problem_lines([f' (:metric maximize (charge {self._robots[0]}))'])
-            # newlines = ['charge '+str(rname) for rname in self._robots]
+            else:
+                part1 = ' (:metric maximize (+ '
+                part2 = ' '.join([f'(charge {rname})' for rname in self._robots])
+                part3 = '))'
+                newline = part1 + part2 + part3
+                optic_wrapper.add_problem_lines([newline])
             
 
             optic_wrapper.run_optic()
