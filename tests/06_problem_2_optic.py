@@ -95,9 +95,9 @@ while t < execution_times[-1] + durations[-1]:
         action = parsed_actions[i]
         current_actions[action.robot_id] = action
         current_actions_status[action.robot_id] = False
+        r[action.robot_id].act(action, env)
         i += 1
     
-
     status = False #just to initialize
     for ri, s in enumerate(current_actions_status):
         if not s:

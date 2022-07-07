@@ -1,12 +1,13 @@
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot
-from maildelivery.brains.brains0 import robot_planner
+from maildelivery.agents import robot, wait
+from maildelivery.brains.brains1 import robot_planner
 
 import numpy as np
 import matplotlib.pyplot as plt
 import gtsam
 
 PLANNER = 'optic'
+DT = 0.001
 
 def build_env():
     docks = [location(0,np.array([0,0]),'dock')]
@@ -59,17 +60,36 @@ for p in env.packages:
 plt.draw()
 
 #roll simulation
-for action in parsed_actions:
-
-    status = False
-    while not(status):
-        status = r.act(action, env)
-        
-        #update plot        
+t = 0
+action_index = 0
+plotCounter = 0
+action = wait(robot_id = 0)
+while True:
+    
+    #go do next action
+    if type(action) == wait and t > execution_times[action_index]:
+        action = parsed_actions[action_index]
+        action_index += 1
+    
+    
+    if r.act(action, env): #do action, and if its finished, start waiting, accepting new actions
+        action = wait(robot_id = 0)
+    
+    #update plot        
+    if plotCounter % 200 == 0:
         r.plot(ax)
         for p in r.owned_packages:
             p.plot(ax)
         plt.pause(0.1)
+
+    plotCounter += 1
+    t += DT
+
+    if action_index == len(parsed_actions) and type(action) == wait:
+        r.plot(ax)
+        for p in r.owned_packages:
+            p.plot(ax)
+        break
 
 #dont close window in the end
 ax.set_title('finished!')

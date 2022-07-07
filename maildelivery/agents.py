@@ -6,7 +6,7 @@ import numpy as np
 
 CONTROL_THETA_THRESHOLD = np.radians(0.001)
 CONTROL_DIST_THRESHOLD = 0.001
-REACH_DELTA = 0.01
+REACH_DELTA = 0.001
 
 @dataclass(frozen = True)
 class action:
