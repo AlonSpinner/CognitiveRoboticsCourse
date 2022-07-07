@@ -82,7 +82,7 @@ while True:
         r.plot(ax)
         for p in env.packages:
             p.plot(ax)
-        plt.pause(0.1)
+        plt.pause(0.01)
 
     plotCounter += 1
     t += DT

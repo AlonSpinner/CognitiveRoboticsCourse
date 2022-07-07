@@ -5,15 +5,17 @@ import numpy as np
 import unified_planning as up
 from unified_planning.shortcuts import UserType, BoolType,\
         Fluent, InstantaneousAction, DurativeAction, Problem, Object,\
-        OneshotPlanner, Or, Not, IntType, Int, StartTiming, EndTiming
+        OneshotPlanner, Or, Not, IntType, Int, StartTiming, EndTiming, GE, SimulatedEffect
 from unified_planning.io.pddl_writer import PDDLWriter
 from unified_planning.engines import PlanGenerationResultStatus
-from unified_planning.model.metrics import MinimizeMakespan, MinimizeActionCosts
+from unified_planning.model.metrics import MinimizeMakespan, MinimizeActionCosts, MinimizeExpressionOnFinalState, MaximizeExpressionOnFinalState
 
 
 up.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 from maildelivery import optic_wrapper
 
+def dist2chargeUse(dist):# -> int:
+        return 2 * dist
 
 class robot_planner:
     '''
@@ -35,20 +37,30 @@ class robot_planner:
         robot_has_package = Fluent('robot_has_package', BoolType(), p = _package, r = _robot)
         robot_can_hold_package = Fluent('robot_can_hold_package', BoolType(), r = _robot)
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
-        # distance_traveled = Fluent('distance_traveled', IntType(), r = _robot)
+        distance = Fluent('distance', IntType(), l_from = _location, l_to = _location)
+        # distance_traveled = Fluent('distance_traveled',IntType(), r = _robot)
+        charge = Fluent('charge', IntType(0,100), r = _robot)
 
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
-        _move.set_fixed_duration(1)
         r = _move.parameter('r')
         l_from = _move.parameter('l_from')
         l_to = _move.parameter('l_to')
+        _move.set_fixed_duration(distance(l_from,l_to))
         _move.add_condition(StartTiming(), is_connected(l_from, l_to))
         _move.add_condition(StartTiming(), robot_at(r, l_from))
         _move.add_condition(EndTiming(),is_free(l_to)) #at end, l_to is free
+        _move.add_condition(StartTiming(),GE(charge(r),dist2chargeUse(distance(l_from,l_to))))
         _move.add_effect(StartTiming(),robot_at(r, l_from), False)
         _move.add_effect(StartTiming(),is_free(l_from), True)
         _move.add_effect(EndTiming(),robot_at(r, l_to), True)
         _move.add_effect(EndTiming(),is_free(l_to), False)
+        # _move.add_increase_effect(EndTiming(),distance_traveled(r),distance(l_from,l_to))
+        def decrease_charge_fun(problem, state, actual_params):
+            dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
+            requiredCharge = dist2chargeUse(dist)
+            currentCharge = state.get_value(charge(actual_params.get(r))).constant_value()
+            return [Int(currentCharge-requiredCharge)]
+        _move.set_simulated_effect(StartTiming(),SimulatedEffect([charge(r)], decrease_charge_fun))
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
         p = _pickup.parameter('p')
@@ -81,13 +93,16 @@ class robot_planner:
         problem.add_fluent(robot_has_package, default_initial_value = False)
         problem.add_fluent(location_has_package, default_initial_value = False)
         problem.add_fluent(robot_can_hold_package, default_initial_value = True)
+        problem.add_fluent(charge, default_initial_value = int(0))
+        problem.add_fluent(distance, default_initial_value = int(100)) #some absuard number
+        # problem.add_fluent(distance_traveled, default_initial_value = int(0))
         
         # problem.add_quality_metric(metric =  MinimizeMakespan())
-        problem.add_quality_metric(metric = MinimizeActionCosts({
-                                                                _move: Int(1),
-                                                                _pickup: Int(0),
-                                                                _drop: Int(0)
-                                                                }))
+        # problem.add_quality_metric(metric = MinimizeActionCosts({
+        #                                                         _move: Int(1),
+        #                                                         _pickup: Int(0),
+        #                                                         _drop: Int(0)
+        #                                                         }))
 
         #save to self
         self.problem = problem
@@ -102,6 +117,9 @@ class robot_planner:
         self.robot_has_package = robot_has_package
         self.location_has_package =location_has_package
         self.robot_can_hold_package = robot_can_hold_package
+        self.charge = charge
+        self.distance = distance
+        # self.distance_traveled = distance_traveled
 
     def create_problem(self, env : enviorment, robots : list[robot]):
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
@@ -109,7 +127,7 @@ class robot_planner:
         _packages = [Object(f"p{id}", self._package) for id in [p.id for p in env.packages]]
         self.problem.add_objects(_locations + _robots + _packages)
 
-        #locations connectivity
+        #locations connectivity and distance
         for c in env.connectivityList:
             self.problem.set_initial_value(self.is_connected(
                                         _locations[c[0]],
@@ -119,6 +137,16 @@ class robot_planner:
                             _locations[c[1]],
                             _locations[c[0]]),
                             True)
+            self.problem.set_initial_value(self.distance(
+                                        _locations[c[0]],
+                                        _locations[c[1]]),
+                                        int(env.locations[c[0]].distance(env.locations[c[1]]))
+                                        )
+            self.problem.set_initial_value(self.distance(
+                            _locations[c[1]],
+                            _locations[c[0]]),
+                            int(env.locations[c[1]].distance(env.locations[c[0]]))
+                            )
         # robot at start
         for r in robots:
             self.problem.set_initial_value(self.robot_at(
@@ -127,7 +155,9 @@ class robot_planner:
                                                     True)
             self.problem.set_initial_value(self.is_free(
                                                 _locations[r.last_location]),
-                                                False) 
+                                                False)
+            self.problem.set_initial_value(self.charge(_robots[r.id]), r.charge)
+
         #place packages
         for p in env.packages:
             if p.owner_type == 'location':
@@ -146,6 +176,8 @@ class robot_planner:
             self.problem.add_goal(self.location_has_package(_packages[p.id],_locations[p.goal]))
         for r in robots:
             self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
+
+        self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
 
     def solve(self):
         if self.planner_name == 'up-auto':
