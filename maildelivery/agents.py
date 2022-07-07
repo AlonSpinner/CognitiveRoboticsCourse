@@ -180,12 +180,15 @@ class drone:
 #---------------------------------------------------------------------------
 
 def plot_robot(ax , r : robot, scale = 20, color = 'b'):
+        TEXT_OFFSET = 0.04
+        RADIUS = 0.1
         pose = r.pose
         u = np.cos(pose.theta())
         v = np.sin(pose.theta())
         graphics_quiver = ax.quiver(pose.x(),pose.y(),u,v, color = color, scale = scale, width = 0.02)
-        graphics_circle = ax.add_patch(plt.Circle((pose.x(),pose.y()),0.1,fill = False, color = color))
-        return [graphics_quiver,graphics_circle]
+        graphics_circle = ax.add_patch(plt.Circle((pose.x(),pose.y()),RADIUS,fill = False, color = color))
+        graphics_txt = ax.text(r.pose.translation()[0]-2*TEXT_OFFSET,r.pose.translation()[1],r.id, color = color)
+        return [graphics_quiver,graphics_circle,graphics_txt]
 
 def plot_robot_deadcharge(ax, r : robot, scale = 20, color = 'r'):
     pose = r.pose

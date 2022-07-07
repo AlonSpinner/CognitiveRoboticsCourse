@@ -33,6 +33,7 @@ class robot_planner:
         is_connected = Fluent('is_connected', BoolType(), l_from = _location, l_to = _location)
         is_free = Fluent('is_free', BoolType(), l = _location)
         robot_has_package = Fluent('robot_has_package', BoolType(), p = _package, r = _robot)
+        robot_can_hold_package = Fluent('robot_can_hold_package', BoolType(), r = _robot)
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
         # distance_traveled = Fluent('distance_traveled', IntType(), r = _robot)
 
@@ -55,8 +56,10 @@ class robot_planner:
         l = _pickup.parameter('l')
         _pickup.add_precondition(robot_at(r, l))
         _pickup.add_precondition(location_has_package(p, l))
+        _pickup.add_precondition(robot_can_hold_package(r))
         _pickup.add_effect(location_has_package(p, l), False)
         _pickup.add_effect(robot_has_package(p, r), True)
+        _pickup.add_effect(robot_can_hold_package(r), False)
 
         _drop = InstantaneousAction('drop', p = _package, r = _robot, l = _location)
         p = _drop.parameter('p')
@@ -66,6 +69,7 @@ class robot_planner:
         _drop.add_precondition(robot_has_package(p, r))
         _drop.add_effect(robot_has_package(p, r), False)
         _drop.add_effect(location_has_package(p, l), True)
+        _drop.add_effect(robot_can_hold_package(r), True)
 
         problem = Problem('maildelivery')
         problem.add_action(_move)
@@ -76,6 +80,7 @@ class robot_planner:
         problem.add_fluent(is_free, default_initial_value = True)
         problem.add_fluent(robot_has_package, default_initial_value = False)
         problem.add_fluent(location_has_package, default_initial_value = False)
+        problem.add_fluent(robot_can_hold_package, default_initial_value = True)
         
         # problem.add_quality_metric(metric =  MinimizeMakespan())
         problem.add_quality_metric(metric = MinimizeActionCosts({
@@ -96,6 +101,7 @@ class robot_planner:
         self.is_free = is_free
         self.robot_has_package = robot_has_package
         self.location_has_package =location_has_package
+        self.robot_can_hold_package = robot_can_hold_package
 
     def create_problem(self, env : enviorment, robots : list[robot]):
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
@@ -134,6 +140,7 @@ class robot_planner:
                                                 _packages[p.id],
                                                 _robots[p.owner]),
                                                 True)
+                self.problem.set_initial_value(self.robot_can_hold_package(_robots[p.owner]),False)
         #goal
         for p in env.packages:
             self.problem.add_goal(self.location_has_package(_packages[p.id],_locations[p.goal]))

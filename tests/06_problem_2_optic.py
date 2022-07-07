@@ -8,7 +8,7 @@ from matplotlib.animation import PillowWriter
 import gtsam
 import os
 
-DT = 0.001
+DT = 0.0005
 MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'06_movie.gif')
@@ -107,7 +107,7 @@ while t < execution_times[-1] + durations[-1]:
     status = bool(np.all(current_actions_status))
 
     #update plot        
-    if plotCounter % 100 == 0:
+    if plotCounter % 200 == 0:
         for ri in r:
             ri.plot(ax)
             for p in ri.owned_packages:
