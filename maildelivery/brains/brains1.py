@@ -14,8 +14,7 @@ from unified_planning.model.metrics import MinimizeMakespan, MinimizeActionCosts
 up.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 from maildelivery import optic_wrapper
 
-def dist2chargeUse(dist):# -> int:
-        return 2 * dist
+NOT_CONNECTED_DISTANCE = int(100)
 
 class robot_planner:
     '''
@@ -23,6 +22,7 @@ class robot_planner:
     '''
     def __init__(self) -> None:
         self.planner_name = 'optic' #can also be 'tamer' or 'up-auto'
+        self.f_dist2charge  = lambda dist: 2 * dist
         self.create_domain()
 
     def create_domain(self) -> None:
@@ -38,7 +38,6 @@ class robot_planner:
         robot_can_hold_package = Fluent('robot_can_hold_package', BoolType(), r = _robot)
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
         distance = Fluent('distance', IntType(), l_from = _location, l_to = _location)
-        # distance_traveled = Fluent('distance_traveled',IntType(), r = _robot)
         charge = Fluent('charge', IntType(0,100), r = _robot)
 
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
@@ -49,15 +48,14 @@ class robot_planner:
         _move.add_condition(StartTiming(), is_connected(l_from, l_to))
         _move.add_condition(StartTiming(), robot_at(r, l_from))
         _move.add_condition(EndTiming(),is_free(l_to)) #at end, l_to is free
-        _move.add_condition(StartTiming(),GE(charge(r),dist2chargeUse(distance(l_from,l_to))))
+        _move.add_condition(StartTiming(),GE(charge(r),self.f_dist2charge(distance(l_from,l_to))))
         _move.add_effect(StartTiming(),robot_at(r, l_from), False)
         _move.add_effect(StartTiming(),is_free(l_from), True)
         _move.add_effect(EndTiming(),robot_at(r, l_to), True)
         _move.add_effect(EndTiming(),is_free(l_to), False)
-        # _move.add_increase_effect(EndTiming(),distance_traveled(r),distance(l_from,l_to))
         def decrease_charge_fun(problem, state, actual_params):
             dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
-            requiredCharge = dist2chargeUse(dist)
+            requiredCharge = self.f_dist2charge(dist)
             currentCharge = state.get_value(charge(actual_params.get(r))).constant_value()
             return [Int(currentCharge-requiredCharge)]
         _move.set_simulated_effect(StartTiming(),SimulatedEffect([charge(r)], decrease_charge_fun))
@@ -94,8 +92,7 @@ class robot_planner:
         problem.add_fluent(location_has_package, default_initial_value = False)
         problem.add_fluent(robot_can_hold_package, default_initial_value = True)
         problem.add_fluent(charge, default_initial_value = int(0))
-        problem.add_fluent(distance, default_initial_value = int(100)) #some absuard number
-        # problem.add_fluent(distance_traveled, default_initial_value = int(0))
+        problem.add_fluent(distance, default_initial_value = int(NOT_CONNECTED_DISTANCE)) #some absuard number
         
         # problem.add_quality_metric(metric =  MinimizeMakespan())
         # problem.add_quality_metric(metric = MinimizeActionCosts({
@@ -115,11 +112,10 @@ class robot_planner:
         self.is_connected = is_connected
         self.is_free = is_free
         self.robot_has_package = robot_has_package
-        self.location_has_package =location_has_package
+        self.location_has_package = location_has_package
         self.robot_can_hold_package = robot_can_hold_package
         self.charge = charge
         self.distance = distance
-        # self.distance_traveled = distance_traveled
 
     def create_problem(self, env : enviorment, robots : list[robot]):
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
