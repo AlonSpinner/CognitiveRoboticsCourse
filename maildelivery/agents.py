@@ -186,9 +186,11 @@ def plot_robot(ax , r : robot, scale = 20, color = 'b'):
         pose = r.pose
         u = np.cos(pose.theta())
         v = np.sin(pose.theta())
+        ptext = np.array([0,-4*TEXT_OFFSET])
+        ptext = r.pose.transformFrom(ptext)
         graphics_quiver = ax.quiver(pose.x(),pose.y(),u,v, color = color, scale = scale, width = 0.02)
         graphics_circle = ax.add_patch(plt.Circle((pose.x(),pose.y()),RADIUS,fill = False, color = color))
-        graphics_txt = ax.text(r.pose.translation()[0]-2*TEXT_OFFSET,r.pose.translation()[1],r.id, color = color)
+        graphics_txt = ax.text(ptext[0],ptext[1],r.id, color = color)
         return [graphics_quiver,graphics_circle,graphics_txt]
 
 def plot_robot_deadcharge(ax, r : robot, scale = 20, color = 'r'):
