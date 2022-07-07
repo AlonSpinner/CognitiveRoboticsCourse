@@ -121,6 +121,7 @@ class robot_planner:
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
         _robots = [Object(f"r{id}", self._robot) for id in [bot.id for bot in robots]]
         _packages = [Object(f"p{id}", self._package) for id in [p.id for p in env.packages]]
+
         self.problem.add_objects(_locations + _robots + _packages)
 
         #locations connectivity and distance
@@ -173,8 +174,12 @@ class robot_planner:
         for r in robots:
             self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
 
-        self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
+        # self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
 
+        self._locations = _locations
+        self._robots = _robots
+        self._packages = _packages
+        
     def solve(self):
         if self.planner_name == 'up-auto':
             with OneshotPlanner(problem_kind = self.problem.kind) as planner:
@@ -194,6 +199,11 @@ class robot_planner:
                 print(w.get_problem(), file = f)
             print('copied pddls')
             
+            if len(self._robots) == 1:
+                optic_wrapper.add_problem_lines([f' (:metric maximize (charge {self._robots[0]}))'])
+            # newlines = ['charge '+str(rname) for rname in self._robots]
+            
+
             optic_wrapper.run_optic()
             
             execution_times, actions, durations = optic_wrapper.get_plan()

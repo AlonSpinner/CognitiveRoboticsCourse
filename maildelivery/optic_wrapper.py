@@ -57,8 +57,14 @@ def get_plan(file = None):
 def add_problem_lines(added_lines : list[str]):
     with open(PROBLEM_PATH, 'r') as file:
         lines = file.readlines()
+        ii = 0
+        for line in lines[::-1]:
+            if line == '\n':
+                ii += 1
+            else:
+                break
     with open(PROBLEM_PATH, 'w') as file:
-        for line in lines[:-1]:
+        for line in lines[:-(1+ii)]:
             file.write(line)
         for line in added_lines:
             file.write(line + '\n')
