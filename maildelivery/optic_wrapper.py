@@ -15,6 +15,8 @@ def place_files(domain_old,problem_old):
     subprocess.run(f"cp {problem_old} {PROBLEM_PATH}", shell = True)
 
 def run_optic():
+    # p = subprocess.run(f"./optic-clp {DOMAIN_PATH} {PROBLEM_PATH} > {PLAN_PATH}", \
+    #      cwd = DIR_PATH, shell = True)
     p = subprocess.run(f"./optic-rewrite-no-lp {DOMAIN_PATH} {PROBLEM_PATH} > {PLAN_PATH}", \
          cwd = DIR_PATH, shell = True)
     return p.returncode

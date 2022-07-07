@@ -43,7 +43,7 @@ class robot:
     def __init__(self,pose0, id) -> None:
         self.pose : gtsam.Pose2 = pose0
         self.id : int = id
-        self.max_forward : float = 0.25
+        self.max_forward : float = 0.0015
         self.max_rotate : float = np.pi #np.pi/4
         self.last_location : int = 0
         self.goal_location : int = 0

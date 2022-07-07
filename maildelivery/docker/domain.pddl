@@ -11,10 +11,10 @@
  (:action pickup
   :parameters ( ?p - package ?r - robot ?l - location)
   :precondition (and (robot_at ?r ?l) (location_has_package ?p ?l))
-  :effect (and (not (location_has_package ?p ?l)) (robot_has_package ?p ?r) (increase total-cost 1)))
+  :effect (and (not (location_has_package ?p ?l)) (robot_has_package ?p ?r) (increase total-cost 0)))
  (:action drop
   :parameters ( ?p - package ?r - robot ?l - location)
   :precondition (and (robot_at ?r ?l) (robot_has_package ?p ?r))
-  :effect (and (not (robot_has_package ?p ?r)) (location_has_package ?p ?l) (increase total-cost 1)))
+  :effect (and (not (robot_has_package ?p ?r)) (location_has_package ?p ?l) (increase total-cost 0)))
 )
 

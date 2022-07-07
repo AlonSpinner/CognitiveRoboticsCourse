@@ -1,4 +1,4 @@
-from maildelivery.agents import move, pickup, drop, robot
+from maildelivery.agents import move, pickup, drop, robot, action
 from maildelivery.world import enviorment
 import numpy as np
 
@@ -80,8 +80,8 @@ class robot_planner:
         # problem.add_quality_metric(metric =  MinimizeMakespan())
         problem.add_quality_metric(metric = MinimizeActionCosts({
                                                                 _move: Int(1),
-                                                                _pickup: Int(1),
-                                                                _drop: Int(1)
+                                                                _pickup: Int(0),
+                                                                _drop: Int(0)
                                                                 }))
 
         #save to self
@@ -219,17 +219,20 @@ class robot_planner:
                     ))
         return parsed_actions
 
-    def actions_per_robot(self,parsed_actions, Nrobots = None):
+    def actions_per_robot(self,parsed_actions : list[action], Nrobots = None):
         if Nrobots is None:
             robots_inds = np.sort(np.unique([a.robot_id for a in parsed_actions]))
         else:
             robots_inds = list(range(Nrobots))
         
         robots_actions = [[] for _ in robots_inds]
-        for a in parsed_actions:
-            robots_actions[a.robot_id].append(a)
+        robot_actions_indicies = [[] for _ in robots_inds]
         
-        return robots_actions
+        for a,idx in enumerate(parsed_actions):
+            robots_actions[a.robot_id].append(a)
+            robot_actions_indicies[a.robot_id].append(idx)
+        
+        return robots_actions, robot_actions_indicies
 
 class drone_planner:
     pass
