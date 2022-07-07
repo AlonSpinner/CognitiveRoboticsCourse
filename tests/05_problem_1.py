@@ -72,13 +72,13 @@ while True:
         action_index += 1
     
     
-    if r.act(action, env): #do action, and if its finished, start waiting, accepting new actions
+    if r.act(action, env): #do action, and if its finished, start waiting allowing accepting new actions
         action = wait(robot_id = 0)
     
     #update plot        
     if plotCounter % 200 == 0:
         r.plot(ax)
-        for p in r.owned_packages:
+        for p in env.packages:
             p.plot(ax)
         plt.pause(0.1)
 

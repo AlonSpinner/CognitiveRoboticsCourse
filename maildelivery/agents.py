@@ -43,7 +43,7 @@ class robot:
     def __init__(self,pose0, id) -> None:
         self.pose : gtsam.Pose2 = pose0
         self.id : int = id
-        self.max_forward : float = 0.0015
+        self.max_forward : float = 0.001
         self.max_rotate : float = np.pi #np.pi/4
         self.last_location : int = 0
         self.goal_location : int = 0
@@ -79,10 +79,10 @@ class robot:
             else:
                 return False
         elif type(a) is drop:
-            if np.linalg.norm(self.sense() - a.loc.xy) < REACH_DELTA and \
-                np.linalg.norm(self.sense() - a.p.xy) < REACH_DELTA:
+            if np.linalg.norm(self.sense() - a.loc.xy) < REACH_DELTA:
                 env.packages[a.p.id].owner = a.loc.id #put the landmark as owner of package
                 env.packages[a.p.id].owner_type = 'location'
+                env.packages[a.p.id].xy = a.loc.xy
                 self.owned_packages.remove(a.p)
                 print(f'robot {self.id} dropped package {a.p.id}')
                 return True
