@@ -75,7 +75,7 @@ class robot:
                 env.packages[a.p.id].owner = self.id #put robot as owner of package
                 env.packages[a.p.id].owner_type = 'robot'
                 self.owned_packages.append(a.p)
-                print(f'robot {self.id} picked up package {a.p.id}')
+                print(f'robot {self.id} picked up package {a.p.id} from location {a.loc.id}')
                 return True
             else:
                 return False
@@ -85,7 +85,7 @@ class robot:
                 env.packages[a.p.id].owner_type = 'location'
                 env.packages[a.p.id].xy = a.loc.xy
                 self.owned_packages.remove(a.p)
-                print(f'robot {self.id} dropped package {a.p.id}')
+                print(f'robot {self.id} dropped package {a.p.id} at location {a.loc.id}')
                 return True
             else:
                 return False

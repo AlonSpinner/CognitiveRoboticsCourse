@@ -14,7 +14,7 @@ from unified_planning.io.pddl_writer import PDDLWriter
 up.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 from maildelivery import optic_wrapper
 
-NOT_CONNECTED_DISTANCE = int(100)
+NOT_CONNECTED_DISTANCE = int(1000)
 
 class robot_planner:
     '''

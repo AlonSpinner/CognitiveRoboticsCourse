@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot, wait, drop
-from maildelivery.brains.brains0 import robot_planner
+from maildelivery.agents import robot, wait
+from maildelivery.brains.brains1 import robot_planner
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,11 +8,14 @@ from matplotlib.animation import PillowWriter
 import gtsam
 import os
 
+DT = 0.001 #[s]
+V = 1.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'08_movie.gif')
-X_D = 1.0
-H_D = 0.4
+X_D = 10.0
+H_D = 4
+f_dist2charge = lambda dist: 0
 
 def build_block(base_ind : int, bottomleft_xy : np.ndarray):
     x_bl = location(base_ind + 0,bottomleft_xy + np.array([0,0]),'intersection')
@@ -121,6 +124,8 @@ theta0 = np.pi/2
 r0 = robot(gtsam.Pose2(x0,y0,theta0),0)
 r0.last_location = station
 r0.goal_location = station
+r0.max_forward = V * DT
+r0.f_dist2charge = f_dist2charge
 
 station = 21
 x0 = env.locations[station].xy[0]
@@ -129,6 +134,8 @@ theta0 = np.pi/2
 r1 = robot(gtsam.Pose2(x0,y0,theta0),1)
 r1.last_location = station
 r1.goal_location = station
+r1.max_forward = V * DT
+r1.f_dist2charge = f_dist2charge
 
 station = 22
 x0 = env.locations[station].xy[0]
@@ -137,16 +144,17 @@ theta0 = np.pi/2
 r2 = robot(gtsam.Pose2(x0,y0,theta0),2)
 r2.last_location = station
 r2.goal_location = station
+r2.max_forward = V * DT
+r2.f_dist2charge = f_dist2charge
 
-r = [r0,r1,r2]
+r = [r0]#,r1,r2]
 Nrobots = len(r)
 
+#ask for plan
 planner = robot_planner()
-planner.planner_name = 'optic'
+planner.f_dist2charge = f_dist2charge #no charge cost at all
 planner.create_problem(env,r)
-execution_times, actions, durations = planner.solve()
-parsed_actions = planner.parse_actions(actions, env)
-actions_per_robot = planner.actions_per_robot(parsed_actions, Nrobots)
+r_execution_times, r_actions, r_durations = planner.solve_and_parse(env)
 
 #plot initial state
 plt.ion()
@@ -162,48 +170,59 @@ if MOVIE:
     moviewriter.setup(fig,MOVIE_FILENAME,dpi = 100)
 
 #roll simulation
-current_action_indicies = [0 for _ in range(len(r))]
+t = 0
+plotCounter = 0
+
+r_current_actions = [wait(i) for i in range(Nrobots)]
+r_next_actions_indicies = [0 for _ in range(Nrobots)]
+r_done = [False for _ in range(Nrobots)]
 while True:
-    current_actions = [wait(id) for id in range(len(r))]
-    finished_all_actions = True
-    
-    for ri in range(len(r)):
-        if current_action_indicies[ri] < len(actions_per_robot[ri]): #still actions to do
-            current_actions[ri] = actions_per_robot[ri][current_action_indicies[ri]]
-            current_action_indicies[ri] += 1
-            finished_all_actions = False
 
-    if finished_all_actions:
-        break
+    for i,ri in enumerate(r):
+        #go do next action
+        if r_done[i] == False and \
+            type(r_current_actions[i]) == wait and \
+                t > r_execution_times[i][r_next_actions_indicies[i]]:
+            r_current_actions[i] = r_actions[i][r_next_actions_indicies[i]]
+            r_current_actions[i] #we update index so 
+            r_next_actions_indicies[i] += 1
+             
+        if ri.act(r_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions
+            r_current_actions[i] = wait(robot_id = i)
 
-    #perform current actions
-    status = False #just to initialize
-    current_actions_status = np.zeros(Nrobots) #just to initialize
-    while status is False:
-        
-        for ri, s in enumerate(current_actions_status):
-            if not s:
-                action = current_actions[ri]
-                current_actions_status[ri] = r[action.robot_id].act(action, env)
-        
-        status = bool(np.all(current_actions_status))
-
-        #update plot        
+    #update plot        
+    if plotCounter % 1000 == 0:
         for ri in r:
             ri.plot(ax)
-            for p in ri.owned_packages:
-                p.plot(ax)
-        for a, s in zip(current_actions, current_actions_status):
-            if s and type(a) is drop:
-                a.p.plot(ax)
-
+        for p in env.packages:
+            p.plot(ax)
+        
         if MOVIE:
             moviewriter.grab_frame()
         plt.pause(0.1)
+    plotCounter +=1
 
+    t += DT
+
+    for i in range(Nrobots):
+        r_done[i] = r_next_actions_indicies[i] == len(r_actions[i]) and type(r_current_actions[i]) == wait
+
+    if all(r_done):
+        for ri in r:
+            ri.plot(ax)
+        for p in env.packages:
+            p.plot(ax)
+        if MOVIE:
+            moviewriter.grab_frame()
+        break
+    
 #dont close window in the end
 ax.set_title('finished!')
 if MOVIE:
     moviewriter.finish()
+
+for ri in r:
+    print(f"robot has {ri.charge}/{ri.max_charge} charge left")
+
 plt.ioff()
 plt.show()

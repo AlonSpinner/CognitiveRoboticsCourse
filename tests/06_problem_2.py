@@ -8,9 +8,9 @@ from matplotlib.animation import PillowWriter
 import gtsam
 import os
 
-DT = 0.001
-L = 1.0
-T = 1.0
+DT = 0.001 #[s]
+V = 1.0 #[m/s]
+
 MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'06_movie.gif')
@@ -50,7 +50,7 @@ theta0 = np.pi/2
 r0 = robot(gtsam.Pose2(x0,y0,theta0),0)
 r0.last_location = l0
 r0.goal_location = l0
-r0.max_forward = L/T * DT
+r0.max_forward = V * DT
 
 l0 = 6
 x0 = env.locations[l0].xy[0]
@@ -59,7 +59,7 @@ theta0 = np.pi/2
 r1 = robot(gtsam.Pose2(x0,y0,theta0),1)
 r1.last_location = l0
 r1.goal_location = l0
-r1.max_forward = L/T * DT
+r1.max_forward = V * DT
 
 r = [r0,r1]
 Nrobots = len(r)
@@ -107,9 +107,9 @@ while True:
     if plotCounter % 100 == 0:
         for ri in r:
             ri.plot(ax)
-            for p in ri.owned_packages:
-                p.plot(ax)
-        
+        for p in env.packages:
+            p.plot(ax)
+    
         if MOVIE:
             moviewriter.grab_frame()
         plt.pause(0.1)

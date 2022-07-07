@@ -6,10 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gtsam
 
-PLANNER = 'optic'
 DT = 0.001 #[s]
-L = 1.0 #[m]
-T = 2.0 #[s]
+V = 0.5 #[m/s]
 
 def build_env():
     docks = [location(0,np.array([0,0]),'dock')]
@@ -45,7 +43,7 @@ theta0 = location.angle(env.locations[0],env.locations[1])
 r = robot(gtsam.Pose2(x0,y0,theta0),0)
 r.last_location = 0
 r.goal_location = 0
-r.max_forward = L/T * DT
+r.max_forward = V * DT
 
 #ask for plan
 planner = robot_planner()
