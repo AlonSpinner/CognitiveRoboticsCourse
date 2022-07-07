@@ -49,7 +49,6 @@ r.max_forward = L/T * DT
 
 #ask for plan
 planner = robot_planner()
-planner.planner_name = 'optic'
 planner.create_problem(env,[r])
 execution_times, actions, durations = planner.solve()
 parsed_actions = planner.parse_actions(actions, env)
@@ -64,17 +63,17 @@ plt.draw()
 
 #roll simulation
 t = 0
-action_index = 0
+next_action_index = 0
 plotCounter = 0
 action = wait(robot_id = 0)
 while True:
     
     #go do next action
-    if type(action) == wait and t > execution_times[action_index]:
-        action = parsed_actions[action_index]
-        action_index += 1
-    
-    
+    if type(action) == wait and t > execution_times[next_action_index]:
+        action = parsed_actions[next_action_index]
+        next_action_index += 1
+        
+        
     if r.act(action, env): #do action, and if its finished, start waiting allowing accepting new actions
         action = wait(robot_id = 0)
     
@@ -84,13 +83,13 @@ while True:
         for p in env.packages:
             p.plot(ax)
         plt.pause(0.01)
-
     plotCounter += 1
+    
     t += DT
 
-    if action_index == len(parsed_actions) and type(action) == wait:
+    if next_action_index == len(parsed_actions) and type(action) == wait:
         r.plot(ax)
-        for p in r.owned_packages:
+        for p in env.packages:
             p.plot(ax)
         break
 

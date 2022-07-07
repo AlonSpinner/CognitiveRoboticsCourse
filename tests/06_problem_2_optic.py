@@ -8,7 +8,9 @@ from matplotlib.animation import PillowWriter
 import gtsam
 import os
 
-DT = 0.0005
+DT = 0.001
+L = 1.0
+T = 1.0
 MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'06_movie.gif')
@@ -48,6 +50,7 @@ theta0 = np.pi/2
 r0 = robot(gtsam.Pose2(x0,y0,theta0),0)
 r0.last_location = l0
 r0.goal_location = l0
+r0.max_forward = L/T * DT
 
 l0 = 6
 x0 = env.locations[l0].xy[0]
@@ -56,17 +59,15 @@ theta0 = np.pi/2
 r1 = robot(gtsam.Pose2(x0,y0,theta0),1)
 r1.last_location = l0
 r1.goal_location = l0
+r1.max_forward = L/T * DT
 
 r = [r0,r1]
 Nrobots = len(r)
 
 #ask for plan
 planner = robot_planner()
-planner.planner_name = 'optic'
 planner.create_problem(env,r)
-execution_times, actions, durations = planner.solve()
-parsed_actions = planner.parse_actions(actions, env)
-# actions_per_robot = planner.actions_per_robot(parsed_actions, Nrobots)
+r_execution_times, r_actions, r_durations = planner.solve_and_parse(env)
 
 #plot initial state
 plt.ion()
@@ -83,31 +84,27 @@ if MOVIE:
 
 #roll simulation
 t = 0
-i = 0
 plotCounter = 0
 
-current_actions = [wait(0), wait(1)]
-current_actions_status = np.zeros(Nrobots) #just to initialize
+r_current_actions = [wait(i) for i in range(Nrobots)]
+r_next_actions_indicies = [0 for _ in range(Nrobots)]
+r_done = [False for _ in range(Nrobots)]
+while True:
 
-while t < execution_times[-1] + durations[-1]:
-    
-    while i != len(execution_times) and t >= execution_times[i]:  #could have been if, but might be two robots
-        action = parsed_actions[i]
-        current_actions[action.robot_id] = action
-        current_actions_status[action.robot_id] = False
-        r[action.robot_id].act(action, env)
-        i += 1
-    
-    status = False #just to initialize
-    for ri, s in enumerate(current_actions_status):
-        if not s:
-            action = current_actions[ri]
-            current_actions_status[ri] = r[action.robot_id].act(action, env)
-
-    status = bool(np.all(current_actions_status))
+    for i,ri in enumerate(r):
+        #go do next action
+        if r_done[i] == False and \
+            type(r_current_actions[i]) == wait and \
+                t > r_execution_times[i][r_next_actions_indicies[i]]:
+            r_current_actions[i] = r_actions[i][r_next_actions_indicies[i]]
+            r_current_actions[i] #we update index so 
+            r_next_actions_indicies[i] += 1
+             
+        if ri.act(r_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions
+            r_current_actions[i] = wait(robot_id = i)
 
     #update plot        
-    if plotCounter % 200 == 0:
+    if plotCounter % 100 == 0:
         for ri in r:
             ri.plot(ax)
             for p in ri.owned_packages:
@@ -116,10 +113,20 @@ while t < execution_times[-1] + durations[-1]:
         if MOVIE:
             moviewriter.grab_frame()
         plt.pause(0.1)
-    t += DT
     plotCounter +=1
-    print(t)
 
+    t += DT
+
+    for i in range(Nrobots):
+        r_done[i] = r_next_actions_indicies[i] == len(r_actions[i]) and type(r_current_actions[i]) == wait
+
+    if all(r_done):
+        for ri in r:
+            ri.plot(ax)
+        for p in env.packages:
+            p.plot(ax)
+        break
+    
 #dont close window in the end
 ax.set_title('finished!')
 if MOVIE:

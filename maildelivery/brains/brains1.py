@@ -21,7 +21,6 @@ class robot_planner:
     multirobot, instant actions, no charging
     '''
     def __init__(self) -> None:
-        self.planner_name = 'optic' #can also be 'tamer' or 'up-auto'
         self.f_dist2charge  = lambda dist: 2 * dist
         self.create_domain()
 
@@ -181,47 +180,29 @@ class robot_planner:
         self._packages = _packages
         
     def solve(self):
-        if self.planner_name == 'up-auto':
-            with OneshotPlanner(problem_kind = self.problem.kind) as planner:
-                result = planner.solve(self.problem)
-        elif self.planner_name == 'tamer':
-            with OneshotPlanner(name='tamer',
-                    optimality_guarantee=PlanGenerationResultStatus.SOLVED_OPTIMALLY) as planner:
-                #this solved optimally seems to do nothing
-                result = planner.solve(self.problem)
-            return result.plan
+        w = PDDLWriter(self.problem)
+        with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
+            print(w.get_domain(), file = f)
+        with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
+            print(w.get_problem(), file = f)
+        print('copied pddls')
         
-        elif self.planner_name == 'optic':
-            w = PDDLWriter(self.problem)
-            with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
-                print(w.get_domain(), file = f)
-            with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
-                print(w.get_problem(), file = f)
-            print('copied pddls')
-            
-            if len(self._robots) == 1:
-                optic_wrapper.add_problem_lines([f' (:metric maximize (charge {self._robots[0]}))'])
-            else:
-                part1 = ' (:metric maximize (+ '
-                part2 = ' '.join([f'(charge {rname})' for rname in self._robots])
-                part3 = '))'
-                newline = part1 + part2 + part3
-                optic_wrapper.add_problem_lines([newline])
-            
-
-            optic_wrapper.run_optic()
-            
-            execution_times, actions, durations = optic_wrapper.get_plan()
-
-            return execution_times, actions, durations
-
-    def parse_actions(self, actions, env):
-        if self.planner_name == 'optic':
-            return self.parse_actions_optic(actions,env)
+        if len(self._robots) == 1:
+            optic_wrapper.add_problem_lines([f' (:metric maximize (charge {self._robots[0]}))'])
         else:
-            return self.parse_actions_up(actions,env)
+            part1 = ' (:metric maximize (+ '
+            part2 = ' '.join([f'(charge {rname})' for rname in self._robots])
+            part3 = '))'
+            newline = part1 + part2 + part3
+            optic_wrapper.add_problem_lines([newline])
+        
+        optic_wrapper.run_optic()
+        execution_times, actions, durations = optic_wrapper.get_plan()
 
-    def parse_actions_optic(self, actions : list[tuple], env : enviorment):
+        return execution_times, actions, durations
+
+    def parse_actions(self, actions : list[tuple], env : enviorment):
+        #from up actions to my actions
         parsed_actions = []
         for a in actions:
             name = a[0]
@@ -246,43 +227,38 @@ class robot_planner:
                     ))
         return parsed_actions
     
-    def parse_actions_up(self, actions : list[up.plans.plan.ActionInstance], env : enviorment):
-        parsed_actions = []
-        for a in actions:
-            if a.action.name == 'move':
-                parsed_actions.append(move(
-                    int(str(a.actual_parameters[0])[1:]), #robot id
-                    env.locations[int(str(a.actual_parameters[1])[1:])], #locations_from
-                    env.locations[int(str(a.actual_parameters[2])[1:])], #locations_to
-                    )) 
-            elif a.action.name == 'drop':
-                parsed_actions.append(drop(
-                    int(str(a.actual_parameters[1])[1:]), #robot id
-                    env.packages[int(str(a.actual_parameters[0])[1:])], #package
-                    env.locations[int(str(a.actual_parameters[2])[1:])] #location
-                    )) 
-            elif a.action.name == 'pickup':
-                parsed_actions.append(pickup(
-                    int(str(a.actual_parameters[1])[1:]), #robot id
-                    env.packages[int(str(a.actual_parameters[0])[1:])], #package
-                    env.locations[int(str(a.actual_parameters[2])[1:])] #location
-                    ))
-        return parsed_actions
-
-    def actions_per_robot(self,parsed_actions : list[action], Nrobots = None):
+    def actions_indicies_per_robot(self,parsed_actions : list[action], Nrobots = None):
+        #split to N lists each holding indicies of actions [indicies for robot0, indicies for robot1...]
         if Nrobots is None:
             robots_inds = np.sort(np.unique([a.robot_id for a in parsed_actions]))
         else:
             robots_inds = list(range(Nrobots))
         
-        robots_actions = [[] for _ in robots_inds]
-        robot_actions_indicies = [[] for _ in robots_inds]
+        actions_indicies_per_robot = [[] for _ in robots_inds]
         
-        for a,idx in enumerate(parsed_actions):
-            robots_actions[a.robot_id].append(a)
-            robot_actions_indicies[a.robot_id].append(idx)
+        for idx, a in enumerate(parsed_actions):
+            actions_indicies_per_robot[a.robot_id].append(idx)
         
-        return robots_actions, robot_actions_indicies
+        return actions_indicies_per_robot
+
+    def plan_per_robot(self,actions_indicies_per_robot, execution_times, actions, durations):
+        N = len(actions_indicies_per_robot)
+        robot_actions = [[] for _ in range(N)]
+        robot_durations = [[] for _ in range(N)]
+        robot_execution_times = [[] for _ in range(N)]
+        for i in range(N):
+            robot_execution_times[i] = [execution_times[k] for k in actions_indicies_per_robot[i]]
+            robot_actions[i] = [actions[k] for k in actions_indicies_per_robot[i]]
+            robot_durations[i] = [durations[k] for k in actions_indicies_per_robot[i]]
+        
+        return robot_execution_times, robot_actions, robot_durations
+
+    def solve_and_parse(self,env,):
+        execution_times, up_actions, durations = self.solve()
+        actions = self.parse_actions(up_actions, env)
+        actions_indicies_per_robot = self.actions_indicies_per_robot(actions)
+        r_execution_times, r_actions, r_durations = self.plan_per_robot(actions_indicies_per_robot, execution_times, actions, durations)
+        return r_execution_times, r_actions, r_durations
 
 class drone_planner:
     pass
