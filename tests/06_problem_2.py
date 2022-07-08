@@ -67,7 +67,7 @@ Nrobots = len(r)
 #ask for plan
 planner = robot_planner()
 planner.create_problem(env,r)
-r_execution_times, r_actions, r_durations = planner.solve_and_parse(env)
+r_execution_times, r_actions, r_durations = planner.solve_and_parse(env,read_only = False)
 
 #plot initial state
 plt.ion()

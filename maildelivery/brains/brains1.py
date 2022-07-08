@@ -230,13 +230,17 @@ class robot_planner:
         #     newline = part1 + part2 + part3
         #     optic_wrapper.add_problem_lines([newline])
         
-    def solve(self):        
-        start = time.time()
-        print('started solving domain+problem with optic')
-        optic_wrapper.run_optic()
-        end = time.time()
-        print(f'finished solving in {end-start} seconds')
+    def solve(self, read_only = False, time_fix = True):        
+        if not read_only:
+            start = time.time()
+            print('started solving domain+problem with optic')
+            optic_wrapper.run_optic()
+            end = time.time()
+            print(f'finished solving in {end-start} seconds')
         execution_times, actions, durations = optic_wrapper.get_plan()
+
+        if time_fix:
+            execution_times = [execution_times[i] - execution_times[0] for i in range(len(execution_times))]
 
         return execution_times, actions, durations
 
@@ -292,8 +296,8 @@ class robot_planner:
         
         return robot_execution_times, robot_actions, robot_durations
 
-    def solve_and_parse(self,env,):
-        execution_times, up_actions, durations = self.solve()
+    def solve_and_parse(self,env,read_only = False):
+        execution_times, up_actions, durations = self.solve(read_only = read_only)
         actions = self.parse_actions(up_actions, env)
         actions_indicies_per_robot = self.actions_indicies_per_robot(actions)
         r_execution_times, r_actions, r_durations = self.plan_per_robot(actions_indicies_per_robot, execution_times, actions, durations)
