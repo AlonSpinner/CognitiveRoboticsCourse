@@ -180,7 +180,7 @@ class drone:
 #--------------------------------PLOTTING FUNCTIONS-------------------------
 #---------------------------------------------------------------------------
 
-def plot_robot(ax , r : robot, scale = 20, color = 'b'):
+def plot_robot(ax : plt.Axes , r : robot, scale = 20, color = 'b'):
         TEXT_OFFSET = 0.04
         RADIUS = 0.1
         pose = r.pose
@@ -190,7 +190,7 @@ def plot_robot(ax , r : robot, scale = 20, color = 'b'):
         ptext = r.pose.transformFrom(ptext)
         graphics_quiver = ax.quiver(pose.x(),pose.y(),u,v, color = color, scale = scale, width = 0.02)
         graphics_circle = ax.add_patch(plt.Circle((pose.x(),pose.y()),RADIUS,fill = False, color = color))
-        graphics_txt = ax.text(ptext[0],ptext[1],r.id, color = color)
+        graphics_txt = ax.text(ptext[0],ptext[1],r.id, color = color, horizontalalignment = 'center')
         return [graphics_quiver,graphics_circle,graphics_txt]
 
 def plot_robot_deadcharge(ax, r : robot, scale = 20, color = 'r'):

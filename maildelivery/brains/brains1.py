@@ -93,13 +93,6 @@ class robot_planner:
         problem.add_fluent(robot_can_hold_package, default_initial_value = True)
         problem.add_fluent(charge, default_initial_value = int(0))
         problem.add_fluent(distance, default_initial_value = int(NOT_CONNECTED_DISTANCE)) #some absuard number
-        
-        # problem.add_quality_metric(metric =  MinimizeMakespan())
-        # problem.add_quality_metric(metric = MinimizeActionCosts({
-        #                                                         _move: Int(1),
-        #                                                         _pickup: Int(0),
-        #                                                         _drop: Int(0)
-        #                                                         }))
 
         #save to self
         self.problem = problem
@@ -174,11 +167,27 @@ class robot_planner:
         for r in robots:
             self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
 
-        # self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
+        # self._locations = _locations
+        # self._robots = _robots
+        # self._packages = _packages
 
-        self._locations = _locations
-        self._robots = _robots
-        self._packages = _packages
+        #add optimization here via rewriting the pddl files
+        if len(_robots) == 1:
+            optic_wrapper.add_problem_lines([f' (:metric maximize (charge {_robots[0]}))'])
+        else:
+            part1 = ' (:metric maximize (+ '
+            part2 = ' '.join([f'(charge {rname})' for rname in _robots])
+            part3 = '))'
+            newline = part1 + part2 + part3
+            optic_wrapper.add_problem_lines([newline])
+
+        # self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
+        # problem.add_quality_metric(metric =  MinimizeMakespan())
+        # problem.add_quality_metric(metric = MinimizeActionCosts({
+        #                                                         _move: Int(1),
+        #                                                         _pickup: Int(0),
+        #                                                         _drop: Int(0)
+        #                                                         }))
         
     def solve(self):
         w = PDDLWriter(self.problem)
@@ -187,15 +196,6 @@ class robot_planner:
         with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
             print(w.get_problem(), file = f)
         print('copied pddls')
-        
-        if len(self._robots) == 1:
-            optic_wrapper.add_problem_lines([f' (:metric maximize (charge {self._robots[0]}))'])
-        else:
-            part1 = ' (:metric maximize (+ '
-            part2 = ' '.join([f'(charge {rname})' for rname in self._robots])
-            part3 = '))'
-            newline = part1 + part2 + part3
-            optic_wrapper.add_problem_lines([newline])
         
         start = time.time()
         print('started solving domain+problem with optic')
