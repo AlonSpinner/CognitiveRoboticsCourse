@@ -14,7 +14,7 @@ MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'08_movie.gif')
 X_D = 10.0
-H_D = 4
+H_D = 4.0
 f_dist2charge = lambda dist: 0
 
 def build_block(base_ind : int, bottomleft_xy : np.ndarray):
@@ -147,7 +147,7 @@ r2.goal_location = station
 r2.max_forward = V * DT
 r2.f_dist2charge = f_dist2charge
 
-r = [r0,r1]#,r2]
+r = [r0]#,r1]#,r2]
 Nrobots = len(r)
 
 #ask for plan

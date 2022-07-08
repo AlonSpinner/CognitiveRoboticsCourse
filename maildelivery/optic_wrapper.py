@@ -12,7 +12,7 @@ PLAN_PATH = os.path.join(DOCKER_DIR_PATH,"plan.txt")
 
 OPTIC_NO_LP = "optic-rewrite-no-lp"
 OPTIC_CLP = "optic-clp -N"
-BINARY_NAME = OPTIC_CLP
+BINARY_NAME = OPTIC_NO_LP
 
 def place_files(domain_old,problem_old):
     subprocess.run(f"cp {domain_old} {DOMAIN_PATH}", shell = True)

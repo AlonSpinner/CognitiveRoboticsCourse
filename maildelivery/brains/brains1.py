@@ -1,15 +1,15 @@
 from maildelivery.agents import move, pickup, drop, robot, action
-from maildelivery.world import enviorment
+from maildelivery.world import enviorment, package
 import numpy as np
 
 import unified_planning as up
 from unified_planning.shortcuts import UserType, BoolType,\
         Fluent, InstantaneousAction, DurativeAction, Problem, Object,\
-        IntType, Int, StartTiming, EndTiming, GE, SimulatedEffect
+        IntType, Int, StartTiming, EndTiming, GE, GT, Or, Equals, And, Not, Implies, SimulatedEffect
 from unified_planning.io.pddl_writer import PDDLWriter
-
 import time
-#from unified_planning.model.metrics import MinimizeMakespan, MinimizeActionCosts, MinimizeExpressionOnFinalState, MaximizeExpressionOnFinalState
+from unified_planning.model.metrics import MinimizeMakespan,\
+     MinimizeActionCosts, MinimizeExpressionOnFinalState, MaximizeExpressionOnFinalState
 
 
 up.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
@@ -37,13 +37,15 @@ class robot_planner:
             #robot can wait on a location, occupying it, and no robot will pass over
         location_not_targeted = Fluent('not_targeted', BoolType(), l_to = _location)
             #no robot is targeting the location == moving towards it. We don't want "near misses"
-        road_is_free = Fluent('road_is_used',BoolType(), l_from = _location, l_to = _location)
+        road_is_free = Fluent('road_is_free',BoolType(), l_from = _location, l_to = _location)
             #don't want two robots to go into head on collision
         robot_has_package = Fluent('robot_has_package', BoolType(), p = _package, r = _robot)
             #robot has a specific package, to allow for drop actions
-        robot_can_hold_package = Fluent('robot_can_hold_package', BoolType(), r = _robot)
+        robot_not_holding_package = Fluent('robot_not_holding_package', BoolType(), r = _robot)
             #to prevent picking up more than one package
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
+        location_packages_amount = Fluent('location_packages_amount', IntType(), l = _location)
+        package_goal = Fluent('package_goal',BoolType(), p = _package, l = _location)
         distance = Fluent('distance', IntType(), l_from = _location, l_to = _location)
             #used charge is a function of distance in this model
         charge = Fluent('charge', IntType(0,100), r = _robot)
@@ -59,6 +61,9 @@ class robot_planner:
         _move.add_condition(StartTiming(), robot_at(r, l_from))
         _move.add_condition(EndTiming(),location_is_free(l_to))
         _move.add_condition(StartTiming(),GE(charge(r),self.f_dist2charge(distance(l_from,l_to))))
+        # _move.add_condition(StartTiming(), Implies(GT(location_packages_amount(l_from),Int(0)), Not(robot_not_holding_package(r))))
+        _move.add_condition(StartTiming(), Or(Equals(location_packages_amount(l_from),Int(0)),And(GT(location_packages_amount(l_from),Int(0)),Not(robot_not_holding_package(r)))))
+        # _move.add_condition(StartTiming(), Equals(location_packages_amount(l_from),Int(0)))
         _move.add_effect(StartTiming(),robot_at(r, l_from), False)
         _move.add_effect(StartTiming(),location_is_free(l_from), True)
         _move.add_effect(StartTiming(), location_not_targeted(l_to), False)
@@ -80,10 +85,11 @@ class robot_planner:
         l = _pickup.parameter('l')
         _pickup.add_precondition(robot_at(r, l))
         _pickup.add_precondition(location_has_package(p, l))
-        _pickup.add_precondition(robot_can_hold_package(r))
+        _pickup.add_precondition(robot_not_holding_package(r))
         _pickup.add_effect(location_has_package(p, l), False)
         _pickup.add_effect(robot_has_package(p, r), True)
-        _pickup.add_effect(robot_can_hold_package(r), False)
+        _pickup.add_effect(robot_not_holding_package(r), False)
+        _pickup.add_decrease_effect(location_packages_amount(l),1)
 
         _drop = InstantaneousAction('drop', p = _package, r = _robot, l = _location)
         p = _drop.parameter('p')
@@ -93,7 +99,8 @@ class robot_planner:
         _drop.add_precondition(robot_has_package(p, r))
         _drop.add_effect(robot_has_package(p, r), False)
         _drop.add_effect(location_has_package(p, l), True)
-        _drop.add_effect(robot_can_hold_package(r), True)
+        _drop.add_effect(robot_not_holding_package(r), True)
+        _drop.add_increase_effect(location_packages_amount(l),1,Not(package_goal(p,l)))
 
         problem = Problem('maildelivery')
         problem.add_action(_move)
@@ -104,11 +111,13 @@ class robot_planner:
         problem.add_fluent(location_is_free, default_initial_value = True)
         problem.add_fluent(robot_has_package, default_initial_value = False)
         problem.add_fluent(location_has_package, default_initial_value = False)
-        problem.add_fluent(robot_can_hold_package, default_initial_value = True)
+        problem.add_fluent(robot_not_holding_package, default_initial_value = True)
         problem.add_fluent(charge, default_initial_value = int(0))
         problem.add_fluent(distance, default_initial_value = int(NOT_CONNECTED_DISTANCE)) #some absuard number
         problem.add_fluent(location_not_targeted, default_initial_value = True)
         problem.add_fluent(road_is_free, default_initial_value = True)
+        problem.add_fluent(location_packages_amount, default_initial_value = int(0))
+        problem.add_fluent(package_goal, default_initial_value = False)
 
         #save to self
         self.problem = problem
@@ -122,9 +131,13 @@ class robot_planner:
         self.location_is_free = location_is_free
         self.robot_has_package = robot_has_package
         self.location_has_package = location_has_package
-        self.robot_can_hold_package = robot_can_hold_package
+        self.robot_not_holding_package = robot_not_holding_package
         self.charge = charge
         self.distance = distance
+        self.location_not_targeted = location_not_targeted
+        self.road_is_free = road_is_free
+        self.location_packages_amount = location_packages_amount
+        self.package_goal = package_goal
 
     def create_problem(self, env : enviorment, robots : list[robot]):
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
@@ -166,22 +179,39 @@ class robot_planner:
 
         #place packages
         for p in env.packages:
+            self.problem.set_initial_value(self.package_goal(
+                                                _packages[p.id],
+                                                _locations[p.goal]),
+                                                True)
+
             if p.owner_type == 'location':
                 self.problem.set_initial_value(self.location_has_package(
                                                             _packages[p.id],
                                                             _locations[p.owner]),
                                                             True)
+                self.problem.set_initial_value(self.location_packages_amount(
+                                                         _locations[p.owner]),
+                                                         1)
+
             elif p.owner_type == 'robot':
                 self.problem.set_initial_value(self.robot_has_package(
                                                 _packages[p.id],
                                                 _robots[p.owner]),
                                                 True)
-                self.problem.set_initial_value(self.robot_can_hold_package(_robots[p.owner]),False)
+                self.problem.set_initial_value(self.robot_not_holding_package(_robots[p.owner]),False)
         #goal
         for p in env.packages:
             self.problem.add_goal(self.location_has_package(_packages[p.id],_locations[p.goal]))
         for r in robots:
             self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
+
+        # self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
+        self.problem.add_quality_metric(metric =  MinimizeMakespan())
+        # problem.add_quality_metric(metric = MinimizeActionCosts({
+        #                                                         _move: Int(1),
+        #                                                         _pickup: Int(0),
+        #                                                         _drop: Int(0)
+        #                                                         }))
 
         w = PDDLWriter(self.problem)
         with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
@@ -190,23 +220,15 @@ class robot_planner:
             print(w.get_problem(), file = f)
         print('copied pddls')
 
-        # add optimization here via rewriting the pddl files
-        if len(_robots) == 1:
-            optic_wrapper.add_problem_lines([f' (:metric maximize (charge {_robots[0]}))'])
-        else:
-            part1 = ' (:metric maximize (+ '
-            part2 = ' '.join([f'(charge {rname})' for rname in _robots])
-            part3 = '))'
-            newline = part1 + part2 + part3
-            optic_wrapper.add_problem_lines([newline])
-
-        # self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
-        # problem.add_quality_metric(metric =  MinimizeMakespan())
-        # problem.add_quality_metric(metric = MinimizeActionCosts({
-        #                                                         _move: Int(1),
-        #                                                         _pickup: Int(0),
-        #                                                         _drop: Int(0)
-        #                                                         }))
+        # # add optimization here via rewriting the pddl files
+        # if len(_robots) == 1:
+        #     optic_wrapper.add_problem_lines([f' (:metric maximize (charge {_robots[0]}))'])
+        # else:
+        #     part1 = ' (:metric maximize (+ '
+        #     part2 = ' '.join([f'(charge {rname})' for rname in _robots])
+        #     part3 = '))'
+        #     newline = part1 + part2 + part3
+        #     optic_wrapper.add_problem_lines([newline])
         
     def solve(self):        
         start = time.time()
