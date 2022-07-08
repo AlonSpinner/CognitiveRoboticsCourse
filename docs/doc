@@ -27,10 +27,23 @@ https://github.com/karpase/unified-planning
 	Maybe this is all I need? "The unified_planning library makes it easy to formulate planning problems and to invoke automated planners."
 		This is the source https://github.com/aiplan4eu/unified-planning
 
-https://github.com/AI-Planning
+repo with high intentions
+	https://github.com/AI-Planning
+	https://github.com/AI-Planning/planutils
+	http://education.planning.domains/
+	http://ai.berkeley.edu/contest.html
 
-https://github.com/Dongbox/optic-clp-release
+	https://github.com/Dongbox/optic-clp-release
 
+pacman competition... they use fastforward solver
+	http://ai.berkeley.edu/contest.html
+	https://github.com/AI4EDUC/pacman-contest-cluster
+
+classical planning course. good stuff
+	https://github.com/pucrs-automated-planning
+
+This repo contains various automated planning systems with the source code.
+	https://github.com/ssardina-planning/planners
 
 
 

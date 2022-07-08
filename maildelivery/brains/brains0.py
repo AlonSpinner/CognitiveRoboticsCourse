@@ -30,17 +30,18 @@ class robot_planner:
         robot_has_package = Fluent('robot_has_package', BoolType(), p = _package, r = _robot)
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
 
-        _move = InstantaneousAction('move',  r = _robot, l_from = _location, l_to = _location)
+        _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
         l_from = _move.parameter('l_from')
         l_to = _move.parameter('l_to')
-        _move.add_precondition(is_connected(l_from, l_to))
-        _move.add_precondition(robot_at(r, l_from))
-        _move.add_precondition((is_free(l_to))) #at end, l_to is free
-        _move.add_effect(robot_at(r, l_from), False)
-        _move.add_effect(is_free(l_from), True)
-        _move.add_effect(robot_at(r, l_to), True)
-        _move.add_effect(is_free(l_to), False)
+        _move.set_fixed_duration(1)
+        _move.add_condition(StartTiming(),is_connected(l_from, l_to))
+        _move.add_condition(StartTiming(),robot_at(r, l_from))
+        _move.add_condition(StartTiming(),is_free(l_to)) #at end, l_to is free
+        _move.add_effect(StartTiming(),robot_at(r, l_from), False)
+        _move.add_effect(EndTiming(),is_free(l_from), True)
+        _move.add_effect(EndTiming(),robot_at(r, l_to), True)
+        _move.add_effect(EndTiming(),is_free(l_to), False)
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
         p = _pickup.parameter('p')
