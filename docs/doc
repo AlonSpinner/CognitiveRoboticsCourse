@@ -49,6 +49,7 @@ Optic - https://nms.kcl.ac.uk/planning/software/optic.html
 
 lpg - Optic competitor?
 	https://lpg.unibs.it/lpg/ #pddl 2.2
+	https://lpg.unibs.it/lpg/download-lpg-td.html
 
 popf - Optic competitor?
 	https://github.com/fmrico/popf
@@ -99,3 +100,8 @@ Maybe this:
 
 	3) The nice thing about this idea is that it completely seperates (1) from (2).
 		We can work with an incomplete (1) where minimization did not happen.
+
+	IDEA: planners seem to like to make 1 robot do all the work.
+			How about we introduce a metric of the distance between fuel uses. We want to minimize this distance
+
+	

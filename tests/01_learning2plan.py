@@ -33,6 +33,7 @@ robot_has_package = Fluent('robot_has_package', BoolType(), p = package, r = rob
 location_has_package = Fluent('location_has_package', BoolType(), p = package, l = location)
 location_is_dock = Fluent('location_is_dock', BoolType(), l = location)
 charge = Fluent('charge', IntType(0,100), r = robot)
+not_targeted = Fluent('not_targeted', BoolType(), l_to = location)
 
 #actions
 move = DurativeAction('move',  r = robot, l_from = location, l_to = location)
@@ -45,10 +46,13 @@ move.add_condition(StartTiming(),Or(is_connected(l_from, l_to), \
 move.add_condition(StartTiming(),GE(charge(r),dist2chargeUse(distance(l_from,l_to))))
 move.add_condition(StartTiming(), robot_at(r, l_from))
 move.add_condition(EndTiming(), is_free(l_to))
+move.add_condition(StartTiming(), not_targeted(l_to))
 move.add_effect(StartTiming(), robot_at(r, l_from), False)
 move.add_effect(StartTiming(), is_free(l_from), True)
+move.add_effect(StartTiming(), not_targeted(l_to), False)
 move.add_effect(EndTiming(), robot_at(r, l_to), True)
 move.add_effect(EndTiming(), is_free(l_to), False)
+move.add_effect(EndTiming(), not_targeted(l_to), True)
 def decrease_charge_fun(problem, state, actual_params):
         dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
         requiredCharge = dist2chargeUse(dist)
@@ -98,6 +102,7 @@ problem.add_fluent(robot_has_package, default_initial_value = False)
 problem.add_fluent(location_has_package, default_initial_value = False)
 problem.add_fluent(location_is_dock, default_initial_value = False)
 problem.add_fluent(charge, default_initial_value = 0) #unsolvable problem without initating this value
+problem.add_fluent(not_targeted, default_initial_value = True)
 
 # --------------------------------------------- Set specific values
 #objects of problem

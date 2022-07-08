@@ -39,6 +39,7 @@ class robot_planner:
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
         distance = Fluent('distance', IntType(), l_from = _location, l_to = _location)
         charge = Fluent('charge', IntType(0,100), r = _robot)
+        not_targeted = Fluent('not_targeted', BoolType(), l_to = _location)
 
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
@@ -46,13 +47,16 @@ class robot_planner:
         l_to = _move.parameter('l_to')
         _move.set_fixed_duration(distance(l_from,l_to))
         _move.add_condition(StartTiming(), is_connected(l_from, l_to))
+        _move.add_condition(StartTiming(), not_targeted(l_to))
         _move.add_condition(StartTiming(), robot_at(r, l_from))
         _move.add_condition(EndTiming(),is_free(l_to)) #at end, l_to is free
         _move.add_condition(StartTiming(),GE(charge(r),self.f_dist2charge(distance(l_from,l_to))))
         _move.add_effect(StartTiming(),robot_at(r, l_from), False)
         _move.add_effect(StartTiming(),is_free(l_from), True)
+        _move.add_effect(StartTiming(), not_targeted(l_to), False)
         _move.add_effect(EndTiming(),robot_at(r, l_to), True)
         _move.add_effect(EndTiming(),is_free(l_to), False)
+        _move.add_effect(EndTiming(), not_targeted(l_to), True)
         def decrease_charge_fun(problem, state, actual_params):
             dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
             requiredCharge = self.f_dist2charge(dist)
@@ -93,6 +97,7 @@ class robot_planner:
         problem.add_fluent(robot_can_hold_package, default_initial_value = True)
         problem.add_fluent(charge, default_initial_value = int(0))
         problem.add_fluent(distance, default_initial_value = int(NOT_CONNECTED_DISTANCE)) #some absuard number
+        problem.add_fluent(not_targeted, default_initial_value = True)
 
         #save to self
         self.problem = problem
@@ -172,14 +177,14 @@ class robot_planner:
         # self._packages = _packages
 
         #add optimization here via rewriting the pddl files
-        if len(_robots) == 1:
-            optic_wrapper.add_problem_lines([f' (:metric maximize (charge {_robots[0]}))'])
-        else:
-            part1 = ' (:metric maximize (+ '
-            part2 = ' '.join([f'(charge {rname})' for rname in _robots])
-            part3 = '))'
-            newline = part1 + part2 + part3
-            optic_wrapper.add_problem_lines([newline])
+        # if len(_robots) == 1:
+        #     optic_wrapper.add_problem_lines([f' (:metric maximize (charge {_robots[0]}))'])
+        # else:
+        #     part1 = ' (:metric maximize (+ '
+        #     part2 = ' '.join([f'(charge {rname})' for rname in _robots])
+        #     part3 = '))'
+        #     newline = part1 + part2 + part3
+        #     optic_wrapper.add_problem_lines([newline])
 
         # self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
         # problem.add_quality_metric(metric =  MinimizeMakespan())
