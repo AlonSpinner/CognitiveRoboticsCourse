@@ -10,6 +10,10 @@ DOMAIN_PATH = os.path.join(DOCKER_DIR_PATH,"domain.pddl")
 PROBLEM_PATH = os.path.join(DOCKER_DIR_PATH,"problem.pddl")
 PLAN_PATH = os.path.join(DOCKER_DIR_PATH,"plan.txt")
 
+OPTIC_NO_LP = "optic-rewrite-no-lp"
+OPTIC_CLP = "optic-clp -N"
+BINARY_NAME = OPTIC_CLP
+
 def place_files(domain_old,problem_old):
     subprocess.run(f"cp {domain_old} {DOMAIN_PATH}", shell = True)
     subprocess.run(f"cp {problem_old} {PROBLEM_PATH}", shell = True)
@@ -17,7 +21,7 @@ def place_files(domain_old,problem_old):
 def run_optic():
     # p = subprocess.run(f"./optic-clp {DOMAIN_PATH} {PROBLEM_PATH} > {PLAN_PATH}", \
     #      cwd = DIR_PATH, shell = True)
-    p = subprocess.run(f"./optic-rewrite-no-lp {DOMAIN_PATH} {PROBLEM_PATH} > {PLAN_PATH}", \
+    p = subprocess.run(f"./{BINARY_NAME} {DOMAIN_PATH} {PROBLEM_PATH} > {PLAN_PATH}", \
          cwd = DIR_PATH, shell = True)
     return p.returncode
 

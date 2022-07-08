@@ -172,19 +172,22 @@ class robot_planner:
         for r in robots:
             self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
 
-        # self._locations = _locations
-        # self._robots = _robots
-        # self._packages = _packages
+        w = PDDLWriter(self.problem)
+        with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
+            print(w.get_domain(), file = f)
+        with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
+            print(w.get_problem(), file = f)
+        print('copied pddls')
 
-        #add optimization here via rewriting the pddl files
-        # if len(_robots) == 1:
-        #     optic_wrapper.add_problem_lines([f' (:metric maximize (charge {_robots[0]}))'])
-        # else:
-        #     part1 = ' (:metric maximize (+ '
-        #     part2 = ' '.join([f'(charge {rname})' for rname in _robots])
-        #     part3 = '))'
-        #     newline = part1 + part2 + part3
-        #     optic_wrapper.add_problem_lines([newline])
+        # add optimization here via rewriting the pddl files
+        if len(_robots) == 1:
+            optic_wrapper.add_problem_lines([f' (:metric maximize (charge {_robots[0]}))'])
+        else:
+            part1 = ' (:metric maximize (+ '
+            part2 = ' '.join([f'(charge {rname})' for rname in _robots])
+            part3 = '))'
+            newline = part1 + part2 + part3
+            optic_wrapper.add_problem_lines([newline])
 
         # self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
         # problem.add_quality_metric(metric =  MinimizeMakespan())
@@ -194,14 +197,7 @@ class robot_planner:
         #                                                         _drop: Int(0)
         #                                                         }))
         
-    def solve(self):
-        w = PDDLWriter(self.problem)
-        with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
-            print(w.get_domain(), file = f)
-        with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
-            print(w.get_problem(), file = f)
-        print('copied pddls')
-        
+    def solve(self):        
         start = time.time()
         print('started solving domain+problem with optic')
         optic_wrapper.run_optic()

@@ -33,8 +33,6 @@ repo with high intentions
 	http://education.planning.domains/
 	http://ai.berkeley.edu/contest.html
 
-	https://github.com/Dongbox/optic-clp-release
-
 pacman competition... they use fastforward solver
 	http://ai.berkeley.edu/contest.html
 	https://github.com/AI4EDUC/pacman-contest-cluster
@@ -46,6 +44,7 @@ This repo contains various automated planning systems with the source code.
 	https://github.com/ssardina-planning/planners
 
 Optic - https://nms.kcl.ac.uk/planning/software/optic.html
+		https://github.com/Dongbox/optic-clp-release
 
 lpg - Optic competitor?
 	https://lpg.unibs.it/lpg/ #pddl 2.2
