@@ -14,7 +14,7 @@
   :effect (and (not (location_has_package ?p ?l)) (robot_has_package ?p ?r) (not (robot_not_holding_package ?r)) (decrease (location_packages_amount ?l) 1)))
  (:action drop
   :parameters ( ?p - package ?r - robot ?l - location)
-  :precondition (and (robot_at ?r ?l) (robot_has_package ?p ?r))
+  :precondition (and (robot_at ?r ?l) (robot_has_package ?p ?r) (package_goal ?p ?l))
   :effect (and (not (robot_has_package ?p ?r)) (location_has_package ?p ?l) (robot_not_holding_package ?r) (when (not (package_goal ?p ?l)) (increase (location_packages_amount ?l) 1))))
 )
 
