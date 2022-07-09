@@ -49,7 +49,7 @@ r.max_forward = V * DT
 #ask for plan
 planner = robot_planner()
 planner.create_problem(env,[r])
-execution_times, actions, durations = planner.solve(engine_name = 'optic')
+execution_times, actions, durations = planner.solve(engine_name = 'lpg')
 parsed_actions = parse_actions(actions, env)
 
 #plot initial state

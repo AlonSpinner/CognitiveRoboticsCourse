@@ -2,6 +2,7 @@ from maildelivery.agents import move, pickup, drop, robot, action
 from maildelivery.world import enviorment, package
 from maildelivery.binary_solvers import manipulate_pddls, paths
 from maildelivery.binary_solvers.optic import optic_wrapper
+from maildelivery.binary_solvers.lpg import lpg_wrapper
 from maildelivery.brains.plan_parser import parse_actions,actions_indicies_per_robot, plan_per_robot, parse_up
 
 import numpy as np
@@ -184,9 +185,13 @@ class robot_planner:
         
     def solve(self, engine_name = 'optic', only_read_plan = False, time_fix = True,\
                          minimize_makespan = True, maximize_charge = False): 
+        
         start = time.time()
         print('started solving domain+problem with optic')
 
+        #---------------------------------------------------------------------------#
+        #                            DEFINE   METRIC                                #
+        #---------------------------------------------------------------------------#
 
         if minimize_makespan:
             self.problem.add_quality_metric(metric =  MinimizeMakespan())
@@ -196,7 +201,7 @@ class robot_planner:
             #                                                         _drop: Int(0)
             #                                                         }))      
 
-        if engine_name == 'optic':
+        if engine_name == 'optic' or engine_name == 'lpg':
             w = PDDLWriter(self.problem)
             with open(paths.DOMAIN_PATH, 'w') as f:
                 print(w.get_domain(), file = f)
@@ -214,7 +219,18 @@ class robot_planner:
                     part3 = '))'
                     newline = part1 + part2 + part3
                     manipulate_pddls.add_problem_lines([newline])
-        
+
+
+        #---------------------------------------------------------------------------#
+        #                            Call ENGINE                                    #
+        #---------------------------------------------------------------------------#
+
+        if engine_name == 'lpg':        
+            if not only_read_plan:
+                lpg_wrapper.run()
+            execution_times, actions, durations = lpg_wrapper.get_plan()
+
+        if engine_name == 'optic':        
             if not only_read_plan:
                 optic_wrapper.run()
             execution_times, actions, durations = optic_wrapper.get_plan()
@@ -223,6 +239,10 @@ class robot_planner:
             with OneshotPlanner(name='tamer') as engine:
                 result = engine.solve(self.problem)
                 execution_times, actions, durations = parse_up(result.plan.timed_actions)
+
+        #---------------------------------------------------------------------------#
+        #                            Wrap it up                                     #
+        #---------------------------------------------------------------------------#
 
         if time_fix:
             execution_times = [execution_times[i] - execution_times[0] for i in range(len(execution_times))]
