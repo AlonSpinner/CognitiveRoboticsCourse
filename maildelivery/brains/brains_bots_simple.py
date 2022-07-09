@@ -227,12 +227,14 @@ class robot_planner:
 
         if engine_name == 'lpg':        
             if not only_read_plan:
-                lpg_wrapper.run()
+                sucess = lpg_wrapper.run()
+                assert sucess, 'solver failed'
             execution_times, actions, durations = lpg_wrapper.get_plan()
 
         if engine_name == 'optic':        
             if not only_read_plan:
-                optic_wrapper.run()
+                sucess = optic_wrapper.run()
+                assert sucess, 'solver failed'
             execution_times, actions, durations = optic_wrapper.get_plan()
         
         if engine_name == 'tamer':

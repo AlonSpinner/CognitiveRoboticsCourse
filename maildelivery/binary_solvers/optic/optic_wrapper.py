@@ -14,7 +14,8 @@ BINARY_NAME = OPTIC_NO_LP
 def run():
     p = subprocess.run(f"./{BINARY_NAME} {DOMAIN_PATH} {PROBLEM_PATH} > {PLAN_PATH}", \
          cwd = DIR_PATH, shell = True)
-    return p.returncode
+    found_solution = p.returncode == 0
+    return found_solution
 
 def get_plan(file = None):
     if file is None:

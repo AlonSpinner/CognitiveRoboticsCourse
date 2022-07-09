@@ -10,12 +10,15 @@ DIR_PATH = os.path.join(os.path.dirname(__file__))
 BINARY_NAME = "lpg-td"
 
 
-def run(mode : Literal["speed", "quality", "-n 2"] = 'speed'):
-    p = subprocess.run(f"./{BINARY_NAME} -o {DOMAIN_PATH} -f {PROBLEM_PATH} -{mode}", \
+def run(mode : Literal["speed", "quality", "-n 2"] = '-n 2'):
+    p = subprocess.run(f"./{BINARY_NAME} -o {DOMAIN_PATH} -f {PROBLEM_PATH} -{mode} \
+        -seed 1 -restarts 10, -search_steps 200", \
          cwd = DIR_PATH, shell = True)
-    p = subprocess.run('find . -type f -name "*.SOL"', cwd = PDDL_DIR, shell = True)
-    p = subprocess.run(f"mv plan_problem.pddl.SOL {PLAN_PATH}", cwd = PDDL_DIR, shell = True)
-    return p.returncode
+    found_solution = p.returncode == 0
+    if found_solution:
+        # p = subprocess.run('find . -type f -name "*.SOL"', cwd = PDDL_DIR, shell = True)
+        p = subprocess.run(f"mv plan_problem.pddl.SOL {PLAN_PATH}", cwd = PDDL_DIR, shell = True)
+    return found_solution
 
 def get_plan(file = None):
     if file is None:
