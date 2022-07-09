@@ -1,6 +1,7 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, wait
 from maildelivery.brains.brains_bots_simple import robot_planner
+from maildelivery.brains.plan_parser import full_plan_2_per_robot, parse_actions
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,8 +14,8 @@ V = 1.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'08_movie.gif')
-X_D = 10.0
-H_D = 4.0
+X_D = 3.0
+H_D = 1.0
 f_dist2charge = lambda dist: 0
 
 def build_block(base_ind : int, bottomleft_xy : np.ndarray):
@@ -109,11 +110,6 @@ def build_env():
     p4 = package(4,locations[16].id,'location',locations[5].id,100, locations[16].xy)
     p5 = package(5,locations[13].id,'location',locations[19].id,100, locations[13].xy)
     packages = [p0,p1,p2,p3,p4,p5]
-    
-    
-    # p1 = p5
-    # p1.id = 1
-    # packages = [p0,p1]
 
     env = enviorment(locations,connectivityList , packages)
     return env
@@ -159,7 +155,10 @@ Nrobots = len(r)
 planner = robot_planner()
 planner.f_dist2charge = f_dist2charge #no charge cost at all
 planner.create_problem(env,r)
-r_execution_times, r_actions, r_durations = planner.solve_and_parse(env)
+
+execution_times, actions, durations = planner.solve(engine_name = 'lpg')
+actions = parse_actions(actions,env)
+r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations)
 
 #plot initial state
 plt.ion()
@@ -187,7 +186,7 @@ while True:
         #go do next action
         if r_done[i] == False and \
             type(r_current_actions[i]) == wait and \
-                t > r_execution_times[i][r_next_actions_indicies[i]]:
+                t >= r_execution_times[i][r_next_actions_indicies[i]]:
             r_current_actions[i] = r_actions[i][r_next_actions_indicies[i]]
             r_current_actions[i] #we update index so 
             r_next_actions_indicies[i] += 1
@@ -196,7 +195,7 @@ while True:
             r_current_actions[i] = wait(robot_id = i)
 
     #update plot        
-    if plotCounter % 1000 == 0:
+    if plotCounter % 500 == 0:
         for ri in r:
             ri.plot(ax)
         for p in env.packages:
