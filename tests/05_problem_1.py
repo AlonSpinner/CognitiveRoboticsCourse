@@ -5,6 +5,7 @@ from maildelivery.brains.plan_parser import parse_actions
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.offsetbox import AnchoredText
 import gtsam
 
 DT = 0.001 #[s]
@@ -55,6 +56,8 @@ parsed_actions = parse_actions(actions, env)
 #plot initial state
 plt.ion()
 _, ax = env.plot()
+anchored_text = AnchoredText(f"t = 0.00[s]", loc=2)
+ax.add_artist(anchored_text)
 r.plot(ax)
 for p in env.packages:
     p.plot(ax)
@@ -81,6 +84,9 @@ while True:
         r.plot(ax)
         for p in env.packages:
             p.plot(ax)
+        anchored_text.remove()
+        anchored_text = AnchoredText(f"t = {t:3.2f}[s]", loc=2)
+        ax.add_artist(anchored_text)
         plt.pause(0.01)
     plotCounter += 1
     
