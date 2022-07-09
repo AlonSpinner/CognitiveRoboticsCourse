@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, wait
-from maildelivery.brains.brains1 import robot_planner
+from maildelivery.brains.brains_bots_simple import robot_planner
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -92,11 +92,11 @@ def build_env():
     stations = [station2, station9, station15]
     n_s = 3
 
-    dock = location(n_a + n_b + n_c + n_s, np.array([1.5*X_D,1.5*X_D]),'dock')
+    # dock = location(n_a + n_b + n_c + n_s, np.array([1.5*X_D,1.5*X_D]),'dock')
 
     locations = sorted(x_a + h_a + \
                         x_b + h_b + \
-                        x_c + h_c + stations +[dock])
+                        x_c + h_c + stations)# +[dock])
     connectivityList = c_a + \
                         connectFromLeft(x_a,x_b,h_b) + c_b + \
                         connectFromLeft(x_b,x_c,h_c) + c_c + \
@@ -109,6 +109,11 @@ def build_env():
     p4 = package(4,locations[16].id,'location',locations[5].id,100, locations[16].xy)
     p5 = package(5,locations[13].id,'location',locations[19].id,100, locations[13].xy)
     packages = [p0,p1,p2,p3,p4,p5]
+    
+    
+    # p1 = p5
+    # p1.id = 1
+    # packages = [p0,p1]
 
     env = enviorment(locations,connectivityList , packages)
     return env
@@ -147,7 +152,7 @@ r2.goal_location = station
 r2.max_forward = V * DT
 r2.f_dist2charge = f_dist2charge
 
-r = [r0]#,r1]#,r2]
+r = [r0,r1]#,r2]
 Nrobots = len(r)
 
 #ask for plan

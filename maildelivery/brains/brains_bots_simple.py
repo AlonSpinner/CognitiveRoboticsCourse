@@ -1,19 +1,20 @@
 from maildelivery.agents import move, pickup, drop, robot, action
 from maildelivery.world import enviorment, package
+from maildelivery.binary_solvers import manipulate_pddls, paths
+from maildelivery.binary_solvers.optic import optic_wrapper
+
 import numpy as np
 
 import unified_planning as up
 from unified_planning.shortcuts import UserType, BoolType,\
         Fluent, InstantaneousAction, DurativeAction, Problem, Object,\
-        IntType, Int, StartTiming, EndTiming, GE, GT, Or, Equals, And, Not, Implies, SimulatedEffect
+        IntType, Int, StartTiming, EndTiming, GE, GT, Or, Equals, And, Not, Implies, OneshotPlanner, SimulatedEffect
 from unified_planning.io.pddl_writer import PDDLWriter
 import time
 from unified_planning.model.metrics import MinimizeMakespan,\
      MinimizeActionCosts, MinimizeExpressionOnFinalState, MaximizeExpressionOnFinalState
-
-
 up.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
-from maildelivery import optic_wrapper
+
 
 NOT_CONNECTED_DISTANCE = int(10000)
 
@@ -22,7 +23,7 @@ class robot_planner:
     multirobot, instant actions, no charging
     '''
     def __init__(self) -> None:
-        self.f_dist2charge  = lambda dist: 2 * dist #some default function
+        self.f_dist2charge  = lambda dist: 2 * dist #not used here 
         self.create_domain()
 
     def create_domain(self) -> None:
@@ -44,11 +45,7 @@ class robot_planner:
         robot_not_holding_package = Fluent('robot_not_holding_package', BoolType(), r = _robot)
             #to prevent picking up more than one package
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
-        location_packages_amount = Fluent('location_packages_amount', IntType(), l = _location)
-        package_goal = Fluent('package_goal',BoolType(), p = _package, l = _location)
         distance = Fluent('distance', IntType(), l_from = _location, l_to = _location)
-            #used charge is a function of distance in this model
-        charge = Fluent('charge', IntType(0,100), r = _robot)
         
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
@@ -60,9 +57,6 @@ class robot_planner:
         _move.add_condition(StartTiming(), road_is_free(l_to,l_from)) #opposite way
         _move.add_condition(StartTiming(), robot_at(r, l_from))
         _move.add_condition(EndTiming(),location_is_free(l_to))
-        _move.add_condition(StartTiming(),GE(charge(r),self.f_dist2charge(distance(l_from,l_to))))
-        # _move.add_condition(StartTiming(), Implies(GT(location_packages_amount(l_from),Int(0)), Not(robot_not_holding_package(r))))
-        _move.add_condition(StartTiming(), Or(Equals(location_packages_amount(l_from),Int(0)),And(GT(location_packages_amount(l_from),Int(0)),Not(robot_not_holding_package(r)))))
         _move.add_effect(StartTiming(),robot_at(r, l_from), False)
         _move.add_effect(StartTiming(),location_is_free(l_from), True)
         _move.add_effect(StartTiming(), location_not_targeted(l_to), False)
@@ -71,12 +65,6 @@ class robot_planner:
         _move.add_effect(EndTiming(),location_is_free(l_to), False)
         _move.add_effect(EndTiming(), location_not_targeted(l_to), True)
         _move.add_effect(EndTiming(), road_is_free(l_from,l_to), True)
-        def decrease_charge_fun(problem, state, actual_params):
-            dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
-            requiredCharge = self.f_dist2charge(dist)
-            currentCharge = state.get_value(charge(actual_params.get(r))).constant_value()
-            return [Int(currentCharge-requiredCharge)]
-        _move.set_simulated_effect(StartTiming(),SimulatedEffect([charge(r)], decrease_charge_fun))
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
         p = _pickup.parameter('p')
@@ -88,7 +76,6 @@ class robot_planner:
         _pickup.add_effect(location_has_package(p, l), False)
         _pickup.add_effect(robot_has_package(p, r), True)
         _pickup.add_effect(robot_not_holding_package(r), False)
-        _pickup.add_decrease_effect(location_packages_amount(l),1)
 
         _drop = InstantaneousAction('drop', p = _package, r = _robot, l = _location)
         p = _drop.parameter('p')
@@ -96,11 +83,9 @@ class robot_planner:
         l = _drop.parameter('l')
         _drop.add_precondition(robot_at(r, l))
         _drop.add_precondition(robot_has_package(p, r))
-        _drop.add_precondition(package_goal(p, l))
         _drop.add_effect(robot_has_package(p, r), False)
         _drop.add_effect(location_has_package(p, l), True)
         _drop.add_effect(robot_not_holding_package(r), True)
-        _drop.add_increase_effect(location_packages_amount(l),1,Not(package_goal(p,l)))
 
         problem = Problem('maildelivery')
         problem.add_action(_move)
@@ -112,12 +97,9 @@ class robot_planner:
         problem.add_fluent(robot_has_package, default_initial_value = False)
         problem.add_fluent(location_has_package, default_initial_value = False)
         problem.add_fluent(robot_not_holding_package, default_initial_value = True)
-        problem.add_fluent(charge, default_initial_value = int(0))
-        problem.add_fluent(distance, default_initial_value = int(NOT_CONNECTED_DISTANCE)) #some absuard number
         problem.add_fluent(location_not_targeted, default_initial_value = True)
         problem.add_fluent(road_is_free, default_initial_value = True)
-        problem.add_fluent(location_packages_amount, default_initial_value = int(0))
-        problem.add_fluent(package_goal, default_initial_value = False)
+        problem.add_fluent(distance, default_initial_value = int(NOT_CONNECTED_DISTANCE)) #some absuard number
 
         #save to self
         self.problem = problem
@@ -132,12 +114,10 @@ class robot_planner:
         self.robot_has_package = robot_has_package
         self.location_has_package = location_has_package
         self.robot_not_holding_package = robot_not_holding_package
-        self.charge = charge
-        self.distance = distance
         self.location_not_targeted = location_not_targeted
         self.road_is_free = road_is_free
-        self.location_packages_amount = location_packages_amount
-        self.package_goal = package_goal
+        self.distance = distance
+        
 
     def create_problem(self, env : enviorment, robots : list[robot]):
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
@@ -157,10 +137,10 @@ class robot_planner:
                             _locations[c[0]]),
                             True)
             self.problem.set_initial_value(self.distance(
-                                        _locations[c[0]],
-                                        _locations[c[1]]),
-                                        int(env.locations[c[0]].distance(env.locations[c[1]]))
-                                        )
+                            _locations[c[0]],
+                            _locations[c[1]]),
+                            int(env.locations[c[0]].distance(env.locations[c[1]]))
+                            )
             self.problem.set_initial_value(self.distance(
                             _locations[c[1]],
                             _locations[c[0]]),
@@ -175,23 +155,15 @@ class robot_planner:
             self.problem.set_initial_value(self.location_is_free(
                                                 _locations[r.last_location]),
                                                 False)
-            self.problem.set_initial_value(self.charge(_robots[r.id]), r.charge)
 
         #place packages
         for p in env.packages:
-            self.problem.set_initial_value(self.package_goal(
-                                                _packages[p.id],
-                                                _locations[p.goal]),
-                                                True)
 
             if p.owner_type == 'location':
                 self.problem.set_initial_value(self.location_has_package(
                                                             _packages[p.id],
                                                             _locations[p.owner]),
                                                             True)
-                self.problem.set_initial_value(self.location_packages_amount(
-                                                         _locations[p.owner]),
-                                                         1)
 
             elif p.owner_type == 'robot':
                 self.problem.set_initial_value(self.robot_has_package(
@@ -205,39 +177,50 @@ class robot_planner:
         for r in robots:
             self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
 
+        # self.problem.add_quality_metric(metric =  MinimizeMakespan())
         # self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
-        self.problem.add_quality_metric(metric =  MinimizeMakespan())
         # problem.add_quality_metric(metric = MinimizeActionCosts({
         #                                                         _move: Int(1),
         #                                                         _pickup: Int(0),
         #                                                         _drop: Int(0)
         #                                                         }))
 
-        w = PDDLWriter(self.problem)
-        with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
-            print(w.get_domain(), file = f)
-        with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
-            print(w.get_problem(), file = f)
-        print('copied pddls')
-
-        # # add optimization here via rewriting the pddl files
-        # if len(_robots) == 1:
-        #     optic_wrapper.add_problem_lines([f' (:metric maximize (charge {_robots[0]}))'])
-        # else:
-        #     part1 = ' (:metric maximize (+ '
-        #     part2 = ' '.join([f'(charge {rname})' for rname in _robots])
-        #     part3 = '))'
-        #     newline = part1 + part2 + part3
-        #     optic_wrapper.add_problem_lines([newline])
+        self._robots = _robots
+        self._locations = _locations
+        self._packages = _packages
         
-    def solve(self, read_only = False, time_fix = True):        
-        if not read_only:
-            start = time.time()
-            print('started solving domain+problem with optic')
-            optic_wrapper.run_optic()
-            end = time.time()
-            print(f'finished solving in {end-start} seconds')
-        execution_times, actions, durations = optic_wrapper.get_plan()
+    def solve(self, planner_name = 'optic', read_only = False, time_fix = True):        
+        
+        if planner_name == 'optic':
+            w = PDDLWriter(self.problem)
+            with open(paths.DOMAIN_PATH, 'w') as f:
+                print(w.get_domain(), file = f)
+            with open(paths.PROBLEM_PATH, 'w') as f:
+                print(w.get_problem(), file = f)
+            print('copied pddls')
+
+            # add optimization here via rewriting the pddl files
+            if len(self._robots) == 1:
+                manipulate_pddls.add_problem_lines([f' (:metric maximize (charge {self._robots[0]}))'])
+            else:
+                part1 = ' (:metric maximize (+ '
+                part2 = ' '.join([f'(charge {rname})' for rname in self._robots])
+                part3 = '))'
+                newline = part1 + part2 + part3
+                manipulate_pddls.add_problem_lines([newline])
+        
+            if not read_only:
+                start = time.time()
+                print('started solving domain+problem with optic')
+                optic_wrapper.run_optic()
+                end = time.time()
+                print(f'finished solving in {end-start} seconds')
+            execution_times, actions, durations = optic_wrapper.get_plan()
+        
+        if planner_name == 'tamer':
+            with OneshotPlanner(name='tamer') as planner:
+                result = planner.solve(self.problem)
+            pass
 
         if time_fix:
             execution_times = [execution_times[i] - execution_times[0] for i in range(len(execution_times))]
@@ -302,16 +285,4 @@ class robot_planner:
         actions_indicies_per_robot = self.actions_indicies_per_robot(actions)
         r_execution_times, r_actions, r_durations = self.plan_per_robot(actions_indicies_per_robot, execution_times, actions, durations)
         return r_execution_times, r_actions, r_durations
-
-class drone_planner:
-    pass
-    # def __init__(self) -> None:
-    #     _location = UserType('_location')
-    #     _drone = UserType('_drone')
-    #     _charge = UserType('charge')
-
-    #     #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
-    #     drone_at = Fluent('drone_at', BoolType(), d = _drone, l = _location)
-    #     location_charge = Fluent('location_charge', IntType(), p = _package, l = _location)
-    #     distance = Fluent(distance, )
         
