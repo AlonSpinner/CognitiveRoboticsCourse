@@ -5,7 +5,7 @@ import numpy as np
 import unified_planning
 
 def parse_actions(actions : list[tuple], env : enviorment):
-    #from up actions to my actions
+    #from actions ('action_name','param1','param2') to my actions
     parsed_actions = []
     for a in actions:
         name = a[0]
@@ -56,8 +56,14 @@ def plan_per_robot(actions_indicies_per_robot, execution_times, actions, duratio
     
     return robot_execution_times, robot_actions, robot_durations
 
+def full_plan_2_per_robot(execution_times, actions, durations):
+    a_i_p_r = actions_indicies_per_robot(actions)
+    r_execution_times, r_actions, r_durations = plan_per_robot(a_i_p_r, execution_times, actions, durations)
+    return r_execution_times, r_actions, r_durations
 
 def parse_up(result_plan):
+    #from list of up timed_actions to list of tuples [('action_name','param1','param2')]
+    #used inside the planners/brains
     
     execution_times = []
     actions = []

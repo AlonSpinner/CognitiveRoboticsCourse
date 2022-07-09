@@ -178,20 +178,22 @@ class robot_planner:
         for r in robots:
             self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
 
-        # REMOVE THIS IF USING BINARY SOLVER
-        # self.problem.add_quality_metric(metric =  MinimizeMakespan())
-        # self.problem.add_quality_metric(metric = MaximizeExpressionOnFinalState(self.charge(_robots[0])))
-        # problem.add_quality_metric(metric = MinimizeActionCosts({
-        #                                                         _move: Int(1),
-        #                                                         _pickup: Int(0),
-        #                                                         _drop: Int(0)
-        #                                                         }))
-
         self._robots = _robots
         self._locations = _locations
         self._packages = _packages
         
-    def solve(self, engine_name = 'optic', only_read_plan = False, time_fix = True):        
+    def solve(self, engine_name = 'optic', only_read_plan = False, time_fix = True, minimize_makespan = False): 
+        start = time.time()
+        print('started solving domain+problem with optic')
+
+
+        if minimize_makespan:
+            self.problem.add_quality_metric(metric =  MinimizeMakespan())
+            # problem.add_quality_metric(metric = MinimizeActionCosts({
+            #                                                         _move: Int(1),
+            #                                                         _pickup: Int(0),
+            #                                                         _drop: Int(0)
+            #                                                         }))      
         
         if engine_name == 'optic':
             w = PDDLWriter(self.problem)
@@ -201,7 +203,7 @@ class robot_planner:
                 print(w.get_problem(), file = f)
             print('copied pddls')
 
-            # add optimization here via rewriting the pddl files
+            # add optimization over final values here via rewriting the pddl files.
             if len(self._robots) == 1:
                 manipulate_pddls.add_problem_lines([f' (:metric maximize (charge {self._robots[0]}))'])
             else:
@@ -212,11 +214,7 @@ class robot_planner:
                 manipulate_pddls.add_problem_lines([newline])
         
             if not only_read_plan:
-                start = time.time()
-                print('started solving domain+problem with optic')
                 optic_wrapper.run_optic()
-                end = time.time()
-                print(f'finished solving in {end-start} seconds')
             execution_times, actions, durations = optic_wrapper.get_plan()
         
         if engine_name == 'tamer':
@@ -226,6 +224,9 @@ class robot_planner:
 
         if time_fix:
             execution_times = [execution_times[i] - execution_times[0] for i in range(len(execution_times))]
+
+        end = time.time()
+        print(f'finished solving in {end-start} seconds')
 
         return execution_times, actions, durations
         

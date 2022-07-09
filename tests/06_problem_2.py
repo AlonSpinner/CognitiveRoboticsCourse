@@ -1,6 +1,7 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, drop, wait
 from maildelivery.brains.brains_bots_simple import robot_planner
+from maildelivery.brains.plan_parser import full_plan_2_per_robot, parse_actions
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -67,7 +68,10 @@ Nrobots = len(r)
 #ask for plan
 planner = robot_planner()
 planner.create_problem(env,r)
-r_execution_times, r_actions, r_durations = planner.solve_and_parse(env,read_only = False)
+
+execution_times, actions, durations = planner.solve(engine_name = 'tamer')
+actions = parse_actions(actions,env)
+r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations)
 
 #plot initial state
 plt.ion()
@@ -95,7 +99,7 @@ while True:
         #go do next action
         if r_done[i] == False and \
             type(r_current_actions[i]) == wait and \
-                t > r_execution_times[i][r_next_actions_indicies[i]]:
+                t >= r_execution_times[i][r_next_actions_indicies[i]]:
             r_current_actions[i] = r_actions[i][r_next_actions_indicies[i]]
             r_current_actions[i] #we update index so 
             r_next_actions_indicies[i] += 1
