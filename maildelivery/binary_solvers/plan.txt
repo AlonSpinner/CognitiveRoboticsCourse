@@ -37,10 +37,10 @@ Running WA* search (g weight = 1, h weight = 5)
 []
 Initial heuristic = 16
 Initial stats: t=0s, 5528kb
-b (15 @ n=4, t=0s, 5528kb)b (14 @ n=9, t=0s, 5664kb).{EPTU=10000,ETD=6.61224}.{EPTU=11111.1,ETD=13.7273}.{EPTU=10000,ETD=16.0805}.{EPTU=8695.65,ETD=17.5327}.{EPTU=7812.5,ETD=29.1406}b (13 @ n=613, t=0.03s, 8220kb)b (12 @ n=614, t=0.03s, 8220kb)b (10 @ n=615, t=0.03s, 8220kb)b (8 @ n=616, t=0.03s, 8220kb)b (6 @ n=628, t=0.03s, 8220kb)b (5 @ n=629, t=0.03s, 8220kb)b (3 @ n=631, t=0.03s, 8352kb)b (1 @ n=634, t=0.03s, 8352kb)
+b (15 @ n=4, t=0s, 5528kb)b (14 @ n=9, t=0s, 5664kb).{EPTU=10000,ETD=6.61224}.{EPTU=10000,ETD=13.7273}.{EPTU=10000,ETD=16.0805}.{EPTU=10000,ETD=17.5327}.{EPTU=9259.26,ETD=29.1406}b (13 @ n=613, t=0.02s, 8220kb)b (12 @ n=614, t=0.02s, 8220kb)b (10 @ n=615, t=0.02s, 8220kb)b (8 @ n=616, t=0.02s, 8220kb)b (6 @ n=628, t=0.02s, 8220kb)b (5 @ n=629, t=0.02s, 8220kb)b (3 @ n=631, t=0.02s, 8352kb)b (1 @ n=634, t=0.02s, 8352kb)
 ;;;; Solution Found
-; Time 0.03
-; Discounted time: 0.040
+; Time 0.02
+; Discounted time: 0.032
 ; Metareasoning time: 0
 ; Peak memory 8352kb
 ; Nodes Generated: 635
@@ -50,19 +50,19 @@ b (15 @ n=4, t=0s, 5528kb)b (14 @ n=9, t=0s, 5664kb).{EPTU=10000,ETD=6.61224}.{E
 ; Nodes memoised with open actions: 618
 ; Nodes memoised without open actions: 121
 ; Nodes pruned by memoisation: 103
-0.040: (move r0 l0 l1) [1.000] ; (1)
-1.041: (move r0 l1 l3) [1.000] ; (6)
-2.042: (move r0 l3 l5) [1.000] ; (12)
-3.043: (pickup p0 r0 l5) [0.001] ; (24)
-3.044: (move r0 l5 l3) [1.000] ; (8)
-4.045: (move r0 l3 l4) [1.000] ; (10)
-5.046: (move r0 l4 l6) [1.000] ; (13)
-6.047: (drop p0 r0 l6) [0.001] ; (40)
-6.048: (pickup p1 r0 l6) [0.001] ; (27)
-6.049: (move r0 l6 l4) [1.000] ; (11)
-7.050: (move r0 l4 l3) [1.000] ; (7)
-8.051: (move r0 l3 l5) [1.000] ; (12)
-9.052: (drop p1 r0 l5) [0.001] ; (39)
-9.053: (move r0 l5 l3) [1.000] ; (8)
-10.054: (move r0 l3 l1) [1.000] ; (3)
-11.055: (move r0 l1 l0) [1.000] ; (0)
+0.032: (move r0 l0 l1) [1.000] ; (1)
+1.033: (move r0 l1 l3) [1.000] ; (6)
+2.034: (move r0 l3 l5) [1.000] ; (12)
+3.035: (pickup p0 r0 l5) [0.001] ; (24)
+3.036: (move r0 l5 l3) [1.000] ; (8)
+4.037: (move r0 l3 l4) [1.000] ; (10)
+5.038: (move r0 l4 l6) [1.000] ; (13)
+6.039: (drop p0 r0 l6) [0.001] ; (40)
+6.040: (pickup p1 r0 l6) [0.001] ; (27)
+6.041: (move r0 l6 l4) [1.000] ; (11)
+7.042: (move r0 l4 l3) [1.000] ; (7)
+8.043: (move r0 l3 l5) [1.000] ; (12)
+9.044: (drop p1 r0 l5) [0.001] ; (39)
+9.045: (move r0 l5 l3) [1.000] ; (8)
+10.046: (move r0 l3 l1) [1.000] ; (3)
+11.047: (move r0 l1 l0) [1.000] ; (0)

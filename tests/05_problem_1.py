@@ -1,6 +1,7 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, wait
 from maildelivery.brains.brains_bots_simple import robot_planner
+from maildelivery.brains.plan_parser import parse_actions
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -48,8 +49,8 @@ r.max_forward = V * DT
 #ask for plan
 planner = robot_planner()
 planner.create_problem(env,[r])
-execution_times, actions, durations = planner.solve()
-parsed_actions = planner.parse_actions(actions, env)
+execution_times, actions, durations = planner.solve(engine_name = 'optic')
+parsed_actions = parse_actions(actions, env)
 
 #plot initial state
 plt.ion()
@@ -67,7 +68,7 @@ action = wait(robot_id = 0)
 while True:
     
     #go do next action
-    if type(action) == wait and t > execution_times[next_action_index]:
+    if type(action) == wait and t >= execution_times[next_action_index]:
         action = parsed_actions[next_action_index]
         next_action_index += 1
         
