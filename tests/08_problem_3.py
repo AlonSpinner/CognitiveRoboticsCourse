@@ -16,7 +16,7 @@ dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'08_movie.gif')
 X_D = 3.0
 H_D = 1.0
-f_dist2charge = lambda dist: 0
+f_dist2charge = lambda dist: dist
 
 def build_block(base_ind : int, bottomleft_xy : np.ndarray):
     x_bl = location(base_ind + 0,bottomleft_xy + np.array([0,0]),'intersection')
@@ -87,9 +87,9 @@ def build_env():
     x_c,h_c, c_c, n_c = build_leftconnected_block(n_a + n_b, np.array([2 * X_D,0]))   
 
     i_s = n_a + n_b + n_c + np.array([0,1,2])
-    station2 = location(int(i_s[0]), x_a[2].xy + np.array([0,0.2*X_D]),'station')
-    station9 = location(int(i_s[1]), x_b[1].xy + np.array([0,0.2*X_D]),'station')
-    station15 = location(int(i_s[2]), x_c[1].xy + np.array([0,0.2*X_D]),'station')
+    station2 = location(int(i_s[0]), x_a[2].xy + np.array([0,H_D]),'station')
+    station9 = location(int(i_s[1]), x_b[1].xy + np.array([0,H_D]),'station')
+    station15 = location(int(i_s[2]), x_c[1].xy + np.array([0,H_D]),'station')
     stations = [station2, station9, station15]
     n_s = 3
 
@@ -156,7 +156,7 @@ planner = robot_planner()
 planner.f_dist2charge = f_dist2charge #no charge cost at all
 planner.create_problem(env,r)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg')#, maximize_charge = True)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)#, maximize_charge = True)
 actions = parse_actions(actions,env)
 r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nrobots)
 
