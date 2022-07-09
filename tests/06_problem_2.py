@@ -71,7 +71,7 @@ planner.create_problem(env,r)
 
 execution_times, actions, durations = planner.solve(engine_name = 'lpg')
 actions = parse_actions(actions,env)
-r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations)
+r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nrobots)
 
 #plot initial state
 plt.ion()

@@ -93,11 +93,11 @@ def build_env():
     stations = [station2, station9, station15]
     n_s = 3
 
-    # dock = location(n_a + n_b + n_c + n_s, np.array([1.5*X_D,1.5*X_D]),'dock')
+    dock = location(n_a + n_b + n_c + n_s, np.array([1.5*X_D,1.5*X_D]),'dock')
 
     locations = sorted(x_a + h_a + \
                         x_b + h_b + \
-                        x_c + h_c + stations)# +[dock])
+                        x_c + h_c + stations +[dock])
     connectivityList = c_a + \
                         connectFromLeft(x_a,x_b,h_b) + c_b + \
                         connectFromLeft(x_b,x_c,h_c) + c_c + \
@@ -148,7 +148,7 @@ r2.goal_location = station
 r2.max_forward = V * DT
 r2.f_dist2charge = f_dist2charge
 
-r = [r0,r1]#,r2]
+r = [r0,r1,r2]
 Nrobots = len(r)
 
 #ask for plan
@@ -156,9 +156,9 @@ planner = robot_planner()
 planner.f_dist2charge = f_dist2charge #no charge cost at all
 planner.create_problem(env,r)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg')
+execution_times, actions, durations = planner.solve(engine_name = 'lpg')#, maximize_charge = True)
 actions = parse_actions(actions,env)
-r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations)
+r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nrobots)
 
 #plot initial state
 plt.ion()
@@ -226,7 +226,7 @@ if MOVIE:
     moviewriter.finish()
 
 for ri in r:
-    print(f"robot has {ri.charge}/{ri.max_charge} charge left")
+    print(f"robot {ri.id} has {ri.charge}/{ri.max_charge} charge left")
 
 plt.ioff()
 plt.show()
