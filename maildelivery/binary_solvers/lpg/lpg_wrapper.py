@@ -48,6 +48,7 @@ def get_plan(file = None):
     return execution_times, actions, durations
 
 if __name__ == '__main__':
+    run()
     t, cmd ,duration = get_plan()
     print(cmd)
 

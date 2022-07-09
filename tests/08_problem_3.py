@@ -88,9 +88,9 @@ def build_env():
     x_c,h_c, c_c, n_c = build_leftconnected_block(n_a + n_b, np.array([2 * X_D,0]))   
 
     i_s = n_a + n_b + n_c + np.array([0,1,2])
-    station2 = location(int(i_s[0]), x_a[2].xy + np.array([0,H_D]),'station')
-    station9 = location(int(i_s[1]), x_b[1].xy + np.array([0,H_D]),'station')
-    station15 = location(int(i_s[2]), x_c[1].xy + np.array([0,H_D]),'station')
+    station2 = location(int(i_s[0]), x_a[2].xy + np.array([0,X_D]),'station')
+    station9 = location(int(i_s[1]), x_b[1].xy + np.array([0,X_D]),'station')
+    station15 = location(int(i_s[2]), x_c[1].xy + np.array([0,X_D]),'station')
     stations = [station2, station9, station15]
     n_s = 3
 
