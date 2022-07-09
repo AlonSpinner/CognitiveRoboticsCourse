@@ -53,16 +53,18 @@ planner.create_problem(env,[r])
 execution_times, actions, durations = planner.solve(engine_name = 'lpg')
 parsed_actions = parse_actions(actions, env)
 
+
 #plot initial state
 plt.ion()
 _, ax = env.plot()
-anchored_text = AnchoredText(f"t = 0.00[s]", loc=2)
-ax.add_artist(anchored_text)
-r.plot(ax)
-for p in env.packages:
-    p.plot(ax)
-plt.draw()
-
+def animate():
+    if 'anchored_text' in locals(): anchored_text.remove()
+    anchored_text = AnchoredText(f"t = {t:2.2f}[s]", loc=2)
+    ax.add_artist(anchored_text)
+    r.plot(ax)
+    [p.plot(ax) for p in env.packages]
+    plt.pause(0.01)
+    
 #roll simulation
 t = 0
 next_action_index = 0
@@ -81,21 +83,13 @@ while True:
     
     #update plot        
     if plotCounter % 200 == 0:
-        r.plot(ax)
-        for p in env.packages:
-            p.plot(ax)
-        anchored_text.remove()
-        anchored_text = AnchoredText(f"t = {t:3.2f}[s]", loc=2)
-        ax.add_artist(anchored_text)
-        plt.pause(0.01)
+        animate()
     plotCounter += 1
     
     t += DT
 
     if next_action_index == len(parsed_actions) and type(action) == wait:
-        r.plot(ax)
-        for p in env.packages:
-            p.plot(ax)
+        animate()
         break
 
 #dont close window in the end

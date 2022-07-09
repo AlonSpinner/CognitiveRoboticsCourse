@@ -6,6 +6,7 @@ from maildelivery.brains.plan_parser import full_plan_2_per_robot, parse_actions
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import PillowWriter
+from matplotlib.offsetbox import AnchoredText
 import gtsam
 import os
 
@@ -73,14 +74,17 @@ execution_times, actions, durations = planner.solve(engine_name = 'lpg')
 actions = parse_actions(actions,env)
 r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nrobots)
 
+
 #plot initial state
 plt.ion()
-fig, ax = env.plot()
-[ri.plot(ax) for ri in r]
-for p in env.packages:
-    p.plot(ax)
-plt.draw()
-
+fig , ax = env.plot()
+def animate():
+    if 'anchored_text' in locals(): anchored_text.remove()
+    anchored_text = AnchoredText(f"t = {t:2.2f}[s]", loc=2)
+    ax.add_artist(anchored_text)
+    [ri.plot(ax) for ri in r]
+    [p.plot(ax) for p in env.packages]
+    plt.pause(0.01)
 #ready movie
 if MOVIE:
     moviewriter = PillowWriter(fps = 5)
@@ -109,14 +113,9 @@ while True:
 
     #update plot        
     if plotCounter % 100 == 0:
-        for ri in r:
-            ri.plot(ax)
-        for p in env.packages:
-            p.plot(ax)
-    
+        animate()
         if MOVIE:
             moviewriter.grab_frame()
-        plt.pause(0.1)
     plotCounter +=1
 
     t += DT
@@ -125,10 +124,7 @@ while True:
         r_done[i] = r_next_actions_indicies[i] == len(r_actions[i]) and type(r_current_actions[i]) == wait
 
     if all(r_done):
-        for ri in r:
-            ri.plot(ax)
-        for p in env.packages:
-            p.plot(ax)
+        animate()
         if MOVIE:
             moviewriter.grab_frame()
         break
