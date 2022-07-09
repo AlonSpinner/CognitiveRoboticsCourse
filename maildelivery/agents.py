@@ -134,7 +134,7 @@ class drone:
         self.max_rotate : float = np.pi #np.pi/4
         self.batteries : int = 3
         self.graphics : list = []
-        self.width : float = 0.02
+        self.width : float = 0.05
 
     def sense(self): #gps like sensor
         return self.pose.t()
@@ -195,8 +195,10 @@ def plot_robot(ax : plt.Axes , r : robot, scale = 20, color = 'b'):
 
 def plot_robot_deadcharge(ax, r : robot, scale = 20, color = 'r'):
     pose = r.pose
-    g1 = ax.add_patch(plt.Circle((pose.x(),pose.y()),0.15,fill = False, color = color))
-    g2 = ax.add_patch(plt.Circle((pose.x(),pose.y()),0.25,fill = False, color = color))
+    g1 = ax.scatter(pose.x, pose.y, marker = 'o', c = 'none',\
+             s = 800, edgecolors = color)
+    g2 = ax.scatter(pose.x, pose.y, marker = 'o', c = 'none',\
+             s = 1200, edgecolors = color)
     return [g1,g2]
 
 def plot_drone(ax, d : drone, scale = 20, color = 'r'):
@@ -209,7 +211,8 @@ def plot_drone(ax, d : drone, scale = 20, color = 'r'):
 
         graphics = []
         for p in p_ego:
-            graphics.append(ax.add_patch(plt.Circle(pose.transformFrom(p),d.width,fill = True, color = color)))
+            pdraw = pose.transformFrom(p)
+            graphics.append(ax.scatter(pdraw[0],pdraw[1],marker = 'o', c = 'red', s = 100))
         return graphics
 
         
