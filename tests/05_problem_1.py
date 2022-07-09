@@ -2,11 +2,11 @@ from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, wait
 from maildelivery.brains.brains_bots_simple import robot_planner
 from maildelivery.brains.plan_parser import parse_actions
+from maildelivery.geometry import pose2
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
-import gtsam
 
 DT = 0.001 #[s]
 V = 0.5 #[m/s]
@@ -42,7 +42,7 @@ env = build_env()
 x0 = env.locations[0].xy[0]
 y0 = env.locations[0].xy[1]
 theta0 = location.angle(env.locations[0],env.locations[1])
-r = robot(gtsam.Pose2(x0,y0,theta0),0)
+r = robot(pose2(x0,y0,theta0),0)
 r.last_location = 0
 r.goal_location = 0
 r.max_forward = V * DT

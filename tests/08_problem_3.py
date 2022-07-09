@@ -2,12 +2,12 @@ from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, wait
 from maildelivery.brains.brains_bots_simple import robot_planner
 from maildelivery.brains.plan_parser import full_plan_2_per_robot, parse_actions
+from maildelivery.geometry import pose2
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import PillowWriter
 from matplotlib.offsetbox import AnchoredText
-import gtsam
 import os
 
 DT = 0.001 #[s]
@@ -123,7 +123,7 @@ station = 20
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r0 = robot(gtsam.Pose2(x0,y0,theta0),0)
+r0 = robot(pose2(x0,y0,theta0),0)
 r0.last_location = station
 r0.goal_location = station
 r0.max_forward = V * DT
@@ -133,7 +133,7 @@ station = 21
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r1 = robot(gtsam.Pose2(x0,y0,theta0),1)
+r1 = robot(pose2(x0,y0,theta0),1)
 r1.last_location = station
 r1.goal_location = station
 r1.max_forward = V * DT
@@ -143,7 +143,7 @@ station = 22
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r2 = robot(gtsam.Pose2(x0,y0,theta0),2)
+r2 = robot(pose2(x0,y0,theta0),2)
 r2.last_location = station
 r2.goal_location = station
 r2.max_forward = V * DT
