@@ -1,7 +1,9 @@
 from unified_planning.model.metrics import MaximizeExpressionOnFinalState
 from unified_planning.shortcuts import *
 from unified_planning.io.pddl_writer import PDDLWriter
-from maildelivery import optic_wrapper
+from maildelivery.binary_solvers.manipulate_pddls import add_problem_lines, remove_problem_lines
+from maildelivery.binary_solvers.paths import DOMAIN_PATH, PROBLEM_PATH
+import maildelivery.binary_solvers.optic.optic_wrapper as optic_wrapper
 
 location = UserType('location')
 robot = UserType('robot')
@@ -54,16 +56,16 @@ problem.add_goal(robot_at(deliverybot,locations[2]))
 problem.add_quality_metric(MaximizeExpressionOnFinalState(charge(deliverybot)))
 
 w = PDDLWriter(problem)
-with open(optic_wrapper.DOMAIN_PATH, 'w') as f:
+with open(DOMAIN_PATH, 'w') as f:
     print(w.get_domain(), file = f)
-with open(optic_wrapper.PROBLEM_PATH, 'w') as f:
+with open(PROBLEM_PATH, 'w') as f:
     print(w.get_problem(), file = f)
 print('copied pddls')
 
-optic_wrapper.remove_problem_lines(1)
-optic_wrapper.add_problem_lines(['(:metric maximize(charge r0))'])
+remove_problem_lines(1)
+add_problem_lines(['(:metric maximize(charge r0))'])
 
-returncode = optic_wrapper.run_optic()
+returncode = optic_wrapper.run()
 if returncode == 0:
     execution_times, actions, durations = optic_wrapper.get_plan()
     print(actions)

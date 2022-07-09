@@ -6,13 +6,10 @@ import subprocess
 
 from maildelivery.binary_solvers.paths import DOMAIN_PATH, PROBLEM_PATH, PLAN_PATH
 DIR_PATH = os.path.join(os.path.dirname(__file__))
-
-OPTIC_NO_LP = "optic-rewrite-no-lp"
-OPTIC_CLP = "optic-clp -N"
-BINARY_NAME = OPTIC_NO_LP
+BINARY_NAME = "lpg-td"
 
 def run():
-    p = subprocess.run(f"./{BINARY_NAME} {DOMAIN_PATH} {PROBLEM_PATH} > {PLAN_PATH}", \
+    p = subprocess.run(f"./{BINARY_NAME} -o {DOMAIN_PATH} -f {PROBLEM_PATH} > {PLAN_PATH}", \
          cwd = DIR_PATH, shell = True)
     return p.returncode
 

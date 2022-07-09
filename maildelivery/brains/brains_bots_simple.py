@@ -182,7 +182,8 @@ class robot_planner:
         self._locations = _locations
         self._packages = _packages
         
-    def solve(self, engine_name = 'optic', only_read_plan = False, time_fix = True, minimize_makespan = False): 
+    def solve(self, engine_name = 'optic', only_read_plan = False, time_fix = True,\
+                         minimize_makespan = True, maximize_charge = False): 
         start = time.time()
         print('started solving domain+problem with optic')
 
@@ -194,7 +195,7 @@ class robot_planner:
             #                                                         _pickup: Int(0),
             #                                                         _drop: Int(0)
             #                                                         }))      
-        
+
         if engine_name == 'optic':
             w = PDDLWriter(self.problem)
             with open(paths.DOMAIN_PATH, 'w') as f:
@@ -203,18 +204,19 @@ class robot_planner:
                 print(w.get_problem(), file = f)
             print('copied pddls')
 
-            # add optimization over final values here via rewriting the pddl files.
-            if len(self._robots) == 1:
-                manipulate_pddls.add_problem_lines([f' (:metric maximize (charge {self._robots[0]}))'])
-            else:
-                part1 = ' (:metric maximize (+ '
-                part2 = ' '.join([f'(charge {rname})' for rname in self._robots])
-                part3 = '))'
-                newline = part1 + part2 + part3
-                manipulate_pddls.add_problem_lines([newline])
+            if minimize_makespan == False and maximize_charge == True:
+                # add optimization over final values here via rewriting the pddl files.
+                if len(self._robots) == 1:
+                    manipulate_pddls.add_problem_lines([f' (:metric maximize (charge {self._robots[0]}))'])
+                else:
+                    part1 = ' (:metric maximize (+ '
+                    part2 = ' '.join([f'(charge {rname})' for rname in self._robots])
+                    part3 = '))'
+                    newline = part1 + part2 + part3
+                    manipulate_pddls.add_problem_lines([newline])
         
             if not only_read_plan:
-                optic_wrapper.run_optic()
+                optic_wrapper.run()
             execution_times, actions, durations = optic_wrapper.get_plan()
         
         if engine_name == 'tamer':

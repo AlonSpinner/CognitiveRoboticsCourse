@@ -1,7 +1,3 @@
-Warnings encountered when parsing Domain/Problem File
-
-Errors: 0, warnings: 1
-/home/cear/repos/maildelivery/maildelivery/binary_solvers/problem.pddl: line: 10: Warning: Undeclared symbol: charge
 Parsing and Instantiating...
 Done
 One way facts...
@@ -9,6 +5,7 @@ Mutex groups...
 Semaphore Facts...
 Envelope Facts...
 One-shot actions...
+(move r0 l0 l1) is 1 shot
 Integral variables...
 Variable bounds...
 Static numeric conditions...
@@ -20,54 +17,34 @@ Damaging events...
 Dominance constraints (including processes and events)...
 Variable monotonicity...
 Max/min needed values for any single precondition...
+Dependencies from NumericFluents to the conditions and effects that use them...
 Irrelevant action pruning by backward reachability from goal...
 Uninterestingness criteria...
 Compression-safe actions...
 Compression-safe invariants...
 0% of durative actions in this problem are compression safe
-Goal Goal [4]
-    (robot_at r1 l6)
-    (robot_at r0 l5)
-    (location_has_package p1 l5)
-    (location_has_package p0 l6)
+Goal Goal [1]
+    (robot_at r0 l2)
 
 Finishing preprocessing.  Making a TRPG heuristic...
 Making an open list...
 Running WA* search (g weight = 1, h weight = 5)
-{(robot_at r0 l5),(robot_at r1 l6),(location_has_package p0 l5),(location_has_package p1 l6),(location_is_free l0),(location_is_free l1),(location_is_free l2),(location_is_free l3),(location_is_free l4),(robot_not_holding_package r0),(robot_not_holding_package r1),(not_targeted l0),(not_targeted l1),(not_targeted l2),(not_targeted l3),(not_targeted l4),(not_targeted l5),(not_targeted l6),(road_is_free l0 l0),(road_is_free l1 l0),(road_is_free l2 l0),(road_is_free l3 l0),(road_is_free l4 l0),(road_is_free l5 l0),(road_is_free l6 l0),(road_is_free l0 l1),(road_is_free l1 l1),(road_is_free l2 l1),(road_is_free l3 l1),(road_is_free l4 l1),(road_is_free l5 l1),(road_is_free l6 l1),(road_is_free l0 l2),(road_is_free l1 l2),(road_is_free l2 l2),(road_is_free l3 l2),(road_is_free l4 l2),(road_is_free l5 l2),(road_is_free l6 l2),(road_is_free l0 l3),(road_is_free l1 l3),(road_is_free l2 l3),(road_is_free l3 l3),(road_is_free l4 l3),(road_is_free l5 l3),(road_is_free l6 l3),(road_is_free l0 l4),(road_is_free l1 l4),(road_is_free l2 l4),(road_is_free l3 l4),(road_is_free l4 l4),(road_is_free l5 l4),(road_is_free l6 l4),(road_is_free l0 l5),(road_is_free l1 l5),(road_is_free l2 l5),(road_is_free l3 l5),(road_is_free l4 l5),(road_is_free l5 l5),(road_is_free l6 l5),(road_is_free l0 l6),(road_is_free l1 l6),(road_is_free l2 l6),(road_is_free l3 l6),(road_is_free l4 l6),(road_is_free l5 l6),(road_is_free l6 l6)}
-[]
-Initial heuristic = 16
-Initial stats: t=0s, 5636kb
-b (15 @ n=3, t=0s, 5636kb)b (14 @ n=4, t=0s, 5636kb)b (12 @ n=17, t=0s, 5768kb)b (11 @ n=19, t=0s, 5768kb).{EPTU=8333.33,ETD=4.95918}b (10 @ n=218, t=0.01s, 6532kb)b (9 @ n=224, t=0.01s, 6532kb).{EPTU=7692.31,ETD=8.0404}b (7 @ n=269, t=0.01s, 6780kb)b (6 @ n=271, t=0.01s, 6780kb)b (5 @ n=290, t=0.01s, 6900kb)b (4 @ n=293, t=0.01s, 6900kb)b (3 @ n=297, t=0.01s, 6900kb)b (2 @ n=303, t=0.02s, 7020kb)b (1 @ n=307, t=0.02s, 7020kb)
+{(robot_at r0 l0)}
+[ (charge r0)=40 ]
+Initial heuristic = 4
+Initial stats: t=0s, 5268kb
+
 ;;;; Solution Found
-; Time 0.02
-; Discounted time: 0.021
+; Time 0.00
+; Discounted time: 0.001
 ; Metareasoning time: 0
-; Peak memory 7020kb
-; Nodes Generated: 311
-; Nodes Expanded:  119
-; Nodes Evaluated: 311
-; Nodes Tunneled:  3
-; Nodes memoised with open actions: 274
-; Nodes memoised without open actions: 124
-; Nodes pruned by memoisation: 87
-0.021: (move r1 l6 l4) [1.000] ; (23)
-0.021: (pickup p0 r0 l5) [0.001] ; (48)
-0.022: (move r0 l5 l3) [1.000] ; (16)
-1.023: (drop p0 r0 l3) [0.001] ; (68)
-1.023: (move r1 l4 l3) [1.000] ; (15)
-1.024: (move r0 l3 l5) [1.000] ; (24)
-2.024: (pickup p0 r1 l3) [0.001] ; (42)
-2.025: (move r1 l3 l4) [1.000] ; (21)
-2.025: (move r0 l5 l3) [1.000] ; (16)
-3.026: (move r1 l4 l6) [1.000] ; (27)
-4.027: (drop p0 r1 l6) [0.001] ; (82)
-4.028: (pickup p1 r1 l6) [0.001] ; (55)
-4.029: (move r1 l6 l4) [1.000] ; (23)
-5.030: (drop p1 r1 l4) [0.001] ; (75)
-5.030: (move r0 l3 l4) [1.000] ; (20)
-5.031: (move r1 l4 l6) [1.000] ; (27)
-6.031: (pickup p1 r0 l4) [0.001] ; (45)
-6.032: (move r0 l4 l3) [1.000] ; (14)
-7.033: (move r0 l3 l5) [1.000] ; (24)
-8.034: (drop p1 r0 l5) [0.001] ; (77)
+; Peak memory 5268kb
+; Nodes Generated: 0
+; Nodes Expanded:  1
+; Nodes Evaluated: 1
+; Nodes Tunneled:  4
+; Nodes memoised with open actions: 0
+; Nodes memoised without open actions: 1
+; Nodes pruned by memoisation: 0
+0.001: (move r0 l0 l1) [1.000] ; (0)
+1.002: (move r0 l1 l2) [1.000] ; (1)
