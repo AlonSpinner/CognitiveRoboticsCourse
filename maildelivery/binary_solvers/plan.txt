@@ -1,28 +1,66 @@
 
 ; Version LPG-td-1.4
 ; Seed 1
-; Command line: ./lpg-td -o /home/cear/repos/maildelivery/maildelivery/binary_solvers/domain.pddl -f /home/cear/repos/maildelivery/maildelivery/binary_solvers/problem.pddl -speed -seed 1 -restarts 3 
+; Command line: ./lpg-td -o /home/cear/repos/maildelivery/maildelivery/binary_solvers/domain.pddl -f /home/cear/repos/maildelivery/maildelivery/binary_solvers/problem.pddl -n 2 -seed 1 
 ; Problem /home/cear/repos/maildelivery/maildelivery/binary_solvers
-; Time 0.01
-; Search time 0.01
+; Time 0.03
+; Search time 0.03
 ; Parsing time 0.00
 ; Mutex time 0.00
-; MakeSpan 6.00
+; MakeSpan 48.00
 
 
-0.0002:   (MOVE R0 L5 L3) [1.0000]
-0.0003:   (PICKUP P1 R1 L6) [0.0000]
-0.0007:   (MOVE R1 L6 L4) [1.0000]
-1.0005:   (MOVE R0 L3 L1) [1.0000]
-1.0010:   (MOVE R1 L4 L3) [1.0000]
-2.0013:   (MOVE R1 L3 L5) [1.0000]
-3.0015:   (DROP P1 R1 L5) [0.0000]
-3.0018:   (PICKUP P0 R1 L5) [0.0000]
-3.0020:   (MOVE R1 L5 L3) [1.0000]
-4.0023:   (MOVE R1 L3 L4) [1.0000]
-5.0025:   (MOVE R1 L4 L6) [1.0000]
-6.0027:   (DROP P0 R1 L6) [0.0000]
-4.0023:   (MOVE R0 L1 L3) [1.0000]
-5.0025:   (MOVE R0 L3 L5) [1.0000]
+0.0002:   (MOVE R1 L21 L9) [1.0000]
+1.0005:   (MOVE R1 L9 L19) [1.0000]
+2.0008:   (PICKUP P3 R1 L19) [0.0000]
+2.0013:   (MOVE R1 L19 L9) [1.0000]
+3.0015:   (MOVE R1 L9 L8) [3.0000]
+6.0017:   (MOVE R1 L8 L1) [3.0000]
+9.0020:   (MOVE R1 L1 L10) [1.0000]
+10.0022:   (DROP P3 R1 L10) [0.0000]
+10.0027:   (MOVE R1 L10 L1) [1.0000]
+11.0030:   (MOVE R1 L1 L8) [3.0000]
+14.0032:   (MOVE R1 L8 L16) [1.0000]
+15.0035:   (PICKUP P4 R1 L16) [0.0000]
+15.0040:   (MOVE R1 L16 L8) [1.0000]
+16.0042:   (MOVE R1 L8 L1) [3.0000]
+19.0045:   (MOVE R1 L1 L5) [1.0000]
+20.0047:   (DROP P4 R1 L5) [0.0000]
+20.0052:   (MOVE R1 L5 L1) [1.0000]
+21.0055:   (MOVE R1 L1 L2) [3.0000]
+24.0057:   (MOVE R1 L2 L13) [1.0000]
+25.0060:   (PICKUP P5 R1 L13) [0.0000]
+25.0065:   (MOVE R1 L13 L2) [1.0000]
+26.0067:   (MOVE R1 L2 L9) [3.0000]
+29.0070:   (MOVE R1 L9 L19) [1.0000]
+30.0072:   (DROP P5 R1 L19) [0.0000]
+30.0077:   (MOVE R1 L19 L9) [1.0000]
+31.0080:   (MOVE R1 L9 L8) [3.0000]
+34.0083:   (MOVE R1 L8 L11) [1.0000]
+35.0085:   (PICKUP P2 R1 L11) [0.0000]
+35.0090:   (MOVE R1 L11 L8) [1.0000]
+36.0093:   (MOVE R1 L8 L9) [3.0000]
+39.0095:   (MOVE R1 L9 L15) [3.0000]
+42.0098:   (MOVE R1 L15 L18) [1.0000]
+43.0100:   (DROP P2 R1 L18) [0.0000]
+43.0105:   (MOVE R1 L18 L15) [1.0000]
+44.0108:   (MOVE R1 L15 L9) [3.0000]
+47.0110:   (MOVE R1 L9 L21) [1.0000]
+26.0067:   (MOVE R0 L20 L2) [1.0000]
+27.0070:   (MOVE R0 L2 L6) [1.0000]
+28.0072:   (PICKUP P1 R0 L6) [0.0000]
+28.0077:   (MOVE R0 L6 L2) [1.0000]
+29.0080:   (MOVE R0 L2 L3) [3.0000]
+32.0083:   (MOVE R0 L3 L0) [3.0000]
+35.0085:   (MOVE R0 L0 L4) [1.0000]
+36.0088:   (DROP P1 R0 L4) [0.0000]
+36.0090:   (PICKUP P0 R0 L4) [0.0000]
+36.0093:   (MOVE R0 L4 L0) [1.0000]
+37.0095:   (MOVE R0 L0 L1) [3.0000]
+40.0098:   (MOVE R0 L1 L2) [3.0000]
+43.0100:   (MOVE R0 L2 L6) [1.0000]
+44.0103:   (DROP P0 R0 L6) [0.0000]
+44.0108:   (MOVE R0 L6 L2) [1.0000]
+45.0110:   (MOVE R0 L2 L20) [1.0000]
 
 
