@@ -1,8 +1,2 @@
 
 *.pyc
-
-maildelivery/docker/problem.pddl
-
-maildelivery/docker/plan.txt
-
-maildelivery/docker/domain.pddl

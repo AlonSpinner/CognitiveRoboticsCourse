@@ -1,20 +1,65 @@
-(define (domain maildelivery-domain)
- (:requirements :strips :typing :numeric-fluents :durative-actions)
- (:types robot location package)
- (:predicates (robot_at ?r - robot ?l - location) (is_connected ?l_from - location ?l_to - location) (location_is_free ?l - location) (robot_has_package ?p - package ?r - robot) (location_has_package ?p - package ?l - location) (robot_not_holding_package ?r - robot) (not_targeted ?l_to - location) (road_is_free ?l_from - location ?l_to - location))
- (:functions (distance ?l_from - location ?l_to - location))
- (:durative-action move
-  :parameters ( ?r - robot ?l_from - location ?l_to - location)
-  :duration (= ?duration (distance ?l_from ?l_to))
-  :condition (and (at start (is_connected ?l_from ?l_to))(at start (not_targeted ?l_to))(at start (road_is_free ?l_to ?l_from))(at start (robot_at ?r ?l_from))(at end (location_is_free ?l_to)))
-  :effect (and (at start (not (robot_at ?r ?l_from))) (at start (location_is_free ?l_from)) (at start (not (not_targeted ?l_to))) (at start (not (road_is_free ?l_from ?l_to))) (at end (robot_at ?r ?l_to)) (at end (not (location_is_free ?l_to))) (at end (not_targeted ?l_to)) (at end (road_is_free ?l_from ?l_to))))
- (:action pickup
-  :parameters ( ?p - package ?r - robot ?l - location)
-  :precondition (and (robot_at ?r ?l) (location_has_package ?p ?l) (robot_not_holding_package ?r))
-  :effect (and (not (location_has_package ?p ?l)) (robot_has_package ?p ?r) (not (robot_not_holding_package ?r))))
- (:action drop
-  :parameters ( ?p - package ?r - robot ?l - location)
-  :precondition (and (robot_at ?r ?l) (robot_has_package ?p ?r))
-  :effect (and (not (robot_has_package ?p ?r)) (location_has_package ?p ?l) (robot_not_holding_package ?r)))
+(define (domain turtlebot)
+
+(:requirements :strips :typing :fluents :disjunctive-preconditions :durative-actions)
+
+(:types
+	waypoint 
+	robot
 )
 
+(:predicates
+	(robot_at ?v - robot ?wp - waypoint)
+	(visited ?wp - waypoint)
+	(undocked ?v - robot)
+	(docked ?v - robot)
+	(localised ?v - robot)
+	(dock_at ?wp - waypoint)
+)
+
+;; Move to any waypoint, avoiding terrain
+(:durative-action goto_waypoint
+	:parameters (?v - robot ?from ?to - waypoint)
+	:duration ( = ?duration 60)
+	:condition (and
+		(at start (robot_at ?v ?from))
+		(at start (localised ?v))
+		(over all (undocked ?v)))
+	:effect (and
+		(at end (visited ?to))
+		(at end (robot_at ?v ?to))
+		(at start (not (robot_at ?v ?from))))
+)
+
+;; Localise
+(:durative-action localise
+	:parameters (?v - robot)
+	:duration ( = ?duration 60)
+	:condition (over all (undocked ?v))
+	:effect (at end (localised ?v))
+)
+
+;; Dock to charge
+(:durative-action dock
+	:parameters (?v - robot ?wp - waypoint)
+	:duration ( = ?duration 30)
+	:condition (and
+		(over all (dock_at ?wp))
+		(at start (robot_at ?v ?wp))
+		(at start (undocked ?v)))
+	:effect (and
+		(at end (docked ?v))
+		(at start (not (undocked ?v))))
+)
+
+(:durative-action undock
+	:parameters (?v - robot ?wp - waypoint)
+	:duration ( = ?duration 10)
+	:condition (and
+		(over all (dock_at ?wp))
+		(at start (docked ?v)))
+	:effect (and
+		(at start (not (docked ?v)))
+		(at end (undocked ?v)))
+)
+
+)
