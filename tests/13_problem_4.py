@@ -60,7 +60,7 @@ Nrobots = len(r)
 planner = robot_planner()
 planner.create_problem(env,r)
 
-execution_times, actions, durations = planner.solve(engine_name = 'optic', only_read_plan = False)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', only_read_plan = False)
 actions = parse_actions(actions,env)
 r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nrobots)
 
@@ -83,6 +83,7 @@ plotCounter = 0
 r_current_actions = [wait(i) for i in range(Nrobots)]
 r_next_actions_indicies = [0 for _ in range(Nrobots)]
 r_done = [False for _ in range(Nrobots)]
+animate()
 while True:
 
     for i,ri in enumerate(r):
