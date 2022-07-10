@@ -25,6 +25,7 @@ class robot_planner:
     only deliverybots, no charge involved
     '''
     def __init__(self) -> None:
+        self.f_dist2charge  = lambda dist: 2 * dist #not used here 
         self.create_domain()
 
     def create_domain(self) -> None:
@@ -183,7 +184,7 @@ class robot_planner:
         self._packages = _packages
         
     def solve(self, engine_name = 'optic', only_read_plan = False, time_fix = True,\
-                         minimize_makespan = True): 
+                         minimize_makespan = True, maximize_charge = False): 
         
         start = time.time()
         print('started solving domain+problem with optic')
@@ -207,6 +208,18 @@ class robot_planner:
             with open(paths.PROBLEM_PATH, 'w') as f:
                 print(w.get_problem(), file = f)
             print('copied pddls')
+
+            if minimize_makespan == False and maximize_charge == True:
+                # add optimization over final values here via rewriting the pddl files.
+                if len(self._robots) == 1:
+                    manipulate_pddls.add_problem_lines([f' (:metric maximize (charge {self._robots[0]}))'])
+                else:
+                    part1 = ' (:metric maximize (+ '
+                    part2 = ' '.join([f'(charge {rname})' for rname in self._robots])
+                    part3 = '))'
+                    newline = part1 + part2 + part3
+                    manipulate_pddls.add_problem_lines([newline])
+
 
         #---------------------------------------------------------------------------#
         #                            Call ENGINE                                    #
