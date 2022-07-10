@@ -182,17 +182,14 @@ class drone:
 #--------------------------------PLOTTING FUNCTIONS-------------------------
 #---------------------------------------------------------------------------
 
-def plot_robot(ax : plt.Axes , r : robot, scale = 20, color = 'b'):
-        TEXT_OFFSET = 0.04
+def plot_robot(ax : plt.Axes , r : robot, scale = 20, color = 'b', textcolor = 'magenta'):
         pose = r.pose
         u = np.cos(pose.theta)
         v = np.sin(pose.theta)
-        ptext = np.array([0,-4*TEXT_OFFSET]).reshape(-1,1)
-        ptext = r.pose.transformFrom(ptext)
         graphics_quiver = ax.quiver(pose.x,pose.y,u,v, color = color, scale = scale, width = 0.02)
         graphics_circle = ax.scatter(pose.x, pose.y, marker = 'o', c = 'none',\
-             s = 500, edgecolors = color)
-        graphics_txt = ax.text(ptext[0],ptext[1],r.id, color = color, horizontalalignment = 'center')
+             s = 700, edgecolors = color)
+        graphics_txt = ax.text(pose.x,pose.y,f"{r.id}    ", color = color, horizontalalignment = 'right', verticalalignment = 'center')
         return [graphics_quiver,graphics_circle,graphics_txt]
 
 def plot_robot_deadcharge(ax, r : robot, scale = 20, color = 'r'):
