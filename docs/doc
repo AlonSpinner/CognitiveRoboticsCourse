@@ -43,7 +43,8 @@ classical planning course. good stuff
 This repo contains various automated planning systems with the source code.
 	https://github.com/ssardina-planning/planners
 
-Optic - https://nms.kcl.ac.uk/planning/software/optic.html
+Optic - https://planning.wiki/ref/planners/optic
+		https://nms.kcl.ac.uk/planning/software/optic.html
 		https://github.com/Dongbox/optic-clp-release
 
 lpg - Optic competitor?
@@ -57,6 +58,9 @@ popf - Optic competitor?
 
 planners html from kcl.ac.uk
 	https://nms.kcl.ac.uk/planning/software/
+
+ENHSP: does not support durative actions
+	https://planning.wiki/ref/planners/enhsp
 
 
 Thoughts:
