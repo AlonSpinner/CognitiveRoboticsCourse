@@ -8,7 +8,8 @@ from maildelivery.brains.plan_parser import parse_up
 import unified_planning as up
 from unified_planning.shortcuts import OneshotPlanner, \
         Fluent, InstantaneousAction, DurativeAction, Problem, Object, SimulatedEffect, \
-        UserType, BoolType, IntType, Int, Div, RealType, \
+        UserType, BoolType, IntType, Int, RealType, Real, \
+        Div, Minus, \
         LeftOpenTimeInterval, StartTiming, EndTiming, OpenTimeInterval, \
         GE, GT, Or, Equals, And, Not, Implies
 from unified_planning.io.pddl_writer import PDDLWriter
@@ -26,6 +27,7 @@ class robot_planner:
     '''
     def __init__(self) -> None:
         self.f_dist2charge  = lambda dist: 2 * dist #not used here 
+        self.f_charge2time = lambda missing_charge: missing_charge/10
         self.create_domain()
 
     def create_domain(self) -> None:
@@ -49,14 +51,15 @@ class robot_planner:
         distance = Fluent('distance', RealType(), l_from = _location, l_to = _location)
         velocity = Fluent('velocity', RealType(), r = _robot)
         charge = Fluent('charge', RealType(0,100.0), r = _robot)
-
-        
+        location_is_dock = Fluent('location_is_dock', BoolType(), l = _location)
+      
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
         l_from = _move.parameter('l_from')
         l_to = _move.parameter('l_to')
         _move.set_fixed_duration(Div(distance(l_from,l_to),(velocity(r))))
         _move.add_condition(StartTiming(), is_connected(l_from, l_to))
+        _move.add_condition(StartTiming(),GE(charge(r),self.f_dist2charge(distance(l_from,l_to))))
         _move.add_condition(OpenTimeInterval(StartTiming(), EndTiming()), road_is_free(l_to,l_from)) #opposite way
         _move.add_condition(StartTiming(), robot_at(r, l_from))
         _move.add_condition(LeftOpenTimeInterval(StartTiming(), EndTiming()),location_is_free(l_to))
@@ -70,7 +73,7 @@ class robot_planner:
             dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
             requiredCharge = self.f_dist2charge(dist)
             currentCharge = state.get_value(charge(actual_params.get(r))).constant_value()
-            return [Int(currentCharge-requiredCharge)]
+            return [Real(currentCharge-requiredCharge)]
         _move.set_simulated_effect(StartTiming(),SimulatedEffect([charge(r)], decrease_charge_fun))
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
@@ -94,10 +97,19 @@ class robot_planner:
         _drop.add_effect(location_has_package(p, l), True)
         _drop.add_effect(robot_not_holding_package(r), True)
 
+        _chargeup = DurativeAction('chargeup', r = _robot, l = _location)
+        r = _drop.parameter('r')
+        l = _drop.parameter('l')
+        _chargeup.set_fixed_duration(self.f_charge2time(Minus(100,charge(r))))
+        _chargeup.add_condition(StartTiming(),robot_at(r, l))
+        _chargeup.add_condition(StartTiming(), location_is_dock(l))
+        _chargeup.add_effect(EndTiming(), charge(r), 100.0)
+
         problem = Problem('maildelivery')
         problem.add_action(_move)
         problem.add_action(_pickup)
         problem.add_action(_drop)
+        problem.add_action(_chargeup)
         problem.add_fluent(robot_at, default_initial_value = False)
         problem.add_fluent(is_connected, default_initial_value = False)
         problem.add_fluent(location_is_free, default_initial_value = True)
@@ -108,6 +120,7 @@ class robot_planner:
         problem.add_fluent(distance, default_initial_value = NOT_CONNECTED_DISTANCE) #some absuard number
         problem.add_fluent(velocity, default_initial_value = 1.0)
         problem.add_fluent(charge, default_initial_value = 100.0)
+        problem.add_fluent(location_is_dock, default_initial_value = False)
 
         #save to self
         self.problem = problem
@@ -126,6 +139,7 @@ class robot_planner:
         self.distance = distance
         self.velocity = velocity
         self.charge = charge
+        self.location_is_dock = location_is_dock
         
 
     def create_problem(self, env : enviorment, robots : list[robot]):
