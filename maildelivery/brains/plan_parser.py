@@ -1,5 +1,5 @@
-from maildelivery.agents import move, pickup, drop, robot, action, wait
-from maildelivery.world import enviorment, package
+from maildelivery.agents import action, wait, move, pickup, drop, chargeup
+from maildelivery.world import enviorment
 
 def parse_actions(actions : list[tuple], env : enviorment):
     #from actions ('action_name','param1','param2') to my actions
@@ -25,6 +25,13 @@ def parse_actions(actions : list[tuple], env : enviorment):
                 env.packages[int(params[0][1:])], #package
                 env.locations[int(params[2][1:])] #location
                 ))
+
+        elif name == 'chargeup':
+            parsed_actions.append(chargeup(
+                int(params[0][1:]), #robot id
+                env.locations[int(params[1][1:])], #location
+                ))
+
     return parsed_actions
 
 def actions_indicies_per_robot(parsed_actions : list[action], Nrobots):

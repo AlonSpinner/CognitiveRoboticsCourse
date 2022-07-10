@@ -27,7 +27,8 @@ class robot_planner:
     '''
     def __init__(self) -> None:
         self.f_dist2charge  = lambda dist: 2 * dist #not used here 
-        self.f_charge2time = lambda missing_charge: missing_charge/10
+        self.f_charge2time = lambda missing_charge: missing_charge/100
+        self.max_charge = 100.0
         self.create_domain()
 
     def create_domain(self) -> None:
@@ -50,7 +51,7 @@ class robot_planner:
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
         distance = Fluent('distance', RealType(), l_from = _location, l_to = _location)
         velocity = Fluent('velocity', RealType(), r = _robot)
-        charge = Fluent('charge', RealType(0,100.0), r = _robot)
+        charge = Fluent('charge', RealType(0.0,self.max_charge), r = _robot)
         location_is_dock = Fluent('location_is_dock', BoolType(), l = _location)
       
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
@@ -69,12 +70,7 @@ class robot_planner:
         _move.add_effect(EndTiming(),robot_at(r, l_to), True)
         _move.add_effect(EndTiming(),location_is_free(l_to), False)
         _move.add_effect(EndTiming(), road_is_free(l_from,l_to), True)
-        def decrease_charge_fun(problem, state, actual_params):
-            dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
-            requiredCharge = self.f_dist2charge(dist)
-            currentCharge = state.get_value(charge(actual_params.get(r))).constant_value()
-            return [Real(currentCharge-requiredCharge)]
-        _move.set_simulated_effect(StartTiming(),SimulatedEffect([charge(r)], decrease_charge_fun))
+        _move.add_decrease_effect(EndTiming(),charge(r),self.f_dist2charge(distance(l_from,l_to)))
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
         p = _pickup.parameter('p')
@@ -100,10 +96,10 @@ class robot_planner:
         _chargeup = DurativeAction('chargeup', r = _robot, l = _location)
         r = _drop.parameter('r')
         l = _drop.parameter('l')
-        _chargeup.set_fixed_duration(self.f_charge2time(Minus(100,charge(r))))
+        _chargeup.set_fixed_duration(self.f_charge2time(Minus(self.max_charge,charge(r))))
         _chargeup.add_condition(StartTiming(),robot_at(r, l))
         _chargeup.add_condition(StartTiming(), location_is_dock(l))
-        _chargeup.add_effect(EndTiming(), charge(r), 100.0)
+        _chargeup.add_effect(EndTiming(), charge(r), self.max_charge)
 
         problem = Problem('maildelivery')
         problem.add_action(_move)
@@ -119,7 +115,7 @@ class robot_planner:
         problem.add_fluent(road_is_free, default_initial_value = True)
         problem.add_fluent(distance, default_initial_value = NOT_CONNECTED_DISTANCE) #some absuard number
         problem.add_fluent(velocity, default_initial_value = 1.0)
-        problem.add_fluent(charge, default_initial_value = 100.0)
+        problem.add_fluent(charge, default_initial_value = self.max_charge)
         problem.add_fluent(location_is_dock, default_initial_value = False)
 
         #save to self
@@ -200,6 +196,12 @@ class robot_planner:
                                                 _robots[p.owner]),
                                                 True)
                 self.problem.set_initial_value(self.robot_not_holding_package(_robots[p.owner]),False)
+
+        for l in env.locations:
+            if l.type == 'dock':
+                self.problem.set_initial_value(self.location_is_dock(
+                                                _locations[l.id]),
+                                                True)
         #goal
         for p in env.packages:
             self.problem.add_goal(self.location_has_package(_packages[p.id],_locations[p.goal]))
@@ -214,7 +216,7 @@ class robot_planner:
                          minimize_makespan = True, maximize_charge = False): 
         
         start = time.time()
-        print('started solving domain+problem with optic')
+        print(f'started solving domain+problem with {engine_name}')
 
         #---------------------------------------------------------------------------#
         #                            DEFINE   METRIC                                #

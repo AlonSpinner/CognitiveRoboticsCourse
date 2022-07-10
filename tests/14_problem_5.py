@@ -11,13 +11,14 @@ from matplotlib.offsetbox import AnchoredText
 import os
 
 DT = 0.001 #[s]
-V = 4.0 #[m/s]
+V = 8.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
-MOVIE_FILENAME = os.path.join(dir_path,'08_movie.gif')
+MOVIE_FILENAME = os.path.join(dir_path,'14_movie.gif')
 X_D = 3.0
 H_D = 1.0
-f_dist2charge = lambda dist: dist
+f_dist2charge = lambda dist: 2 * dist
+f_charge2time = lambda missing_charge: missing_charge/100
 
 def build_block(base_ind : int, bottomleft_xy : np.ndarray):
     x_bl = location(base_ind + 0,bottomleft_xy + np.array([0,0]),'intersection')
@@ -94,7 +95,7 @@ def build_env():
     stations = [station2, station9, station15]
     n_s = 3
 
-    dock = location(n_a + n_b + n_c + n_s, np.array([1.5*X_D,1.5*X_D]),'dock')
+    dock = location(n_a + n_b + n_c + n_s, np.array(x_c[0].xy + np.array([H_D,0])),'dock')
 
     locations = sorted(x_a + h_a + \
                         x_b + h_b + \
@@ -102,7 +103,7 @@ def build_env():
     connectivityList = c_a + \
                         connectFromLeft(x_a,x_b,h_b) + c_b + \
                         connectFromLeft(x_b,x_c,h_c) + c_c + \
-                        [[2,station2.id]] + [[9, station9.id]] + [[15, station15.id]]
+                        [[2,station2.id]] + [[9, station9.id]] + [[15, station15.id], [14,dock.id]]
 
     p0 = package(0,locations[4].id,'location',locations[6].id,100, locations[4].xy)
     p1 = package(1,locations[6].id,'location',locations[4].id,100, locations[6].xy)
@@ -123,31 +124,37 @@ station = 20
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r0 = robot(pose2(x0,y0,theta0),0,DT)
+r0 = robot(pose2(x0,y0,theta0), 0, DT)
 r0.last_location = station
 r0.goal_location = station
 r0.velocity = V
 r0.f_dist2charge = f_dist2charge
+r0.f_charge2time = f_charge2time
+r0.charge = 100.0
 
 station = 21
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r1 = robot(pose2(x0,y0,theta0),1,DT)
+r1 = robot(pose2(x0,y0,theta0), 1, DT)
 r1.last_location = station
 r1.goal_location = station
 r1.velocity = V
 r1.f_dist2charge = f_dist2charge
+r1.f_charge2time = f_charge2time
+r1.charge = 50.0
 
 station = 22
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r2 = robot(pose2(x0,y0,theta0),2,DT)
+r2 = robot(pose2(x0,y0,theta0), 2, DT)
 r2.last_location = station
 r2.goal_location = station
 r2.velocity = V
 r2.f_dist2charge = f_dist2charge
+r2.f_charge2time = f_charge2time
+r2.charge = 50.0
 
 r = [r0,r1,r2]
 Nrobots = len(r)
@@ -155,9 +162,10 @@ Nrobots = len(r)
 #ask for plan
 planner = robot_planner()
 planner.f_dist2charge = f_dist2charge
+planner.f_charge2time = f_charge2time
 planner.create_problem(env,r)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)#, maximize_charge = True)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', maximize_charge = True)
 actions = parse_actions(actions,env)
 r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nrobots)
 

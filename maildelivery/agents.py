@@ -39,11 +39,19 @@ class drop(action):
     time_start : float = 0
     time_end : float = 0
 
+@dataclass(frozen = True)
+class chargeup(action):
+    robot_id : int
+    loc: location
+    time_start : float = 0
+    time_end : float = 0
+
 class robot:
-    def __init__(self,pose0, id) -> None:
+    def __init__(self,pose0, id, dt) -> None:
+        self.dt = dt
         self.pose : pose2 = pose0
         self.id : int = id
-        self.max_forward : float = 0.001
+        self.velocity = 1.0 #[m/s]
         self.max_rotate : float = np.pi #np.pi/4
         self.last_location : int = 0
         self.goal_location : int = 0
@@ -51,7 +59,7 @@ class robot:
         self.max_charge : int = 100
         self.charge : int = 100
         self.f_dist2charge  = lambda dist: 2 * dist #some default function
-        self.velocity = 1.0 #[m/s]
+        self.f_charge2time = lambda missing_charge: missing_charge/100
         self.graphics : list = []
         self.graphics_deadcharge : list = []
        
@@ -91,6 +99,14 @@ class robot:
                 return True
             else:
                 return False
+
+        elif type(a) is chargeup:
+            if np.linalg.norm(self.pose.transformTo(a.loc.xy)) < REACH_DELTA:
+                self.charge = self.max_charge #need to figure this out later
+                return True
+            else:
+                return False
+
         elif type(a) is wait:
             return True
 
@@ -103,9 +119,9 @@ class robot:
 
         e_dist = self.pose.range(action.loc_to.xy)
         if e_dist > CONTROL_DIST_THRESHOLD:
-            u = min(e_dist,self.max_forward)
+            u = min(e_dist,self.velocity * self.dt)
 
-            if self.charge >= abs(u):
+            if self.charge >= self.f_dist2charge(abs(u)):
                 self.pose = self.pose + pose2(u,0,0)
                 self.charge = self.charge - self.f_dist2charge(abs(u))
             return

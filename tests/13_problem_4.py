@@ -39,21 +39,19 @@ l0 = 0
 x0 = env.locations[l0].xy[0]
 y0 = env.locations[l0].xy[1]
 theta0 = np.pi/2
-r0 = robot(pose2(x0,y0,theta0),0)
+r0 = robot(pose2(x0,y0,theta0),0, DT)
 r0.last_location = l0
 r0.goal_location = 2
 r0.velocity = V
-r0.max_forward = V * DT
 
 l0 = 2
 x0 = env.locations[l0].xy[0]
 y0 = env.locations[l0].xy[1]
 theta0 = np.pi/2
-r1 = robot(pose2(x0,y0,theta0),1)
+r1 = robot(pose2(x0,y0,theta0),1, DT)
 r1.last_location = l0
 r1.goal_location = 0
 r1.velocity = V
-r1.max_forward = V * DT
 
 r = [r0,r1]
 Nrobots = len(r)
