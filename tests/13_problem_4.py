@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
 
 
-DT = 0.001 #[s]
-V = 0.5 #[m/s]
+DT = 0.0001 #[s]
+V = 1.0 #[m/s]
 
 def build_env():
 
@@ -22,7 +22,7 @@ def build_env():
 
     landmarks = houses
 
-    connectivityList = [[0,1],[1,2]]#,[2,3],[3,0]]
+    connectivityList = [[0,1],[0,2],[1,2]]#[2,3],[3,0]]
 
     p0 = package(0,0,'location',2,100,landmarks[0].xy)
     p1 = package(1,2,'location',0,100,landmarks[2].xy)
@@ -41,7 +41,7 @@ y0 = env.locations[l0].xy[1]
 theta0 = np.pi/2
 r0 = robot(pose2(x0,y0,theta0),0)
 r0.last_location = l0
-r0.goal_location = l0
+r0.goal_location = 2
 r0.max_forward = V * DT
 
 l0 = 2
@@ -50,7 +50,7 @@ y0 = env.locations[l0].xy[1]
 theta0 = np.pi/2
 r1 = robot(pose2(x0,y0,theta0),1)
 r1.last_location = l0
-r1.goal_location = l0
+r1.goal_location = 0
 r1.max_forward = V * DT
 
 r = [r0,r1]
@@ -91,14 +91,13 @@ while True:
             type(r_current_actions[i]) == wait and \
                 t >= r_execution_times[i][r_next_actions_indicies[i]]:
             r_current_actions[i] = r_actions[i][r_next_actions_indicies[i]]
-            r_current_actions[i] #we update index so 
             r_next_actions_indicies[i] += 1
              
         if ri.act(r_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions
             r_current_actions[i] = wait(robot_id = i)
 
     #update plot        
-    if plotCounter % 100 == 0:
+    if plotCounter % 1000 == 0:
         animate()
     plotCounter +=1
 

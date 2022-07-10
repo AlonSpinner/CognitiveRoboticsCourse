@@ -10,7 +10,7 @@ import numpy as np
 import unified_planning as up
 from unified_planning.shortcuts import UserType, BoolType,\
         Fluent, InstantaneousAction, DurativeAction, Problem, Object,\
-        IntType, Int, StartTiming, EndTiming, GE, GT, Or, Equals, And, Not, Implies, OneshotPlanner, SimulatedEffect
+        IntType, Variable, Int, RealType, RightOpenTimeInterval, ClosedTimeInterval, StartTiming, EndTiming, OpenTimeInterval, GE, GT, Forall, Or, Equals, And, Not, Implies, OneshotPlanner, SimulatedEffect
 from unified_planning.io.pddl_writer import PDDLWriter
 import time
 from unified_planning.model.metrics import MinimizeMakespan,\
@@ -38,8 +38,7 @@ class robot_planner:
         is_connected = Fluent('is_connected', BoolType(), l_from = _location, l_to = _location)
         location_is_free = Fluent('location_is_free', BoolType(), l = _location)
             #robot can wait on a location, occupying it, and no robot will pass over
-        location_not_targeted = Fluent('not_targeted', BoolType(), l_to = _location)
-            #no robot is targeting the location == moving towards it. We don't want "near misses"
+            #also, we take extra precaution and want robot location to be free "overall" movement towards it
         road_is_free = Fluent('road_is_free',BoolType(), l_from = _location, l_to = _location)
             #don't want two robots to go into head on collision
         robot_has_package = Fluent('robot_has_package', BoolType(), p = _package, r = _robot)
@@ -47,7 +46,7 @@ class robot_planner:
         robot_not_holding_package = Fluent('robot_not_holding_package', BoolType(), r = _robot)
             #to prevent picking up more than one package
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
-        distance = Fluent('distance', IntType(), l_from = _location, l_to = _location)
+        distance = Fluent('distance', RealType(), l_from = _location, l_to = _location)
         
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
@@ -55,17 +54,14 @@ class robot_planner:
         l_to = _move.parameter('l_to')
         _move.set_fixed_duration(distance(l_from,l_to))
         _move.add_condition(StartTiming(), is_connected(l_from, l_to))
-        _move.add_condition(StartTiming(), location_not_targeted(l_to))
-        _move.add_condition(StartTiming(), road_is_free(l_to,l_from)) #opposite way
+        _move.add_condition(OpenTimeInterval(StartTiming(), EndTiming()), road_is_free(l_to,l_from)) #opposite way
         _move.add_condition(StartTiming(), robot_at(r, l_from))
-        _move.add_condition(EndTiming(),location_is_free(l_to))
+        _move.add_condition(OpenTimeInterval(StartTiming(), EndTiming()),location_is_free(l_to))
         _move.add_effect(StartTiming(),robot_at(r, l_from), False)
         _move.add_effect(StartTiming(),location_is_free(l_from), True)
-        _move.add_effect(StartTiming(), location_not_targeted(l_to), False)
         _move.add_effect(StartTiming(), road_is_free(l_from,l_to), False)
         _move.add_effect(EndTiming(),robot_at(r, l_to), True)
         _move.add_effect(EndTiming(),location_is_free(l_to), False)
-        _move.add_effect(EndTiming(), location_not_targeted(l_to), True)
         _move.add_effect(EndTiming(), road_is_free(l_from,l_to), True)
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
@@ -99,7 +95,6 @@ class robot_planner:
         problem.add_fluent(robot_has_package, default_initial_value = False)
         problem.add_fluent(location_has_package, default_initial_value = False)
         problem.add_fluent(robot_not_holding_package, default_initial_value = True)
-        problem.add_fluent(location_not_targeted, default_initial_value = True)
         problem.add_fluent(road_is_free, default_initial_value = True)
         problem.add_fluent(distance, default_initial_value = int(NOT_CONNECTED_DISTANCE)) #some absuard number
 
@@ -116,7 +111,6 @@ class robot_planner:
         self.robot_has_package = robot_has_package
         self.location_has_package = location_has_package
         self.robot_not_holding_package = robot_not_holding_package
-        self.location_not_targeted = location_not_targeted
         self.road_is_free = road_is_free
         self.distance = distance
         
@@ -141,12 +135,12 @@ class robot_planner:
             self.problem.set_initial_value(self.distance(
                             _locations[c[0]],
                             _locations[c[1]]),
-                            int(env.locations[c[0]].distance(env.locations[c[1]]))
+                            float(env.locations[c[0]].distance(env.locations[c[1]]))
                             )
             self.problem.set_initial_value(self.distance(
                             _locations[c[1]],
                             _locations[c[0]]),
-                            int(env.locations[c[1]].distance(env.locations[c[0]]))
+                            float(env.locations[c[1]].distance(env.locations[c[0]]))
                             )
         # robot at start
         for r in robots:

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
 
 DT = 0.001 #[s]
-V = 0.5 #[m/s]
+V = 1.0 #[m/s]
 
 def build_env():
     docks = [location(0,np.array([0,0]),'dock')]
