@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot, drop, wait
-from maildelivery.brains.brains_bots_simple import robot_planner
+from maildelivery.agents import robot, wait
+from maildelivery.brains.brains_bots_charge_added import robot_planner
 from maildelivery.brains.plan_parser import full_plan_2_per_robot, parse_actions
 from maildelivery.geometry import pose2
 
@@ -72,7 +72,7 @@ Nrobots = len(r)
 planner = robot_planner()
 planner.create_problem(env,r)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', only_read_plan = False)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)
 actions = parse_actions(actions,env)
 r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nrobots)
 
@@ -137,7 +137,7 @@ if MOVIE:
     moviewriter.finish()
 
 for ri in r:
-    print(f"robot has {ri.charge}/{ri.max_charge} charge left")
+    print(f"robot {ri.id} has {ri.charge:2.2f}/{ri.max_charge} charge left")
 
 plt.ioff()
 plt.show()

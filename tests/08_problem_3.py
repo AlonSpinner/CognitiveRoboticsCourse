@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, wait
-from maildelivery.brains.brains_bots_simple import robot_planner
+from maildelivery.brains.brains_bots_charge_added import robot_planner
 from maildelivery.brains.plan_parser import full_plan_2_per_robot, parse_actions
 from maildelivery.geometry import pose2
 
@@ -226,7 +226,7 @@ if MOVIE:
     moviewriter.finish()
 
 for ri in r:
-    print(f"robot {ri.id} has {ri.charge}/{ri.max_charge} charge left")
+    print(f"robot {ri.id} has {ri.charge:2.2f}/{ri.max_charge} charge left")
 
 plt.ioff()
 plt.show()

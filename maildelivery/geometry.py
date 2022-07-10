@@ -68,7 +68,7 @@ class pose2:
         # p - np.array((2,-1))
         # Return angles to p given in world points [-pi,pi]
         p = self.transformTo(p)
-        return np.arctan2(p[1,:],p[0,:])
+        return float(np.arctan2(p[1,:],p[0,:]))
 
     def range(self, p : np.ndarray):
         if p.shape == (2,):
@@ -76,7 +76,7 @@ class pose2:
         # p - np.array((2,-1))
         # Return range of p given inworld points
         p = self.transformTo(p)
-        return np.hypot(p[0,:],p[1,:])
+        return float(np.hypot(p[0,:],p[1,:]))
 
     def __add__(self,other):
         #a+b

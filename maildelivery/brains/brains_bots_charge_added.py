@@ -48,6 +48,8 @@ class robot_planner:
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
         distance = Fluent('distance', RealType(), l_from = _location, l_to = _location)
         velocity = Fluent('velocity', RealType(), r = _robot)
+        charge = Fluent('charge', RealType(0,100.0), r = _robot)
+
         
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
@@ -64,6 +66,12 @@ class robot_planner:
         _move.add_effect(EndTiming(),robot_at(r, l_to), True)
         _move.add_effect(EndTiming(),location_is_free(l_to), False)
         _move.add_effect(EndTiming(), road_is_free(l_from,l_to), True)
+        def decrease_charge_fun(problem, state, actual_params):
+            dist = state.get_value(distance(actual_params.get(l_from),actual_params.get(l_to))).constant_value()
+            requiredCharge = self.f_dist2charge(dist)
+            currentCharge = state.get_value(charge(actual_params.get(r))).constant_value()
+            return [Int(currentCharge-requiredCharge)]
+        _move.set_simulated_effect(StartTiming(),SimulatedEffect([charge(r)], decrease_charge_fun))
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
         p = _pickup.parameter('p')
@@ -99,6 +107,7 @@ class robot_planner:
         problem.add_fluent(road_is_free, default_initial_value = True)
         problem.add_fluent(distance, default_initial_value = NOT_CONNECTED_DISTANCE) #some absuard number
         problem.add_fluent(velocity, default_initial_value = 1.0)
+        problem.add_fluent(charge, default_initial_value = 100.0)
 
         #save to self
         self.problem = problem
@@ -116,6 +125,7 @@ class robot_planner:
         self.road_is_free = road_is_free
         self.distance = distance
         self.velocity = velocity
+        self.charge = charge
         
 
     def create_problem(self, env : enviorment, robots : list[robot]):
@@ -157,6 +167,9 @@ class robot_planner:
             self.problem.set_initial_value(self.velocity(
                                                 _robots[r.id]),
                                                 robots[r.id].velocity)
+            self.problem.set_initial_value(self.charge(
+                                                _robots[r.id]),
+                                                robots[r.id].charge)
 
         #place packages
         for p in env.packages:

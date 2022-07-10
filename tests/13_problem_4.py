@@ -62,7 +62,7 @@ Nrobots = len(r)
 planner = robot_planner()
 planner.create_problem(env,r)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', maximize_charge = True)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)
 actions = parse_actions(actions,env)
 r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nrobots)
 
