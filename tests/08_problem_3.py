@@ -11,7 +11,7 @@ from matplotlib.offsetbox import AnchoredText
 import os
 
 DT = 0.001 #[s]
-V = 1.0 #[m/s]
+V = 4.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'08_movie.gif')
@@ -88,9 +88,9 @@ def build_env():
     x_c,h_c, c_c, n_c = build_leftconnected_block(n_a + n_b, np.array([2 * X_D,0]))   
 
     i_s = n_a + n_b + n_c + np.array([0,1,2])
-    station2 = location(int(i_s[0]), x_a[2].xy + np.array([0,X_D]),'station')
-    station9 = location(int(i_s[1]), x_b[1].xy + np.array([0,X_D]),'station')
-    station15 = location(int(i_s[2]), x_c[1].xy + np.array([0,X_D]),'station')
+    station2 = location(int(i_s[0]), x_a[2].xy + np.array([0,H_D]),'station')
+    station9 = location(int(i_s[1]), x_b[1].xy + np.array([0,H_D]),'station')
+    station15 = location(int(i_s[2]), x_c[1].xy + np.array([0,H_D]),'station')
     stations = [station2, station9, station15]
     n_s = 3
 
@@ -127,6 +127,7 @@ r0 = robot(pose2(x0,y0,theta0),0)
 r0.last_location = station
 r0.goal_location = station
 r0.max_forward = V * DT
+r0.velocity = V
 r0.f_dist2charge = f_dist2charge
 
 station = 21
@@ -137,6 +138,7 @@ r1 = robot(pose2(x0,y0,theta0),1)
 r1.last_location = station
 r1.goal_location = station
 r1.max_forward = V * DT
+r1.velocity = V
 r1.f_dist2charge = f_dist2charge
 
 station = 22
@@ -147,6 +149,7 @@ r2 = robot(pose2(x0,y0,theta0),2)
 r2.last_location = station
 r2.goal_location = station
 r2.max_forward = V * DT
+r2.velocity = V
 r2.f_dist2charge = f_dist2charge
 
 r = [r0,r1,r2]
@@ -199,7 +202,7 @@ while True:
             r_current_actions[i] = wait(robot_id = i)
 
     #update plot        
-    if plotCounter % 500 == 0:
+    if plotCounter % 100 == 0:
         animate()
         
         if MOVIE:

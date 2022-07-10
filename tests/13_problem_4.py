@@ -10,7 +10,7 @@ from matplotlib.offsetbox import AnchoredText
 
 
 DT = 0.0001 #[s]
-V = 1.0 #[m/s]
+V = 2.0 #[m/s]
 
 def build_env():
 
@@ -42,6 +42,7 @@ theta0 = np.pi/2
 r0 = robot(pose2(x0,y0,theta0),0)
 r0.last_location = l0
 r0.goal_location = 2
+r0.velocity = V
 r0.max_forward = V * DT
 
 l0 = 2
@@ -51,6 +52,7 @@ theta0 = np.pi/2
 r1 = robot(pose2(x0,y0,theta0),1)
 r1.last_location = l0
 r1.goal_location = 0
+r1.velocity = V
 r1.max_forward = V * DT
 
 r = [r0,r1]
@@ -60,7 +62,7 @@ Nrobots = len(r)
 planner = robot_planner()
 planner.create_problem(env,r)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', only_read_plan = False)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', maximize_charge = True)
 actions = parse_actions(actions,env)
 r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nrobots)
 

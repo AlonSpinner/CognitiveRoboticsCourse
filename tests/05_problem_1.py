@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import AnchoredText
 
 DT = 0.001 #[s]
-V = 1.0 #[m/s]
+V = 2.0 #[m/s]
 
 def build_env():
     docks = [location(0,np.array([0,0]),'dock')]
@@ -45,6 +45,7 @@ theta0 = location.angle(env.locations[0],env.locations[1])
 r = robot(pose2(x0,y0,theta0),0)
 r.last_location = 0
 r.goal_location = 0
+r.velocity = V
 r.max_forward = V * DT
 
 #ask for plan

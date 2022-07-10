@@ -10,7 +10,7 @@ import numpy as np
 import unified_planning as up
 from unified_planning.shortcuts import UserType, BoolType,\
         Fluent, InstantaneousAction, DurativeAction, Problem, Object,\
-        IntType, Variable, Int, RealType, RightOpenTimeInterval, ClosedTimeInterval, StartTiming, EndTiming, OpenTimeInterval, GE, GT, Forall, Or, Equals, And, Not, Implies, OneshotPlanner, SimulatedEffect
+        IntType, Variable, Div, Int, RealType, LeftOpenTimeInterval, RightOpenTimeInterval, ClosedTimeInterval, StartTiming, EndTiming, OpenTimeInterval, GE, GT, Forall, Or, Equals, And, Not, Implies, OneshotPlanner, SimulatedEffect
 from unified_planning.io.pddl_writer import PDDLWriter
 import time
 from unified_planning.model.metrics import MinimizeMakespan,\
@@ -18,7 +18,7 @@ from unified_planning.model.metrics import MinimizeMakespan,\
 up.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 
 
-NOT_CONNECTED_DISTANCE = int(10000)
+NOT_CONNECTED_DISTANCE = float(10000)
 
 class robot_planner:
     '''
@@ -47,16 +47,17 @@ class robot_planner:
             #to prevent picking up more than one package
         location_has_package = Fluent('location_has_package', BoolType(), p = _package, l = _location)
         distance = Fluent('distance', RealType(), l_from = _location, l_to = _location)
+        velocity = Fluent('velocity', RealType(), r = _robot)
         
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
         l_from = _move.parameter('l_from')
         l_to = _move.parameter('l_to')
-        _move.set_fixed_duration(distance(l_from,l_to))
+        _move.set_fixed_duration(Div(distance(l_from,l_to),(velocity(r))))
         _move.add_condition(StartTiming(), is_connected(l_from, l_to))
         _move.add_condition(OpenTimeInterval(StartTiming(), EndTiming()), road_is_free(l_to,l_from)) #opposite way
         _move.add_condition(StartTiming(), robot_at(r, l_from))
-        _move.add_condition(OpenTimeInterval(StartTiming(), EndTiming()),location_is_free(l_to))
+        _move.add_condition(LeftOpenTimeInterval(StartTiming(), EndTiming()),location_is_free(l_to))
         _move.add_effect(StartTiming(),robot_at(r, l_from), False)
         _move.add_effect(StartTiming(),location_is_free(l_from), True)
         _move.add_effect(StartTiming(), road_is_free(l_from,l_to), False)
@@ -96,7 +97,8 @@ class robot_planner:
         problem.add_fluent(location_has_package, default_initial_value = False)
         problem.add_fluent(robot_not_holding_package, default_initial_value = True)
         problem.add_fluent(road_is_free, default_initial_value = True)
-        problem.add_fluent(distance, default_initial_value = int(NOT_CONNECTED_DISTANCE)) #some absuard number
+        problem.add_fluent(distance, default_initial_value = NOT_CONNECTED_DISTANCE) #some absuard number
+        problem.add_fluent(velocity, default_initial_value = 1.0)
 
         #save to self
         self.problem = problem
@@ -113,6 +115,7 @@ class robot_planner:
         self.robot_not_holding_package = robot_not_holding_package
         self.road_is_free = road_is_free
         self.distance = distance
+        self.velocity = velocity
         
 
     def create_problem(self, env : enviorment, robots : list[robot]):
@@ -151,6 +154,9 @@ class robot_planner:
             self.problem.set_initial_value(self.location_is_free(
                                                 _locations[r.last_location]),
                                                 False)
+            self.problem.set_initial_value(self.velocity(
+                                                _robots[r.id]),
+                                                robots[r.id].velocity)
 
         #place packages
         for p in env.packages:

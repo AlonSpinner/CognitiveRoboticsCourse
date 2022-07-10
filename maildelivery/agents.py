@@ -50,9 +50,11 @@ class robot:
         self.owned_packages : list[package] = []
         self.max_charge : int = 100
         self.charge : int = 100
+        self.f_dist2charge  = lambda dist: 2 * dist #some default function
+        self.velocity = 1.0 #[m/s]
         self.graphics : list = []
         self.graphics_deadcharge : list = []
-        self.f_dist2charge  = lambda dist: 2 * dist #some default function
+       
 
     def sense(self): #gps like sensor
         return self.pose.t()
