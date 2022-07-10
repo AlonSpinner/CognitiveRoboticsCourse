@@ -102,7 +102,9 @@ class robot:
 
         elif type(a) is chargeup:
             if np.linalg.norm(self.pose.transformTo(a.loc.xy)) < REACH_DELTA:
-                self.charge = self.max_charge #need to figure this out later
+                self.charge += self.dt/self.f_charge2time(1.0)
+                self.charge = min(self.charge,self.max_charge)
+            if self.charge == self.max_charge:
                 return True
             else:
                 return False
@@ -204,7 +206,7 @@ def plot_robot(ax : plt.Axes , r : robot, scale = 20, color = 'b', textcolor = '
         v = np.sin(pose.theta)
         graphics_quiver = ax.quiver(pose.x,pose.y,u,v, color = color, scale = scale, width = 0.02)
         graphics_circle = ax.scatter(pose.x, pose.y, marker = 'o', c = 'none',\
-             s = 700, edgecolors = color)
+             s = 700, edgecolors = color, alpha = r.charge/r.max_charge)
         graphics_txt = ax.text(pose.x,pose.y,f"{r.id}    ", color = color, horizontalalignment = 'right', verticalalignment = 'center')
         return [graphics_quiver,graphics_circle,graphics_txt]
 
