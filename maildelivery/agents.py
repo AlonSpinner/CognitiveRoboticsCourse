@@ -61,9 +61,7 @@ class robot:
         self.f_dist2charge  = lambda dist: 2 * dist #some default function
         self.f_charge2time = lambda missing_charge: missing_charge/100
         self.graphics : list = []
-        self.graphics_deadcharge : list = []
        
-
     def sense(self): #gps like sensor
         return self.pose.t()
 
@@ -147,12 +145,13 @@ class charge(action):
     chased_robot : robot
 
 class drone:
-    def __init__(self, pose0, id) -> None:
+    def __init__(self, pose0, id, dt) -> None:
+        self.dt = dt
         self.pose : pose2 = pose0
         self.id : int = id
-        self.max_forward : float = 0.25
-        self.max_rotate : float = np.pi #np.pi/4
-        self.batteries : int = 3
+        self.velocity = 1.0 #[m/s]
+        self.last_location : int = 0
+        self.goal_location : int = 0
         self.graphics : list = []
         self.width : float = 0.05
 

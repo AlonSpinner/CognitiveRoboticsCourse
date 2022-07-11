@@ -1,4 +1,4 @@
-from maildelivery.agents import robot
+from maildelivery.agents import robot, drone
 from maildelivery.world import enviorment
 from maildelivery.binary_solvers import manipulate_pddls, paths
 from maildelivery.binary_solvers.optic import optic_wrapper
@@ -26,17 +26,16 @@ class robot_planner:
     only deliverybots, no charge involved
     '''
     def __init__(self) -> None:
-        #constants that apply to all robots
         self.f_dist2charge  = lambda dist: 2 * dist #not used here 
         self.f_charge2time = lambda missing_charge: missing_charge/100
         self.max_charge = 100.0
-        
         self.create_domain()
 
     def create_domain(self) -> None:
         _location = UserType('location')
         _robot = UserType('robot')
         _package = UserType('package')
+        _drone = UserType('drone')
 
         #problem variables that are changed by actions on objects (no floats please, they cause problems to solvers)
         robot_at = Fluent('robot_at', BoolType(), r = _robot, l = _location)
@@ -55,6 +54,8 @@ class robot_planner:
         robot_velocity = Fluent('robot_velocity', RealType(), r = _robot)
         charge = Fluent('charge', RealType(0.0,self.max_charge), r = _robot)
         location_is_dock = Fluent('location_is_dock', BoolType(), l = _location)
+        drone_at = Fluent('drone_at', BoolType(), d = _drone, l = _location)
+        drone_velocity = Fluent('drone_velocity', RealType(), d = _robot)
       
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
@@ -103,11 +104,39 @@ class robot_planner:
         _chargeup.add_condition(StartTiming(), location_is_dock(l))
         _chargeup.add_effect(EndTiming(), charge(r), self.max_charge)
 
+        _drone_fly = DurativeAction('_drone_fly',  d = _drone, l_from = _location, l_to = _location)
+        d = _drone_fly.parameter('d')
+        l_from = _drone_fly.parameter('l_from')
+        l_to = _drone_fly.parameter('l_to')
+        _drone_fly.set_fixed_duration(Div(distance(l_from,l_to),(drone_velocity(d))))
+        _drone_fly.add_condition(StartTiming(), drone_at(r, l_from))
+        _drone_fly.add_effect(StartTiming(),drone_at(r, l_from), False)
+        _drone_fly.add_effect(EndTiming(), drone_at(d, l_to), True)
+
+        _drone_fly_robot = DurativeAction('_drone_fly_robot',  d = _drone, r = _robot, l_from = _location, l_to = _location)
+        d = _drone_fly_robot.parameter('d')
+        r = _drone_fly_robot.parameter('r')
+        l_from = _drone_fly_robot.parameter('l_from')
+        l_to = _drone_fly_robot.parameter('l_to')
+        _drone_fly_robot.set_fixed_duration(Div(distance(l_from,l_to),(drone_velocity(d))))
+        _drone_fly_robot.add_condition(StartTiming(), robot_at(r, l_from))
+        _drone_fly_robot.add_condition(StartTiming(), drone_at(d, l_from))
+        _drone_fly_robot.add_condition(EndTiming(),location_is_free(l_to))
+        _drone_fly_robot.add_condition(StartTiming(),robot_not_holding_package(r))
+        _drone_fly_robot.add_effect(StartTiming(),robot_at(r, l_from), False)
+        _drone_fly_robot.add_effect(StartTiming(),drone_at(r, l_from), False)
+        _drone_fly_robot.add_effect(StartTiming(),location_is_free(l_from), True)
+        _drone_fly_robot.add_effect(EndTiming(),robot_at(r, l_to), True)
+        _drone_fly_robot.add_effect(EndTiming(), drone_at(d, l_to), True)
+        _drone_fly_robot.add_effect(EndTiming(),location_is_free(l_to), False)
+
         problem = Problem('maildelivery')
         problem.add_action(_move)
         problem.add_action(_pickup)
         problem.add_action(_drop)
         problem.add_action(_chargeup)
+        problem.add_action(_drone_fly)
+        problem.add_action(_drone_fly_robot)
         problem.add_fluent(robot_at, default_initial_value = False)
         problem.add_fluent(is_connected, default_initial_value = False)
         problem.add_fluent(location_is_free, default_initial_value = True)
@@ -119,6 +148,8 @@ class robot_planner:
         problem.add_fluent(robot_velocity) #initalized in create_problem()
         problem.add_fluent(charge) #initalized in create_problem()
         problem.add_fluent(location_is_dock, default_initial_value = False)
+        problem.add_fluent(drone_at, default_initial_value = False)
+        problem.add_fluent(drone_velocity) #initalized in create_problem()
 
         #save to self
         self.problem = problem
@@ -126,6 +157,7 @@ class robot_planner:
         self._location = _location
         self._robot = _robot
         self._package = _package
+        self._drone = _drone
         #fluents
         self.robot_at = robot_at
         self.is_connected = is_connected
@@ -138,11 +170,13 @@ class robot_planner:
         self.robot_velocity = robot_velocity
         self.charge = charge
         self.location_is_dock = location_is_dock
+        self.drone_at = drone_at
+        self.drone_velocity = drone_velocity
         
-
-    def create_problem(self, env : enviorment, robots : list[robot]):
+    def create_problem(self, env : enviorment, robots : list[robot], drones : list[drone]):
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
         _robots = [Object(f"r{id}", self._robot) for id in [bot.id for bot in robots]]
+        _drones = [Object(f"d{id}", self._drone) for id in [bot.id for bot in robots]]
         _packages = [Object(f"p{id}", self._package) for id in [p.id for p in env.packages]]
 
         self.problem.add_objects(_locations + _robots + _packages)
@@ -182,6 +216,15 @@ class robot_planner:
             self.problem.set_initial_value(self.charge(
                                                 _robots[r.id]),
                                                 robots[r.id].charge)
+
+        for d in drones:
+            self.problem.set_initial_value(self.drone_at(
+                                                _drones[d.id],
+                                                _locations[d.last_location]),
+                                                True)
+            self.problem.set_initial_value(self.drone_velocity(
+                                                _drones[d.id]),
+                                                drones[d.id].velocity)
 
         #place packages
         for p in env.packages:
