@@ -53,7 +53,6 @@ planner.create_problem(env,[r])
 execution_times, actions, durations = planner.solve(engine_name = 'lpg')
 parsed_actions = parse_actions(actions, env, [r])
 
-
 #plot initial state
 plt.ion()
 _, ax = env.plot()

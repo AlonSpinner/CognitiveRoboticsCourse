@@ -49,7 +49,7 @@ l0 = 5
 x0 = env.locations[l0].xy[0]
 y0 = env.locations[l0].xy[1]
 theta0 = np.pi/2
-r0 = robot(pose2(x0,y0,theta0),0,DT)
+r0 = robot(0,pose2(x0,y0,theta0),DT)
 r0.last_location = l0
 r0.goal_location = l0
 r0.velocity = V
@@ -58,22 +58,22 @@ l0 = 6
 x0 = env.locations[l0].xy[0]
 y0 = env.locations[l0].xy[1]
 theta0 = np.pi/2
-r1 = robot(pose2(x0,y0,theta0),1,DT)
+r1 = robot(1,pose2(x0,y0,theta0),DT)
 r1.last_location = l0
 r1.goal_location = l0
 r1.velocity = V
-r1.max_forward = V * DT
 
-r = [r0,r1]
-Nrobots = len(r)
+r = [r0, r1]
+a = r
+Nagents = len(a)
 
 #ask for plan
 planner = robot_planner()
-planner.create_problem(env,r)
+planner.create_problem(env,a)
 
 execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)
-actions = parse_actions(actions,env)
-r_execution_times, r_actions, r_durations = full_plan_2_per_agent(execution_times, actions, durations, Nrobots)
+actions = parse_actions(actions,env, a)
+a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
 
 
 #plot initial state
@@ -95,22 +95,22 @@ if MOVIE:
 t = 0
 plotCounter = 0
 
-r_current_actions = [wait(i) for i in range(Nrobots)]
-r_next_actions_indicies = [0 for _ in range(Nrobots)]
-r_done = [False for _ in range(Nrobots)]
+a_current_actions = [wait(ai) for ai in a]
+a_next_actions_indicies = [0 for _ in range(Nagents)]
+a_done = [False for _ in range(Nagents)]
 while True:
 
-    for i,ri in enumerate(r):
+    for i,ai in enumerate(a):
         #go do next action
-        if r_done[i] == False and \
-            type(r_current_actions[i]) == wait and \
-                t >= r_execution_times[i][r_next_actions_indicies[i]]:
-            r_current_actions[i] = r_actions[i][r_next_actions_indicies[i]]
-            r_current_actions[i] #we update index so 
-            r_next_actions_indicies[i] += 1
+        if a_done[i] == False and \
+            type(a_current_actions[i]) == wait and \
+                t >= a_execution_times[i][a_next_actions_indicies[i]]:
+            a_current_actions[i] = a_actions[i][a_next_actions_indicies[i]]
+            a_current_actions[i] #we update index so 
+            a_next_actions_indicies[i] += 1
              
-        if ri.act(r_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions
-            r_current_actions[i] = wait(robot_id = i)
+        if ai.act(a_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions
+            a_current_actions[i] = wait(ai)
 
     #update plot        
     if plotCounter % 100 == 0:
@@ -121,10 +121,10 @@ while True:
 
     t += DT
 
-    for i in range(Nrobots):
-        r_done[i] = r_next_actions_indicies[i] == len(r_actions[i]) and type(r_current_actions[i]) == wait
+    for i in range(Nagents):
+        a_done[i] = a_next_actions_indicies[i] == len(a_actions[i]) and type(a_current_actions[i]) == wait
 
-    if all(r_done):
+    if all(a_done):
         animate()
         if MOVIE:
             moviewriter.grab_frame()
