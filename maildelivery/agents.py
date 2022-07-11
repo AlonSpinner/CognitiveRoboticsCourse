@@ -8,16 +8,23 @@ CONTROL_THETA_THRESHOLD = np.radians(0.01)
 CONTROL_DIST_THRESHOLD = 0.001
 REACH_DELTA = 0.001
 
+class agent():
+    id : int #to be overwritten
+    pass
+
 @dataclass(frozen = True)
 class action:
-    robot_id : int #to be overwritten
+    agent : agent #to be overwritten
 
+@dataclass(frozen = True)
 class wait(action):
-    robot_id : int
+    agent : agent
+    time_start : float = 0
+    time_end : float = 0
 
 @dataclass(frozen = True)
 class move(action):
-    robot_id : int
+    agent : agent
     loc_from : location
     loc_to : location
     time_start : float = 0
@@ -25,7 +32,7 @@ class move(action):
 
 @dataclass(frozen = True)
 class pickup(action):
-    robot_id : int
+    agent : agent
     p : package
     loc: location
     time_start : float = 0
@@ -33,7 +40,7 @@ class pickup(action):
 
 @dataclass(frozen = True)
 class drop(action):
-    robot_id : int
+    agent : agent
     p : package
     loc: location
     time_start : float = 0
@@ -41,16 +48,16 @@ class drop(action):
 
 @dataclass(frozen = True)
 class chargeup(action):
-    robot_id : int
+    agent : agent
     loc: location
     time_start : float = 0
     time_end : float = 0
 
-class robot:
-    def __init__(self,pose0, id, dt) -> None:
-        self.dt = dt
+class robot(agent):
+    def __init__(self,id, pose0, dt) -> None:
+        self.id = id
         self.pose : pose2 = pose0
-        self.id : int = id
+        self.dt = dt
         self.velocity = 1.0 #[m/s]
         self.max_rotate : float = np.pi #np.pi/4
         self.last_location : int = 0
@@ -66,7 +73,7 @@ class robot:
         return self.pose.t()
 
     def act(self, a : action, env : enviorment): #perform action on self or enviorment
-        if a.robot_id != self.id:
+        if a.agent.id != self.id:
             raise('command given to wrong robot')
         if type(a) is move:
             self.motion_control(a)
@@ -135,14 +142,21 @@ class robot:
         self.graphics_deadcharge = plot_robot_deadcharge(ax,self)
 
 @dataclass(frozen = True)
-class chase(action):
-    robot_id : int #drone id here
-    chased_robot : robot
+class drone_fly(action):
+    agent : agent
+    loc_from : location
+    loc_to : location
+    time_start : float = 0
+    time_end : float = 0
 
 @dataclass(frozen = True)
-class charge(action):
-    robot_id : int #drone id here
-    chased_robot : robot
+class drone_fly_robot(action):
+    agent : agent
+    robot : robot
+    loc_from : location
+    loc_to : location
+    time_start : float = 0
+    time_end : float = 0
 
 class drone:
     def __init__(self, pose0, id, dt) -> None:
@@ -150,6 +164,7 @@ class drone:
         self.pose : pose2 = pose0
         self.id : int = id
         self.velocity = 1.0 #[m/s]
+        self.max_rotate : float = np.pi #np.pi/4
         self.last_location : int = 0
         self.graphics : list = []
         self.width : float = 0.05
@@ -158,35 +173,33 @@ class drone:
         return self.pose.t()
 
     def act(self, a : action): #perform action on self or enviorment
-        if a.robot_id != self.id:
+        if a.agent.id != self.id:
             raise('command given to wrong robot')
-        if type(a) is chase:
+        if type(a) is drone_fly:
             self.motion_control(a)
-            if np.linalg.norm(self.sense() - a.chased_robot.pose.t()) < REACH_DELTA:
+            if np.linalg.norm(self.pose.transformTo(a.loc_to.xy)) < REACH_DELTA:
                 return True
             else:
                 return False
 
-        elif type(a) is charge:
-            if np.linalg.norm(self.sense() - a.chased_robot.pose.t()) < REACH_DELTA:
-                if self.batteries > 0:
-                    a.chased_robot.charge = a.chased_robot.max_charge
-                    self.batteries = self.batteries - 1
+        elif type(a) is drone_fly_robot:
+            self.motion_control(a)
+            a.robot.pose = self.pose
+            if np.linalg.norm(self.pose.transformTo(a.loc_to.xy)) < REACH_DELTA:
                 return True
             else:
                 return False
 
-    def motion_control(self, action : chase):
-        e_theta = self.pose.bearing(action.chased_robot.t())
+    def motion_control(self, action : drone_fly):
+        e_theta = self.pose.bearing(action.loc_to.xy)
         if abs(e_theta) > CONTROL_THETA_THRESHOLD:
             u = np.sign(e_theta)*min(abs(e_theta),self.max_rotate)
             self.pose = self.pose + pose2(0,0,u)
             return
 
-        e_dist = self.pose.range(action.chased_robot.t())
+        e_dist = self.pose.range(action.loc_to.xy)
         if e_dist > CONTROL_DIST_THRESHOLD:
-            u = min(e_dist,self.max_forward)
-            self.pose = self.pose + pose2(u,0,0)
+            u = min(e_dist,self.velocity * self.dt)
             return
 
     def plot(self,ax):
