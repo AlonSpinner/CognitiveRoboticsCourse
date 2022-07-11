@@ -125,7 +125,7 @@ station = 20
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r0 = robot(pose2(x0,y0,theta0), 0, DT)
+r0 = robot(0, pose2(x0,y0,theta0), DT)
 r0.last_location = station
 r0.goal_location = station
 r0.velocity = V_ROBOT
@@ -137,7 +137,7 @@ station = 21
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r1 = robot(pose2(x0,y0,theta0), 1, DT)
+r1 = robot(1, pose2(x0,y0,theta0), DT)
 r1.last_location = station
 r1.goal_location = station
 r1.velocity = V_ROBOT
@@ -149,7 +149,7 @@ station = 22
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r2 = robot(pose2(x0,y0,theta0), 2, DT)
+r2 = robot(2, pose2(x0,y0,theta0), DT)
 r2.last_location = station
 r2.goal_location = station
 r2.velocity = V_ROBOT
@@ -161,28 +161,27 @@ drone_init_location = 10
 x0 = env.locations[drone_init_location].xy[0]
 y0 = env.locations[drone_init_location].xy[1]
 theta0 = np.pi/2
-d0 = drone(pose2(x0,y0,theta0), 0, DT)
+d0 = drone(3, pose2(x0,y0,theta0), DT)
 d0.last_location = drone_init_location
 d0.velocity = V_DRONE
 
 r = [r0,r1,r2]
 d = [d0]
-a = d + r #agents
+a = r + d #important that it is r + d as it is assumed all over the code
 Nagents = len(a)
 
 #ask for plan
 planner = robot_planner()
-planner.f_dist2charge = f_dist2charge
-planner.f_charge2time = f_charge2time
 planner.create_problem(env,r,d)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', maximize_charge = True)
-actions = parse_actions(actions,env)
-a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, Nagents)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)
+actions = parse_actions(actions,env, a)
+a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
+
 
 #plot initial state
 plt.ion()
-fig, ax = env.plot()
+fig , ax = env.plot()
 def animate():
     if 'anchored_text' in locals(): anchored_text.remove()
     anchored_text = AnchoredText(f"t = {t:2.2f}[s]", loc=2)
@@ -190,7 +189,6 @@ def animate():
     [ri.plot(ax) for ri in r]
     [p.plot(ax) for p in env.packages]
     plt.pause(0.01)
-
 #ready movie
 if MOVIE:
     moviewriter = PillowWriter(fps = 5)
@@ -200,12 +198,12 @@ if MOVIE:
 t = 0
 plotCounter = 0
 
-a_current_actions = [wait(i) for i in range(Nagents)]
+a_current_actions = [wait(ai) for ai in a]
 a_next_actions_indicies = [0 for _ in range(Nagents)]
 a_done = [False for _ in range(Nagents)]
 while True:
 
-    for i,ri in enumerate(r):
+    for i,ai in enumerate(a):
         #go do next action
         if a_done[i] == False and \
             type(a_current_actions[i]) == wait and \
@@ -214,13 +212,12 @@ while True:
             a_current_actions[i] #we update index so 
             a_next_actions_indicies[i] += 1
              
-        if ri.act(a_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions
-            a_current_actions[i] = wait(robot_id = i)
+        if ai.act(a_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions
+            a_current_actions[i] = wait(ai)
 
     #update plot        
     if plotCounter % 100 == 0:
         animate()
-        
         if MOVIE:
             moviewriter.grab_frame()
     plotCounter +=1

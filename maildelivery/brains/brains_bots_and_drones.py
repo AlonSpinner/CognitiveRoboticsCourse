@@ -175,9 +175,11 @@ class robot_planner:
         self.drone_velocity = drone_velocity
         
     def create_problem(self, env : enviorment, robots : list[robot], drones : list[drone]):
+        Nrobots = len(robots)
+
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
         _robots = [Object(f"r{id}", self._robot) for id in [bot.id for bot in robots]]
-        _drones = [Object(f"d{id}", self._drone) for id in [bot.id for bot in drones]]
+        _drones = [Object(f"d{id - Nrobots}", self._drone) for id in [bot.id for bot in drones]]
         _packages = [Object(f"p{id}", self._package) for id in [p.id for p in env.packages]]
 
         self.problem.add_objects(_locations + _robots + _packages +_drones)
@@ -217,12 +219,12 @@ class robot_planner:
 
         for d in drones:
             self.problem.set_initial_value(self.drone_at(
-                                                _drones[d.id],
+                                                _drones[d.id - Nrobots],
                                                 _locations[d.last_location]),
                                                 True)
             self.problem.set_initial_value(self.drone_velocity(
-                                                _drones[d.id]),
-                                                drones[d.id].velocity)
+                                                _drones[d.id - Nrobots]),
+                                                drones[d.id - Nrobots].velocity)
 
         #place packages
         for p in env.packages:

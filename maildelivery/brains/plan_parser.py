@@ -1,8 +1,12 @@
-from maildelivery.agents import agent, action, wait, move, pickup, drop, chargeup, drone_fly, drone_fly_robot
+from maildelivery.agents import agent, robot, action, wait, move, pickup, drop, chargeup, drone_fly, drone_fly_robot
 from maildelivery.world import enviorment
 
 def parse_actions(actions : list[tuple], env : enviorment, agents : list[agent]):
     #from actions ('action_name','param1','param2') to my actions
+    Nrobots = 0
+    for a in agents:
+        Nrobots += type(a) == robot
+
     parsed_actions = []
     for a in actions:
         name = a[0]
@@ -33,14 +37,14 @@ def parse_actions(actions : list[tuple], env : enviorment, agents : list[agent])
                 ))
         elif name == 'drone_fly':
             parsed_actions.append(drone_fly(
-                agents[(int(params[0][1:]))],
+                agents[(int(params[0][1:])) + Nrobots], #drone index
                 env.locations[int(params[1][1:])], #location_from
                 env.locations[int(params[2][1:])], #location_to
                 ))
         elif name == 'drone_fly_robot':
             parsed_actions.append(drone_fly_robot(
-                agents[(int(params[0][1:]))],
-                agents[(int(params[1][1:]))],
+                agents[(int(params[0][1:])) + Nrobots], #drone index
+                agents[(int(params[1][1:]))], #robot index
                 env.locations[int(params[2][1:])], #location_from
                 env.locations[int(params[3][1:])], #location_to
                 ))

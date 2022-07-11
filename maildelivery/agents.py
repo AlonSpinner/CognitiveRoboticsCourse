@@ -10,7 +10,8 @@ REACH_DELTA = 0.001
 
 class agent():
     id : int #to be overwritten
-    pass
+    def act():
+        pass
 
 @dataclass(frozen = True)
 class action:
@@ -160,9 +161,9 @@ class drone_fly_robot(action):
 
 class drone:
     def __init__(self, id, pose0, dt) -> None:
+        self.id : int = id
         self.dt = dt
         self.pose : pose2 = pose0
-        self.id : int = id
         self.velocity = 1.0 #[m/s]
         self.max_rotate : float = np.pi #np.pi/4
         self.last_location : int = 0
@@ -172,7 +173,7 @@ class drone:
     def sense(self): #gps like sensor
         return self.pose.t()
 
-    def act(self, a : action): #perform action on self or enviorment
+    def act(self, a : action, env :enviorment): #perform action on self or enviorment
         if a.agent.id != self.id:
             raise('command given to wrong robot')
         if type(a) is drone_fly:
@@ -184,6 +185,7 @@ class drone:
 
         elif type(a) is drone_fly_robot:
             self.motion_control(a)
+            #bring robot with
             a.robot.pose = self.pose
             if np.linalg.norm(self.pose.transformTo(a.loc_to.xy)) < REACH_DELTA:
                 return True
