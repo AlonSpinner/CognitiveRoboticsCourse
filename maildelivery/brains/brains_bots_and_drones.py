@@ -104,7 +104,7 @@ class robot_planner:
         _chargeup.add_condition(StartTiming(), location_is_dock(l))
         _chargeup.add_effect(EndTiming(), charge(r), self.max_charge)
 
-        _drone_fly = DurativeAction('_drone_fly',  d = _drone, l_from = _location, l_to = _location)
+        _drone_fly = DurativeAction('drone_fly',  d = _drone, l_from = _location, l_to = _location)
         d = _drone_fly.parameter('d')
         l_from = _drone_fly.parameter('l_from')
         l_to = _drone_fly.parameter('l_to')
@@ -113,12 +113,13 @@ class robot_planner:
         _drone_fly.add_effect(StartTiming(),drone_at(d, l_from), False)
         _drone_fly.add_effect(EndTiming(), drone_at(d, l_to), True)
 
-        _drone_fly_robot = DurativeAction('_drone_fly_robot',  d = _drone, r = _robot, l_from = _location, l_to = _location)
+        _drone_fly_robot = DurativeAction('drone_fly_robot',  d = _drone, r = _robot, l_from = _location, l_to = _location)
         d = _drone_fly_robot.parameter('d')
         r = _drone_fly_robot.parameter('r')
         l_from = _drone_fly_robot.parameter('l_from')
         l_to = _drone_fly_robot.parameter('l_to')
         _drone_fly_robot.set_fixed_duration(Div(distance(l_from,l_to),(drone_velocity(d))))
+        _drone_fly_robot.add_condition(StartTiming(), location_is_dock(l_to))
         _drone_fly_robot.add_condition(StartTiming(), robot_at(r, l_from))
         _drone_fly_robot.add_condition(StartTiming(), drone_at(d, l_from))
         _drone_fly_robot.add_condition(EndTiming(),location_is_free(l_to))
@@ -191,16 +192,13 @@ class robot_planner:
                             _locations[c[1]],
                             _locations[c[0]]),
                             True)
-            self.problem.set_initial_value(self.distance(
-                            _locations[c[0]],
-                            _locations[c[1]]),
-                            float(env.locations[c[0]].distance(env.locations[c[1]]))
-                            )
-            self.problem.set_initial_value(self.distance(
-                            _locations[c[1]],
-                            _locations[c[0]]),
-                            float(env.locations[c[1]].distance(env.locations[c[0]]))
-                            )
+        
+        for l_i in env.locations:
+            for l_j in env.locations:
+                    self.problem.set_initial_value(self.distance(
+                                    _locations[l_i.id],
+                                    _locations[l_j.id]),
+                                    float(l_i.distance(l_j)))
         # robot at start
         for r in robots:
             self.problem.set_initial_value(self.robot_at(

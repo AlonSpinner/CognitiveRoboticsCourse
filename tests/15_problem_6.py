@@ -1,7 +1,7 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, drone, wait
 from maildelivery.brains.brains_bots_and_drones import robot_planner
-from maildelivery.brains.plan_parser import full_plan_2_per_robot, parse_actions
+from maildelivery.brains.plan_parser import full_plan_2_per_agent, parse_actions
 from maildelivery.geometry import pose2
 
 import numpy as np
@@ -167,7 +167,8 @@ d0.velocity = V_DRONE
 
 r = [r0,r1,r2]
 d = [d0]
-Nagents = len(r) + len(d)
+a = d + r #agents
+Nagents = len(a)
 
 #ask for plan
 planner = robot_planner()
@@ -177,7 +178,7 @@ planner.create_problem(env,r,d)
 
 execution_times, actions, durations = planner.solve(engine_name = 'lpg', maximize_charge = True)
 actions = parse_actions(actions,env)
-r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nagents)
+r_execution_times, r_actions, r_durations = full_plan_2_per_agent(execution_times, actions, durations, Nagents)
 
 #plot initial state
 plt.ion()
@@ -199,9 +200,9 @@ if MOVIE:
 t = 0
 plotCounter = 0
 
-r_current_actions = [wait(i) for i in range(Nrobots)]
-r_next_actions_indicies = [0 for _ in range(Nrobots)]
-r_done = [False for _ in range(Nrobots)]
+r_current_actions = [wait(i) for i in range(Nagents)]
+r_next_actions_indicies = [0 for _ in range(Nagents)]
+r_done = [False for _ in range(Nagents)]
 while True:
 
     for i,ri in enumerate(r):

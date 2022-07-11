@@ -1,7 +1,7 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, wait
 from maildelivery.brains.brains_bots_charge_added import robot_planner
-from maildelivery.brains.plan_parser import full_plan_2_per_robot, parse_actions
+from maildelivery.brains.plan_parser import full_plan_2_per_agent, parse_actions
 from maildelivery.geometry import pose2
 
 import numpy as np
@@ -167,7 +167,7 @@ planner.create_problem(env,r)
 
 execution_times, actions, durations = planner.solve(engine_name = 'lpg', maximize_charge = True)
 actions = parse_actions(actions,env)
-r_execution_times, r_actions, r_durations = full_plan_2_per_robot(execution_times, actions, durations, Nrobots)
+r_execution_times, r_actions, r_durations = full_plan_2_per_agent(execution_times, actions, durations, Nrobots)
 
 #plot initial state
 plt.ion()
