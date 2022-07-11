@@ -187,6 +187,7 @@ def animate():
     anchored_text = AnchoredText(f"t = {t:2.2f}[s]", loc=2)
     ax.add_artist(anchored_text)
     [ri.plot(ax) for ri in r]
+    [di.plot(ax) for di in d]
     [p.plot(ax) for p in env.packages]
     plt.pause(0.01)
 #ready movie

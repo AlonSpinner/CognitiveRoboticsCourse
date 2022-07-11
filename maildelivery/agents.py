@@ -175,7 +175,7 @@ class drone:
 
     def act(self, a : action, env :enviorment): #perform action on self or enviorment
         if a.agent.id != self.id:
-            raise('command given to wrong robot')
+            raise('command given to wrong drone')
         if type(a) is drone_fly:
             self.motion_control(a)
             if np.linalg.norm(self.pose.transformTo(a.loc_to.xy)) < REACH_DELTA:
@@ -202,6 +202,7 @@ class drone:
         e_dist = self.pose.range(action.loc_to.xy)
         if e_dist > CONTROL_DIST_THRESHOLD:
             u = min(e_dist,self.velocity * self.dt)
+            self.pose = self.pose + pose2(u,0,0)
             return
 
     def plot(self,ax):
