@@ -12,7 +12,7 @@ import os
 
 DT = 0.001 #[s]
 V_ROBOT = 8.0 #[m/s]
-V_DRONE = 4.0 #[m/s]
+V_DRONE = 10.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'15_movie.gif')
@@ -210,7 +210,7 @@ while True:
             type(a_current_actions[i]) == wait and \
                 t >= a_execution_times[i][a_next_actions_indicies[i]]:
             a_current_actions[i] = a_actions[i][a_next_actions_indicies[i]]
-            a_current_actions[i] #we update index so 
+            print(f"t = {t:2.2f}  :",a_current_actions[i])
             a_next_actions_indicies[i] += 1
              
         if ai.act(a_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions

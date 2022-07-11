@@ -8,6 +8,9 @@ class location:
     xy : np.ndarray((2))
     type : str
 
+    def __repr__(self):
+        return f"location {self.id}"
+
     def angle(lm1,lm2): #akeen to lm2 - lm1
         dy = lm2.xy[1]-lm1.xy[1]
         dx = lm2.xy[0]-lm1.xy[0]
@@ -27,6 +30,9 @@ class package:
     deliverytime : float
     xy : np.ndarray((2))
     graphics : list = None
+
+    def __repr__(self):
+        return f"package {self.id}"
 
     def plot(self,ax): #this is a moving object.. so we need a method to replot it
         if self.graphics is not None:

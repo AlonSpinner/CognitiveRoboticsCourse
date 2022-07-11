@@ -192,7 +192,7 @@ while True:
             type(a_current_actions[i]) == wait and \
                 t >= a_execution_times[i][a_next_actions_indicies[i]]:
             a_current_actions[i] = a_actions[i][a_next_actions_indicies[i]]
-            a_current_actions[i] #we update index so 
+            print(f"t = {t:2.2f}  :",a_current_actions[i])
             a_next_actions_indicies[i] += 1
              
         if ai.act(a_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions

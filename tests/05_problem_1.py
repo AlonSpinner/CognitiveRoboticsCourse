@@ -74,6 +74,7 @@ while True:
     #go do next action
     if type(action) == wait and t >= execution_times[next_action_index]:
         action = parsed_actions[next_action_index]
+        print(f"t = {t:2.2f}  :",action)
         next_action_index += 1
         
         

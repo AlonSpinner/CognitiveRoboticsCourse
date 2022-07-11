@@ -10,7 +10,7 @@ REACH_DELTA = 0.001
 
 class agent():
     id : int #to be overwritten
-    def act():
+    def act(): #to be overwritten
         pass
 
 @dataclass(frozen = True)
@@ -22,6 +22,8 @@ class wait(action):
     agent : agent
     time_start : float = 0
     time_end : float = 0
+    def __repr__(self):
+        return f"{self.agent} no waits"
 
 @dataclass(frozen = True)
 class move(action):
@@ -30,6 +32,8 @@ class move(action):
     loc_to : location
     time_start : float = 0
     time_end : float = 0
+    def __repr__(self):
+        return f"{self.agent} moves from {self.loc_from} to {self.loc_to}"
 
 @dataclass(frozen = True)
 class pickup(action):
@@ -38,6 +42,8 @@ class pickup(action):
     loc: location
     time_start : float = 0
     time_end : float = 0
+    def __repr__(self):
+        return f"{self.agent} picked up {self.p} at {self.loc}"
 
 @dataclass(frozen = True)
 class drop(action):
@@ -46,6 +52,8 @@ class drop(action):
     loc: location
     time_start : float = 0
     time_end : float = 0
+    def __repr__(self):
+        return f"{self.agent} dropped off {self.p} at {self.loc}"
 
 @dataclass(frozen = True)
 class chargeup(action):
@@ -53,6 +61,8 @@ class chargeup(action):
     loc: location
     time_start : float = 0
     time_end : float = 0
+    def __repr__(self):
+        return f"{self.agent} charging up at {self.loc}"
 
 class robot(agent):
     def __init__(self,id, pose0, dt) -> None:
@@ -91,7 +101,6 @@ class robot(agent):
                 env.packages[a.p.id].owner = self.id #put robot as owner of package
                 env.packages[a.p.id].owner_type = 'robot'
                 self.owned_packages.append(a.p)
-                print(f'robot {self.id} picked up package {a.p.id} from location {a.loc.id}')
                 return True
             else:
                 return False
@@ -101,7 +110,6 @@ class robot(agent):
                 env.packages[a.p.id].owner_type = 'location'
                 env.packages[a.p.id].xy = a.loc.xy
                 self.owned_packages.remove(a.p)
-                print(f'robot {self.id} dropped package {a.p.id} at location {a.loc.id}')
                 return True
             else:
                 return False
@@ -142,6 +150,9 @@ class robot(agent):
     def plot_deadcharge(self,ax):
         self.graphics_deadcharge = plot_robot_deadcharge(ax,self)
 
+    def __repr__(self):
+        return f"robot {self.id}"
+
 @dataclass(frozen = True)
 class drone_fly(action):
     agent : agent
@@ -149,6 +160,9 @@ class drone_fly(action):
     loc_to : location
     time_start : float = 0
     time_end : float = 0
+
+    def __repr__(self):
+        return f"{self.agent} now flies from {self.loc_from} to {self.loc_to}"
 
 @dataclass(frozen = True)
 class drone_fly_robot(action):
@@ -158,6 +172,9 @@ class drone_fly_robot(action):
     loc_to : location
     time_start : float = 0
     time_end : float = 0
+
+    def __repr__(self):
+        return f"{self.agent} now carries {self.robot} from {self.loc_from} to {self.loc_to}"
 
 class drone:
     def __init__(self, id, pose0, dt) -> None:
@@ -209,6 +226,9 @@ class drone:
         if self.graphics is not None:
             [g.remove() for g in self.graphics]
         self.graphics = plot_drone(ax,self)
+
+    def __repr__(self):
+        return f"drone {self.id}"
 
 #---------------------------------------------------------------------------
 #--------------------------------PLOTTING FUNCTIONS-------------------------
