@@ -42,17 +42,16 @@ env = build_env()
 x0 = env.locations[0].xy[0]
 y0 = env.locations[0].xy[1]
 theta0 = location.angle(env.locations[0],env.locations[1])
-r = robot(pose2(x0,y0,theta0),0, DT)
+r = robot(0, pose2(x0,y0,theta0), DT)
 r.last_location = 0
 r.goal_location = 0
 r.velocity = V
-r.max_forward = V * DT
 
 #ask for plan
 planner = robot_planner()
 planner.create_problem(env,[r])
 execution_times, actions, durations = planner.solve(engine_name = 'lpg')
-parsed_actions = parse_actions(actions, env)
+parsed_actions = parse_actions(actions, env, [r])
 
 
 #plot initial state
@@ -70,7 +69,7 @@ def animate():
 t = 0
 next_action_index = 0
 plotCounter = 0
-action = wait(robot_id = 0)
+action = wait(r)
 while True:
     
     #go do next action
@@ -80,7 +79,7 @@ while True:
         
         
     if r.act(action, env): #do action, and if its finished, start waiting allowing accepting new actions
-        action = wait(robot_id = 0)
+        action = wait(r)
     
     #update plot        
     if plotCounter % 200 == 0:

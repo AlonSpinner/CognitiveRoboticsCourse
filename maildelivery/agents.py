@@ -159,7 +159,7 @@ class drone_fly_robot(action):
     time_end : float = 0
 
 class drone:
-    def __init__(self, pose0, id, dt) -> None:
+    def __init__(self, id, pose0, dt) -> None:
         self.dt = dt
         self.pose : pose2 = pose0
         self.id : int = id
