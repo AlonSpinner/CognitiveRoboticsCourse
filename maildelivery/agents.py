@@ -151,7 +151,6 @@ class drone:
         self.id : int = id
         self.velocity = 1.0 #[m/s]
         self.last_location : int = 0
-        self.goal_location : int = 0
         self.graphics : list = []
         self.width : float = 0.05
 

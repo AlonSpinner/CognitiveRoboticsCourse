@@ -55,7 +55,7 @@ class robot_planner:
         charge = Fluent('charge', RealType(0.0,self.max_charge), r = _robot)
         location_is_dock = Fluent('location_is_dock', BoolType(), l = _location)
         drone_at = Fluent('drone_at', BoolType(), d = _drone, l = _location)
-        drone_velocity = Fluent('drone_velocity', RealType(), d = _robot)
+        drone_velocity = Fluent('drone_velocity', RealType(), d = _drone)
       
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
@@ -109,8 +109,8 @@ class robot_planner:
         l_from = _drone_fly.parameter('l_from')
         l_to = _drone_fly.parameter('l_to')
         _drone_fly.set_fixed_duration(Div(distance(l_from,l_to),(drone_velocity(d))))
-        _drone_fly.add_condition(StartTiming(), drone_at(r, l_from))
-        _drone_fly.add_effect(StartTiming(),drone_at(r, l_from), False)
+        _drone_fly.add_condition(StartTiming(), drone_at(d, l_from))
+        _drone_fly.add_effect(StartTiming(),drone_at(d, l_from), False)
         _drone_fly.add_effect(EndTiming(), drone_at(d, l_to), True)
 
         _drone_fly_robot = DurativeAction('_drone_fly_robot',  d = _drone, r = _robot, l_from = _location, l_to = _location)
@@ -124,7 +124,7 @@ class robot_planner:
         _drone_fly_robot.add_condition(EndTiming(),location_is_free(l_to))
         _drone_fly_robot.add_condition(StartTiming(),robot_not_holding_package(r))
         _drone_fly_robot.add_effect(StartTiming(),robot_at(r, l_from), False)
-        _drone_fly_robot.add_effect(StartTiming(),drone_at(r, l_from), False)
+        _drone_fly_robot.add_effect(StartTiming(),drone_at(d, l_from), False)
         _drone_fly_robot.add_effect(StartTiming(),location_is_free(l_from), True)
         _drone_fly_robot.add_effect(EndTiming(),robot_at(r, l_to), True)
         _drone_fly_robot.add_effect(EndTiming(), drone_at(d, l_to), True)
@@ -176,10 +176,10 @@ class robot_planner:
     def create_problem(self, env : enviorment, robots : list[robot], drones : list[drone]):
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
         _robots = [Object(f"r{id}", self._robot) for id in [bot.id for bot in robots]]
-        _drones = [Object(f"d{id}", self._drone) for id in [bot.id for bot in robots]]
+        _drones = [Object(f"d{id}", self._drone) for id in [bot.id for bot in drones]]
         _packages = [Object(f"p{id}", self._package) for id in [p.id for p in env.packages]]
 
-        self.problem.add_objects(_locations + _robots + _packages)
+        self.problem.add_objects(_locations + _robots + _packages +_drones)
 
         #locations connectivity and distance
         for c in env.connectivityList:
