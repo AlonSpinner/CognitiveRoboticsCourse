@@ -239,10 +239,6 @@ while True:
                     print(f"t = {t:2.2f}  :",ai.current_action)
                     a_next_actions_indicies[i] += 1
 
-                    if type(ai.current_action) == drone_fly_robot:
-                        animate()
-                        temp = 1
-
         if ai.act(ai.current_action, env): #do action, and if its finished, start waiting allowing accepting new actions
             ai.current_action = wait(ai)
 
@@ -250,13 +246,31 @@ while True:
             and type(ai.current_action) != robot_fly \
                 and t > ai.current_action.time_end + 0.1:
                     ax.set_title('SOMETHING WENT WRONG.... REPLANNING!')
+                    if MOVIE:
+                        moviewriter.grab_frame()
+                    #assumption: plan failed because robot ran out of charge
+                    #create intersection where agents are
+                    for aj in a:
+                        new_loc = location(len(env.locations), ai.pose.t().squeeze(),'intersection')
+                        ai.last_location = new_loc.id
+                        loc_from = ai.current_action.loc_from
+                        loc_to = ai.current_action.loc_to
+                        env.locations += [new_loc]
+                        env.connectivityList = env.connectivityList + [[new_loc.id,loc_from.id]] + [[new_loc.id,loc_to.id]]
                     
+                    env.plot(ax)
+
+                    planner = robot_planner()
+                    planner.f_dist2charge = f_dist2charge
+                    planner.f_charge2time = f_charge2time
+                    planner.max_charge = max_charge
                     planner.create_problem(env,r,d)
-                    execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 5)
+                    execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 2)
                     actions = parse_plan(execution_times, actions, durations,env, a)
                     a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
                     a_next_actions_indicies = [0 for _ in range(Nagents)]
                     a_done = [False for _ in range(Nagents)]
+                    t = 0
                     
                     ax.set_title('')
 

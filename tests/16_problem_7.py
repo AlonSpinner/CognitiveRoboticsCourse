@@ -239,10 +239,6 @@ while True:
                     print(f"t = {t:2.2f}  :",ai.current_action)
                     a_next_actions_indicies[i] += 1
 
-                    if type(ai.current_action) == drone_fly_robot:
-                        animate()
-                        temp = 1
-
         if ai.act(ai.current_action, env): #do action, and if its finished, start waiting allowing accepting new actions
             ai.current_action = wait(ai)
 
