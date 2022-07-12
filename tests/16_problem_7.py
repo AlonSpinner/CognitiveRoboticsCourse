@@ -1,5 +1,5 @@
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot, drone, wait
+from maildelivery.agents import robot, drone, wait, robot_fly, drone_fly_robot
 from maildelivery.brains.brains_bots_and_drones import robot_planner
 from maildelivery.brains.plan_parser import full_plan_2_per_agent, parse_plan
 from maildelivery.geometry import pose2
@@ -191,7 +191,7 @@ Nagents = len(a)
 planner = robot_planner()
 planner.create_problem(env,r,d)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, only_read_plan = False)
 actions = parse_plan(execution_times, actions, durations,env, a)
 a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
 
@@ -227,13 +227,23 @@ while True:
         if a_done[i] == False and \
             type(ai.current_action) == wait and \
                 t >= a_execution_times[i][a_next_actions_indicies[i]]:
-            
-            ai.current_action =  a_actions[i][a_next_actions_indicies[i]]
-            print(f"t = {t:2.2f}  :",ai.current_action)
-            a_next_actions_indicies[i] += 1
+
+                    ai.current_action =  a_actions[i][a_next_actions_indicies[i]]
+                    print(f"t = {t:2.2f}  :",ai.current_action)
+                    a_next_actions_indicies[i] += 1
+
+                    if type(ai.current_action) == drone_fly_robot:
+                        animate()
+                        temp = 1
 
         if ai.act(ai.current_action, env): #do action, and if its finished, start waiting allowing accepting new actions
             ai.current_action = wait(ai)
+
+        if type(ai.current_action) != wait \
+            and type(ai.current_action) != robot_fly \
+                and t > ai.current_action.time_end + 1.0:
+                    ai.act(ai.current_action, env)
+                    raise('FAILED')
 
     #update plot        
     if plotCounter % 100 == 0:

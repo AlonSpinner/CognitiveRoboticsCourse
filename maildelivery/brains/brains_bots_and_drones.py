@@ -121,6 +121,7 @@ class robot_planner:
 
         _prep_for_liftoff = InstantaneousAction('prep_for_liftoff', r = _robot)
         r = _prep_for_liftoff.parameter('r')
+        _prep_for_liftoff.add_precondition(Not(robot_ready_for_liftoff(r)))
         _prep_for_liftoff.add_precondition(robot_not_holding_package(r))
         _prep_for_liftoff.add_effect(robot_ready_for_liftoff(r), True)
 
