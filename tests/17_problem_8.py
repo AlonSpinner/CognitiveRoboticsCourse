@@ -198,7 +198,7 @@ planner.f_charge2time = f_charge2time
 planner.max_charge = max_charge
 planner.create_problem(env,r,d)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, only_read_plan = False)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 5)
 actions = parse_plan(execution_times, actions, durations,env, a)
 a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
 
@@ -248,11 +248,11 @@ while True:
 
         if type(ai.current_action) != wait \
             and type(ai.current_action) != robot_fly \
-                and t > ai.current_action.time_end + 1.0:
+                and t > ai.current_action.time_end + 0.1:
                     ax.set_title('SOMETHING WENT WRONG.... REPLANNING!')
                     
                     planner.create_problem(env,r,d)
-                    execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, only_read_plan = False)
+                    execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 5)
                     actions = parse_plan(execution_times, actions, durations,env, a)
                     a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
                     a_next_actions_indicies = [0 for _ in range(Nagents)]

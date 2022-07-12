@@ -69,6 +69,8 @@ class robot_fly(action):
     agent : agent
     time_start : float = 0
     time_end : float = 0
+    def __repr__(self):
+        return f"{self.agent} is preping to fly"
 
 class robot(agent):
     def __init__(self,id, pose0, dt) -> None:
