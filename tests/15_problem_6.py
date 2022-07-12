@@ -1,5 +1,5 @@
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot, drone, wait, robot_fly
+from maildelivery.agents import robot, drone, wait
 from maildelivery.brains.brains_bots_and_drones import robot_planner
 from maildelivery.brains.plan_parser import full_plan_2_per_agent, parse_plan
 from maildelivery.geometry import pose2
@@ -215,8 +215,6 @@ while True:
             print(f"t = {t:2.2f}  :",ai.current_action)
             a_next_actions_indicies[i] += 1
 
-        if type(ai.current_action) == robot_fly:
-            temp = 1
         if ai.act(ai.current_action, env): #do action, and if its finished, start waiting allowing accepting new actions
             ai.current_action = wait(ai)
 

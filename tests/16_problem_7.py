@@ -93,22 +93,22 @@ def build_env():
     x_c,h_c, c_c, n_c = build_leftconnected_block(n, np.array([2 * X_D,0]))
     n += n_c
 
-    station2 = location(n, x_a[2].xy + np.array([0,H_D]),'station')
+    station0 = location(n, x_a[2].xy + np.array([0,H_D]),'station')
     n += 1
-    station9 = location(n, x_b[1].xy + np.array([0,H_D]),'station')
+    station1 = location(n, x_b[1].xy + np.array([0,H_D]),'station')
     n += 1
-    station15 = location(n, x_c[1].xy + np.array([0,H_D]),'station')
+    station2 = location(n, x_c[1].xy + np.array([0,H_D]),'station')
     n += 1
-    stations = [station2, station9, station15]
+    stations = [station0, station1, station2]
 
-    dock0 = location(n, np.array(x_c[0].xy + np.array([H_D,0])),'dock')
+    dock0 = location(n, np.array(x_b[0].xy + np.array([0,-H_D])),'dock')
     n += 1
-    dock1 = location(n, np.array(dock0.xy + np.array([H_D,0])),'dock')
+    dock1 = location(n, np.array(station0.xy + np.array([0,H_D])),'dock')
     n += 1
     docks = [dock0, dock1]
 
 
-    x_d,h_d, c_d, n_d = build_block(n, dock1.xy + np.array([X_D,0]))
+    x_d,h_d, c_d, n_d = build_block(n, dock1.xy + np.array([H_D,0]))
     n += n_d
 
     locations = sorted(x_a + h_a + \
@@ -118,8 +118,8 @@ def build_env():
     connectivityList = c_a + \
                         connectFromLeft(x_a,x_b,h_b) + c_b + \
                         connectFromLeft(x_b,x_c,h_c) + c_c + \
-                        [[2,station2.id]] + [[9, station9.id]] + [[15, station15.id]] + \
-                            [[14,dock0.id]] + [[x_d[0].id, dock1.id]] + c_d
+                        [[2,station0.id]] + [[9, station1.id]] + [[15, station2.id]] + \
+                            [[8,dock0.id]] + [[x_d[0].id, dock1.id]] + c_d
 
     p0 = package(0,locations[4].id,'location',locations[6].id,100, locations[4].xy)
     p1 = package(1,locations[6].id,'location',locations[4].id,100, locations[6].xy)
@@ -127,8 +127,8 @@ def build_env():
     p3 = package(3,locations[19].id,'location',locations[10].id,100, locations[19].xy)
     p4 = package(4,locations[16].id,'location',locations[5].id,100, locations[16].xy)
     p5 = package(5,locations[13].id,'location',locations[19].id,100, locations[13].xy)
-    p6 = package(6,locations[29].id,'location',locations[5].id,100, locations[31].xy)
-    p7 = package(7,locations[32].id,'location',locations[19].id,100, locations[30].xy)
+    p6 = package(6,locations[29].id,'location',locations[30].id,100, locations[29].xy)
+    p7 = package(7,locations[32].id,'location',locations[31].id,100, locations[32].xy)
     packages = [p0,p1,p2,p3,p4,p5,p6,p7]
 
     env = enviorment(locations,connectivityList , packages)
@@ -218,7 +218,6 @@ if MOVIE:
 t = 0
 plotCounter = 0
 
-a_current_actions = [wait(ai) for ai in a]
 a_next_actions_indicies = [0 for _ in range(Nagents)]
 a_done = [False for _ in range(Nagents)]
 while True:
@@ -226,14 +225,15 @@ while True:
     for i,ai in enumerate(a):
         #go do next action
         if a_done[i] == False and \
-            type(a_current_actions[i]) == wait and \
+            type(ai.current_action) == wait and \
                 t >= a_execution_times[i][a_next_actions_indicies[i]]:
-            a_current_actions[i] = a_actions[i][a_next_actions_indicies[i]]
-            print(f"t = {t:2.2f}  :",a_current_actions[i])
+            
+            ai.current_action =  a_actions[i][a_next_actions_indicies[i]]
+            print(f"t = {t:2.2f}  :",ai.current_action)
             a_next_actions_indicies[i] += 1
-             
-        if ai.act(a_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions
-            a_current_actions[i] = wait(ai)
+
+        if ai.act(ai.current_action, env): #do action, and if its finished, start waiting allowing accepting new actions
+            ai.current_action = wait(ai)
 
     #update plot        
     if plotCounter % 100 == 0:
@@ -245,7 +245,7 @@ while True:
     t += DT
 
     for i in range(Nagents):
-        a_done[i] = a_next_actions_indicies[i] == len(a_actions[i]) and type(a_current_actions[i]) == wait
+        a_done[i] = a_next_actions_indicies[i] == len(a_actions[i]) and type(a[i].current_action) == wait
 
     if all(a_done):
         animate()
@@ -263,3 +263,4 @@ for ri in r:
 
 plt.ioff()
 plt.show()
+
