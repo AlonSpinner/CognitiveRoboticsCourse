@@ -186,6 +186,7 @@ class drone:
         self.last_location : int = 0
         self.graphics : list = []
         self.width : float = 0.05
+        self.current_action : action = wait(self)
 
     def sense(self): #gps like sensor
         return self.pose.t()
@@ -254,19 +255,12 @@ def plot_robot_deadcharge(ax, r : robot, scale = 20, color = 'r'):
 
 def plot_drone(ax, d : drone, scale = 20, color = 'r'):
         pose = d.pose
-        
-        p_ego = d.width * np.array([[-1,-1],
-                             [1,-1],
-                             [1,1],
-                             [-1,1]])
-
-        graphics = []
-        for p in p_ego:
-            pdraw = pose.transformFrom(p)
-            graphics.append(ax.scatter(pdraw[0],pdraw[1],marker = 'o', c = 'red', s = 100))
-        return graphics
-
-        
+        numsides = 4
+        g1 = ax.scatter(pose.x, pose.y, marker = (numsides, 2, np.degrees(pose.theta)), c = 'magenta',\
+             s = 200, edgecolors = color)
+        g2 = ax.scatter(pose.x, pose.y, marker = 'o', c = 'magenta',\
+             s = 200, alpha = 0.2)
+        return [g1,g2]
 
 
 
