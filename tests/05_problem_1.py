@@ -1,7 +1,7 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, wait
 from maildelivery.brains.brains_bots_simple import robot_planner
-from maildelivery.brains.plan_parser import parse_actions
+from maildelivery.brains.plan_parser import parse_plan
 from maildelivery.geometry import pose2
 
 import numpy as np
@@ -51,7 +51,7 @@ r.velocity = V
 planner = robot_planner()
 planner.create_problem(env,[r])
 execution_times, actions, durations = planner.solve(engine_name = 'lpg')
-parsed_actions = parse_actions(actions, env, [r])
+parsed_actions = parse_plan(execution_times, actions, durations, env, [r])
 
 #plot initial state
 plt.ion()

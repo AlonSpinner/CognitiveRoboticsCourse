@@ -1,7 +1,7 @@
 from maildelivery.world import enviorment,location, package
 from maildelivery.agents import robot, wait
 from maildelivery.brains.brains_bots_charge_added import robot_planner
-from maildelivery.brains.plan_parser import full_plan_2_per_agent, parse_actions
+from maildelivery.brains.plan_parser import full_plan_2_per_agent, parse_plan
 from maildelivery.geometry import pose2
 
 import numpy as np
@@ -14,7 +14,7 @@ DT = 0.001 #[s]
 V = 8.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
-MOVIE_FILENAME = os.path.join(dir_path,'14_movie.gif')
+MOVIE_FILENAME = os.path.join(dir_path,'15_movie.gif')
 X_D = 3.0
 H_D = 1.0
 f_dist2charge = lambda dist: 2 * dist
@@ -165,7 +165,7 @@ planner = robot_planner()
 planner.create_problem(env,a)
 
 execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)
-actions = parse_actions(actions,env, a)
+actions = parse_plan(execution_times, actions, durations,env, a)
 a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
 
 

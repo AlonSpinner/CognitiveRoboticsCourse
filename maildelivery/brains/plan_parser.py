@@ -1,52 +1,64 @@
 from maildelivery.agents import agent, robot, action, wait, move, pickup, drop, chargeup, drone_fly, drone_fly_robot
 from maildelivery.world import enviorment
 
-def parse_actions(actions : list[tuple], env : enviorment, agents : list[agent]):
+def parse_plan(execution_times, actions, durations, env : enviorment, agents : list[agent]):
     #from actions ('action_name','param1','param2') to my actions
     Nrobots = 0
     for a in agents:
         Nrobots += type(a) == robot
 
     parsed_actions = []
-    for a in actions:
+    for e, a, d in zip(execution_times, actions, durations):
         name = a[0]
         params = a[1:]
         if name == 'move':
             parsed_actions.append(move(
-            agents[(int(params[0][1:]))],
-            env.locations[int(params[1][1:])], #locations_from
-            env.locations[int(params[2][1:])], #locations_to
+            agent = agents[(int(params[0][1:]))],
+            loc_from = env.locations[int(params[1][1:])], #locations_from
+            loc_to = env.locations[int(params[2][1:])], #locations_to
+            time_start = e,
+            time_end = e + d
             )) 
         elif name == 'drop':
             parsed_actions.append(drop(
-                agents[(int(params[1][1:]))],
-                env.packages[int(params[0][1:])], #package
-                env.locations[int(params[2][1:])] #location
-                )) 
+            agent = agents[(int(params[1][1:]))],
+            p = env.packages[int(params[0][1:])], #package
+            loc = env.locations[int(params[2][1:])], #location
+            time_start = e,
+            time_end = e + d
+            )) 
         elif name == 'pickup':
             parsed_actions.append(pickup(
-                agents[(int(params[1][1:]))],
-                env.packages[int(params[0][1:])], #package
-                env.locations[int(params[2][1:])] #location
+            agent = agents[(int(params[1][1:]))],
+            p = env.packages[int(params[0][1:])], #package
+            loc = env.locations[int(params[2][1:])], #location
+            time_start = e,
+            time_end = e + d
                 ))
 
         elif name == 'chargeup':
             parsed_actions.append(chargeup(
-                agents[(int(params[0][1:]))],
-                env.locations[int(params[1][1:])], #location
+                agent = agents[(int(params[0][1:]))],
+                loc = env.locations[int(params[1][1:])], #location
+                time_start = e,
+                time_end = e + d
                 ))
         elif name == 'drone_fly':
             parsed_actions.append(drone_fly(
-                agents[(int(params[0][1:])) + Nrobots], #drone index
-                env.locations[int(params[1][1:])], #location_from
-                env.locations[int(params[2][1:])], #location_to
+                agent = agents[(int(params[0][1:])) + Nrobots], #drone index
+                loc_from = env.locations[int(params[1][1:])], #location_from
+                loc_to = env.locations[int(params[2][1:])], #location_to
+                time_start = e,
+                time_end = e + d
                 ))
         elif name == 'drone_fly_robot':
             parsed_actions.append(drone_fly_robot(
-                agents[(int(params[0][1:])) + Nrobots], #drone index
-                agents[(int(params[1][1:]))], #robot index
-                env.locations[int(params[2][1:])], #location_from
-                env.locations[int(params[3][1:])], #location_to
+                agent = agents[(int(params[0][1:])) + Nrobots], #drone index
+                robot = agents[(int(params[1][1:]))], #robot index
+                loc_from = env.locations[int(params[2][1:])], #location_from
+                loc_to = env.locations[int(params[3][1:])], #location_to
+                time_start = e,
+                time_end = e + d
                 ))
 
     return parsed_actions
