@@ -15,7 +15,7 @@ V_ROBOT = 8.0 #[m/s]
 V_DRONE = 10.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
-MOVIE_FILENAME = os.path.join(dir_path,'15_movie.gif')
+MOVIE_FILENAME = os.path.join(dir_path,'16_movie.gif')
 X_D = 3.0
 H_D = 1.0
 f_dist2charge = lambda dist: 2 * dist
@@ -85,26 +85,41 @@ def connectFromLeft(x_left,x_right,h_right):
 
 
 def build_env():
-    x_a, h_a, c_a, n_a = build_block(0, np.array([0,0]))
-    x_b,h_b, c_b, n_b = build_leftconnected_block(n_a, np.array([X_D,0]))    
-    x_c,h_c, c_c, n_c = build_leftconnected_block(n_a + n_b, np.array([2 * X_D,0]))   
+    n = 0
+    x_a, h_a, c_a, n_a = build_block(n, np.array([0,0]))
+    n += n_a
+    x_b,h_b, c_b, n_b = build_leftconnected_block(n, np.array([X_D,0]))    
+    n += n_b
+    x_c,h_c, c_c, n_c = build_leftconnected_block(n, np.array([2 * X_D,0]))
+    n += n_c
 
-    i_s = n_a + n_b + n_c + np.array([0,1,2])
-    station2 = location(int(i_s[0]), x_a[2].xy + np.array([0,H_D]),'station')
-    station9 = location(int(i_s[1]), x_b[1].xy + np.array([0,H_D]),'station')
-    station15 = location(int(i_s[2]), x_c[1].xy + np.array([0,H_D]),'station')
+    station2 = location(n, x_a[2].xy + np.array([0,H_D]),'station')
+    n += 1
+    station9 = location(n, x_b[1].xy + np.array([0,H_D]),'station')
+    n += 1
+    station15 = location(n, x_c[1].xy + np.array([0,H_D]),'station')
+    n += 1
     stations = [station2, station9, station15]
-    n_s = 3
 
-    dock = location(n_a + n_b + n_c + n_s, np.array(x_c[0].xy + np.array([H_D,0])),'dock')
+    dock0 = location(n, np.array(x_c[0].xy + np.array([H_D,0])),'dock')
+    n += 1
+    dock1 = location(n, np.array(dock0.xy + np.array([H_D,0])),'dock')
+    n += 1
+    docks = [dock0, dock1]
+
+
+    x_d,h_d, c_d, n_d = build_block(n, dock1.xy + np.array([X_D,0]))
+    n += n_d
 
     locations = sorted(x_a + h_a + \
                         x_b + h_b + \
-                        x_c + h_c + stations +[dock])
+                        x_c + h_c + stations +docks \
+                        + x_d + h_d)
     connectivityList = c_a + \
                         connectFromLeft(x_a,x_b,h_b) + c_b + \
                         connectFromLeft(x_b,x_c,h_c) + c_c + \
-                        [[2,station2.id]] + [[9, station9.id]] + [[15, station15.id], [14,dock.id]]
+                        [[2,station2.id]] + [[9, station9.id]] + [[15, station15.id]] + \
+                            [[14,dock0.id]] + [[x_d[0].id, dock1.id]] + c_d
 
     p0 = package(0,locations[4].id,'location',locations[6].id,100, locations[4].xy)
     p1 = package(1,locations[6].id,'location',locations[4].id,100, locations[6].xy)
@@ -112,7 +127,9 @@ def build_env():
     p3 = package(3,locations[19].id,'location',locations[10].id,100, locations[19].xy)
     p4 = package(4,locations[16].id,'location',locations[5].id,100, locations[16].xy)
     p5 = package(5,locations[13].id,'location',locations[19].id,100, locations[13].xy)
-    packages = [p0,p1,p2,p3,p4,p5]
+    p6 = package(6,locations[29].id,'location',locations[5].id,100, locations[31].xy)
+    p7 = package(7,locations[32].id,'location',locations[19].id,100, locations[30].xy)
+    packages = [p0,p1,p2,p3,p4,p5,p6,p7]
 
     env = enviorment(locations,connectivityList , packages)
     return env
@@ -157,7 +174,7 @@ r2.f_dist2charge = f_dist2charge
 r2.f_charge2time = f_charge2time
 r2.charge = 50.0
 
-drone_init_location = 10
+drone_init_location = 31
 x0 = env.locations[drone_init_location].xy[0]
 y0 = env.locations[drone_init_location].xy[1]
 theta0 = np.pi/2
