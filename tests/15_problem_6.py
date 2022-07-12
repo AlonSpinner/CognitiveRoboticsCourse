@@ -20,6 +20,7 @@ X_D = 3.0
 H_D = 1.0
 f_dist2charge = lambda dist: 2 * dist
 f_charge2time = lambda missing_charge: missing_charge/100
+max_charge = 100.0
 
 def build_block(base_ind : int, bottomleft_xy : np.ndarray):
     x_bl = location(base_ind + 0,bottomleft_xy + np.array([0,0]),'intersection')
@@ -131,6 +132,7 @@ r0.goal_location = station
 r0.velocity = V_ROBOT
 r0.f_dist2charge = f_dist2charge
 r0.f_charge2time = f_charge2time
+r0.max_charge = 100.0
 r0.charge = 100.0
 
 station = 21
@@ -143,6 +145,7 @@ r1.goal_location = station
 r1.velocity = V_ROBOT
 r1.f_dist2charge = f_dist2charge
 r1.f_charge2time = f_charge2time
+r1.max_charge = 100
 r1.charge = 50.0
 
 station = 22
@@ -155,6 +158,7 @@ r2.goal_location = station
 r2.velocity = V_ROBOT
 r2.f_dist2charge = f_dist2charge
 r2.f_charge2time = f_charge2time
+r2.max_charge = 100
 r2.charge = 50.0
 
 drone_init_location = 10
@@ -173,8 +177,11 @@ Nagents = len(a)
 #ask for plan
 planner = robot_planner()
 planner.create_problem(env,r,d)
+planner.f_dist2charge = f_dist2charge
+planner.f_charge2time = f_charge2time
+planner.max_charge = max_charge
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 4)
 actions = parse_plan(execution_times, actions, durations,env, a)
 a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
 

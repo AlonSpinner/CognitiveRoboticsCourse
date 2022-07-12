@@ -16,6 +16,9 @@ V = 2.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'06_movie.gif')
+f_dist2charge = lambda dist: 2 * dist
+f_charge2time = lambda missing_charge: missing_charge/100
+max_charge = 100.0
 
 def build_env():
     docks = [location(0,np.array([0,0]),'dock')]
@@ -53,6 +56,9 @@ r0 = robot(0,pose2(x0,y0,theta0),DT)
 r0.last_location = l0
 r0.goal_location = l0
 r0.velocity = V
+r0.f_charge2time = f_charge2time
+r0.max_charge = max_charge
+r0.charge = 100.0
 
 l0 = 6
 x0 = env.locations[l0].xy[0]
@@ -62,6 +68,9 @@ r1 = robot(1,pose2(x0,y0,theta0),DT)
 r1.last_location = l0
 r1.goal_location = l0
 r1.velocity = V
+r1.f_charge2time = f_charge2time
+r1.max_charge = max_charge
+r1.charge = 100.0
 
 r = [r0, r1]
 a = r
@@ -70,8 +79,11 @@ Nagents = len(a)
 #ask for plan
 planner = robot_planner()
 planner.create_problem(env,a)
+planner.f_dist2charge = f_dist2charge
+planner.f_charge2time = f_charge2time
+planner.max_charge = max_charge
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 1)
 actions = parse_plan(execution_times, actions, durations,env, a)
 a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
 

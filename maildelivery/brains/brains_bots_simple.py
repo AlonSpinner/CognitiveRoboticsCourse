@@ -183,7 +183,7 @@ class robot_planner:
         self._packages = _packages
         
     def solve(self, engine_name = 'optic', only_read_plan = False, time_fix = True,\
-                         minimize_makespan = True): 
+                         minimize_makespan = True, lpg_n = 3): 
         
         start = time.time()
         print('started solving domain+problem with optic')
@@ -214,7 +214,7 @@ class robot_planner:
 
         if engine_name == 'lpg':        
             if not only_read_plan:
-                sucess = lpg_wrapper.run()
+                sucess = lpg_wrapper.run(n_user = lpg_n)
                 assert sucess, 'solver failed'
             execution_times, actions, durations = lpg_wrapper.get_plan()
 

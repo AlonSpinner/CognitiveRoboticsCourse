@@ -61,7 +61,7 @@ Nagents = len(a)
 planner = robot_planner()
 planner.create_problem(env,a)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 3)
 actions = parse_plan(execution_times, actions, durations,env, a)
 a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
 

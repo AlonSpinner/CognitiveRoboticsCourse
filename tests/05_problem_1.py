@@ -50,7 +50,7 @@ r.velocity = V
 #ask for plan
 planner = robot_planner()
 planner.create_problem(env,[r])
-execution_times, actions, durations = planner.solve(engine_name = 'lpg')
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', lpg_n = 2)
 parsed_actions = parse_plan(execution_times, actions, durations, env, [r])
 
 #plot initial state

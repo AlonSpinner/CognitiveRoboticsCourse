@@ -9,9 +9,13 @@ from maildelivery.binary_solvers.paths import DOMAIN_PATH, PROBLEM_PATH, PLAN_PA
 DIR_PATH = os.path.join(os.path.dirname(__file__))
 BINARY_NAME = "lpg-td"
 LPG_PLAN_PATH = os.path.join(DIR_PATH,'lpg_plan')
-n = 5
+n = 3
 
-def run(mode : Literal["speed", "quality", f"n {n}"] = f"n {n}"):
+def run(mode : Literal["speed", "quality", f"n {n}"] = f"n {n}", n_user = None):
+    if n_user != None:
+        n = n_user
+        mode = f"n {n}"
+
     p = subprocess.run(f"./{BINARY_NAME} -o {DOMAIN_PATH} -f {PROBLEM_PATH} -{mode} \
         -seed 1 -out {LPG_PLAN_PATH}", \
          cwd = DIR_PATH, shell = True)

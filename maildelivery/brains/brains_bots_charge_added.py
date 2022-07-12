@@ -18,13 +18,8 @@ from unified_planning.model.metrics import MinimizeMakespan,\
      MinimizeActionCosts, MinimizeExpressionOnFinalState, MaximizeExpressionOnFinalState
 up.shortcuts.get_env().credits_stream = None #removes the printing planners credits 
 
-
-NOT_CONNECTED_DISTANCE = float(10000)
-
 class robot_planner:
-    '''
-    only deliverybots, no charge involved
-    '''
+
     def __init__(self) -> None:
         #constants that apply to all robots
         self.f_dist2charge  = lambda dist: 2 * dist #not used here 
@@ -115,7 +110,7 @@ class robot_planner:
         problem.add_fluent(location_has_package, default_initial_value = False)
         problem.add_fluent(robot_not_holding_package, default_initial_value = True)
         problem.add_fluent(road_is_free, default_initial_value = True)
-        problem.add_fluent(distance, default_initial_value = NOT_CONNECTED_DISTANCE) #some absuard number
+        problem.add_fluent(distance)
         problem.add_fluent(robot_velocity) #initalized in create_problem()
         problem.add_fluent(charge) #initalized in create_problem()
         problem.add_fluent(location_is_dock, default_initial_value = False)
@@ -157,16 +152,14 @@ class robot_planner:
                             _locations[c[1]],
                             _locations[c[0]]),
                             True)
-            self.problem.set_initial_value(self.distance(
-                            _locations[c[0]],
-                            _locations[c[1]]),
-                            float(env.locations[c[0]].distance(env.locations[c[1]]))
-                            )
-            self.problem.set_initial_value(self.distance(
-                            _locations[c[1]],
-                            _locations[c[0]]),
-                            float(env.locations[c[1]].distance(env.locations[c[0]]))
-                            )
+
+        for l_i in env.locations:
+            for l_j in env.locations:
+                    self.problem.set_initial_value(self.distance(
+                                    _locations[l_i.id],
+                                    _locations[l_j.id]),
+                                    float(l_i.distance(l_j)))
+
         # robot at start
         for r in robots:
             self.problem.set_initial_value(self.robot_at(
@@ -215,7 +208,7 @@ class robot_planner:
         self._packages = _packages
         
     def solve(self, engine_name = 'optic', only_read_plan = False, time_fix = True,\
-                         minimize_makespan = True, maximize_charge = False): 
+                         minimize_makespan = True, maximize_charge = False, lpg_n = 3): 
         
         start = time.time()
         print(f'started solving domain+problem with {engine_name}')
@@ -258,7 +251,7 @@ class robot_planner:
 
         if engine_name == 'lpg':        
             if not only_read_plan:
-                sucess = lpg_wrapper.run()
+                sucess = lpg_wrapper.run(n_user = lpg_n)
                 assert sucess, 'solver failed'
             execution_times, actions, durations = lpg_wrapper.get_plan()
 

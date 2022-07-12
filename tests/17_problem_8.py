@@ -1,6 +1,6 @@
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot, wait
-from maildelivery.brains.brains_bots_charge_added import robot_planner
+from maildelivery.agents import robot, drone, wait, robot_fly, drone_fly_robot
+from maildelivery.brains.brains_bots_and_drones import robot_planner
 from maildelivery.brains.plan_parser import full_plan_2_per_agent, parse_plan
 from maildelivery.geometry import pose2
 
@@ -11,16 +11,16 @@ from matplotlib.offsetbox import AnchoredText
 import os
 
 DT = 0.001 #[s]
-V = 8.0 #[m/s]
+V_ROBOT = 8.0 #[m/s]
+V_DRONE = 10.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
-MOVIE_FILENAME = os.path.join(dir_path,'08_movie.gif')
+MOVIE_FILENAME = os.path.join(dir_path,'17_movie.gif')
 X_D = 3.0
 H_D = 1.0
 f_dist2charge = lambda dist: 2 * dist
 f_charge2time = lambda missing_charge: missing_charge/100
 max_charge = 100.0
-
 
 def build_block(base_ind : int, bottomleft_xy : np.ndarray):
     x_bl = location(base_ind + 0,bottomleft_xy + np.array([0,0]),'intersection')
@@ -86,26 +86,41 @@ def connectFromLeft(x_left,x_right,h_right):
 
 
 def build_env():
-    x_a, h_a, c_a, n_a = build_block(0, np.array([0,0]))
-    x_b,h_b, c_b, n_b = build_leftconnected_block(n_a, np.array([X_D,0]))    
-    x_c,h_c, c_c, n_c = build_leftconnected_block(n_a + n_b, np.array([2 * X_D,0]))   
+    n = 0
+    x_a, h_a, c_a, n_a = build_block(n, np.array([0,0]))
+    n += n_a
+    x_b,h_b, c_b, n_b = build_leftconnected_block(n, np.array([X_D,0]))    
+    n += n_b
+    x_c,h_c, c_c, n_c = build_leftconnected_block(n, np.array([2 * X_D,0]))
+    n += n_c
 
-    i_s = n_a + n_b + n_c + np.array([0,1,2])
-    station2 = location(int(i_s[0]), x_a[2].xy + np.array([0,H_D]),'station')
-    station9 = location(int(i_s[1]), x_b[1].xy + np.array([0,H_D]),'station')
-    station15 = location(int(i_s[2]), x_c[1].xy + np.array([0,H_D]),'station')
-    stations = [station2, station9, station15]
-    n_s = 3
+    station0 = location(n, x_a[2].xy + np.array([0,H_D]),'station')
+    n += 1
+    station1 = location(n, x_b[1].xy + np.array([0,H_D]),'station')
+    n += 1
+    station2 = location(n, x_c[1].xy + np.array([0,H_D]),'station')
+    n += 1
+    stations = [station0, station1, station2]
 
-    dock = location(n_a + n_b + n_c + n_s, np.array([1.5*X_D,1.5*X_D]),'dock')
+    dock0 = location(n, np.array(x_b[0].xy + np.array([0,-H_D])),'dock')
+    n += 1
+    dock1 = location(n, np.array(station0.xy + np.array([0,H_D])),'dock')
+    n += 1
+    docks = [dock0, dock1]
+
+
+    x_d,h_d, c_d, n_d = build_block(n, dock1.xy + np.array([H_D,0]))
+    n += n_d
 
     locations = sorted(x_a + h_a + \
                         x_b + h_b + \
-                        x_c + h_c + stations +[dock])
+                        x_c + h_c + stations +docks \
+                        + x_d + h_d)
     connectivityList = c_a + \
                         connectFromLeft(x_a,x_b,h_b) + c_b + \
                         connectFromLeft(x_b,x_c,h_c) + c_c + \
-                        [[2,station2.id]] + [[9, station9.id]] + [[15, station15.id]]
+                        [[2,station0.id]] + [[9, station1.id]] + [[15, station2.id]] + \
+                            [[8,dock0.id]] + [[x_d[0].id, dock1.id]] + c_d
 
     p0 = package(0,locations[4].id,'location',locations[6].id,100, locations[4].xy)
     p1 = package(1,locations[6].id,'location',locations[4].id,100, locations[6].xy)
@@ -113,7 +128,9 @@ def build_env():
     p3 = package(3,locations[19].id,'location',locations[10].id,100, locations[19].xy)
     p4 = package(4,locations[16].id,'location',locations[5].id,100, locations[16].xy)
     p5 = package(5,locations[13].id,'location',locations[19].id,100, locations[13].xy)
-    packages = [p0,p1,p2,p3,p4,p5]
+    p6 = package(6,locations[29].id,'location',locations[30].id,100, locations[29].xy)
+    p7 = package(7,locations[32].id,'location',locations[31].id,100, locations[32].xy)
+    packages = [p0,p1,p2,p3,p4,p5,p6,p7]
 
     env = enviorment(locations,connectivityList , packages)
     return env
@@ -126,53 +143,67 @@ station = 20
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r0 = robot(0,pose2(x0,y0,theta0),DT)
+r0 = robot(0, pose2(x0,y0,theta0), DT)
 r0.last_location = station
 r0.goal_location = station
-r0.velocity = V
-r0.f_dist2charge = f_dist2charge
+r0.velocity = V_ROBOT
+r0.f_dist2charge = lambda dist: 3 * dist #insead of 2
 r0.f_charge2time = f_charge2time
 r0.max_charge = max_charge
+r0.charge = 100.0
 
 station = 21
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r1 = robot(1,pose2(x0,y0,theta0),DT)
+r1 = robot(1, pose2(x0,y0,theta0), DT)
 r1.last_location = station
 r1.goal_location = station
-r1.velocity = V
+r1.velocity = V_ROBOT
 r1.f_dist2charge = f_dist2charge
 r1.f_charge2time = f_charge2time
 r1.max_charge = max_charge
+r1.charge = 50.0
 
 station = 22
 x0 = env.locations[station].xy[0]
 y0 = env.locations[station].xy[1]
 theta0 = np.pi/2
-r2 = robot(2,pose2(x0,y0,theta0),DT)
+r2 = robot(2, pose2(x0,y0,theta0), DT)
 r2.last_location = station
 r2.goal_location = station
-r2.velocity = V
+r2.velocity = V_ROBOT
 r2.f_dist2charge = f_dist2charge
 r2.f_charge2time = f_charge2time
 r2.max_charge = max_charge
+r2.charge = 50.0
+
+drone_init_location = 31
+x0 = env.locations[drone_init_location].xy[0]
+y0 = env.locations[drone_init_location].xy[1]
+theta0 = np.pi/2
+d0 = drone(3, pose2(x0,y0,theta0), DT)
+d0.last_location = drone_init_location
+d0.velocity = V_DRONE
 
 r = [r0,r1,r2]
-a = r
+d = [d0]
+a = r + d #important that it is r + d as it is assumed all over the code
 Nagents = len(a)
 
 #ask for plan
 planner = robot_planner()
-planner.create_problem(env,a)
 planner.f_dist2charge = f_dist2charge
 planner.f_charge2time = f_charge2time
 planner.max_charge = max_charge
+planner.create_problem(env,r,d)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 3)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, only_read_plan = False)
 actions = parse_plan(execution_times, actions, durations,env, a)
 a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
 
+
+print(f"plan should end at {max([action.time_end for action in actions])}")
 
 #plot initial state
 plt.ion()
@@ -182,6 +213,7 @@ def animate():
     anchored_text = AnchoredText(f"t = {t:2.2f}[s]", loc=2)
     ax.add_artist(anchored_text)
     [ri.plot(ax) for ri in r]
+    [di.plot(ax) for di in d]
     [p.plot(ax) for p in env.packages]
     plt.pause(0.01)
 #ready movie
@@ -193,7 +225,6 @@ if MOVIE:
 t = 0
 plotCounter = 0
 
-a_current_actions = [wait(ai) for ai in a]
 a_next_actions_indicies = [0 for _ in range(Nagents)]
 a_done = [False for _ in range(Nagents)]
 while True:
@@ -201,14 +232,33 @@ while True:
     for i,ai in enumerate(a):
         #go do next action
         if a_done[i] == False and \
-            type(a_current_actions[i]) == wait and \
+            type(ai.current_action) == wait and \
                 t >= a_execution_times[i][a_next_actions_indicies[i]]:
-            a_current_actions[i] = a_actions[i][a_next_actions_indicies[i]]
-            print(f"t = {t:2.2f}  :",a_current_actions[i])
-            a_next_actions_indicies[i] += 1
-             
-        if ai.act(a_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions
-            a_current_actions[i] = wait(ai)
+
+                    ai.current_action =  a_actions[i][a_next_actions_indicies[i]]
+                    print(f"t = {t:2.2f}  :",ai.current_action)
+                    a_next_actions_indicies[i] += 1
+
+                    if type(ai.current_action) == drone_fly_robot:
+                        animate()
+                        temp = 1
+
+        if ai.act(ai.current_action, env): #do action, and if its finished, start waiting allowing accepting new actions
+            ai.current_action = wait(ai)
+
+        if type(ai.current_action) != wait \
+            and type(ai.current_action) != robot_fly \
+                and t > ai.current_action.time_end + 1.0:
+                    ax.set_title('SOMETHING WENT WRONG.... REPLANNING!')
+                    
+                    planner.create_problem(env,r,d)
+                    execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, only_read_plan = False)
+                    actions = parse_plan(execution_times, actions, durations,env, a)
+                    a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
+                    a_next_actions_indicies = [0 for _ in range(Nagents)]
+                    a_done = [False for _ in range(Nagents)]
+                    
+                    ax.set_title('')
 
     #update plot        
     if plotCounter % 100 == 0:
@@ -220,7 +270,7 @@ while True:
     t += DT
 
     for i in range(Nagents):
-        a_done[i] = a_next_actions_indicies[i] == len(a_actions[i]) and type(a_current_actions[i]) == wait
+        a_done[i] = a_next_actions_indicies[i] == len(a_actions[i]) and type(a[i].current_action) == wait
 
     if all(a_done):
         animate()
@@ -238,3 +288,4 @@ for ri in r:
 
 plt.ioff()
 plt.show()
+
