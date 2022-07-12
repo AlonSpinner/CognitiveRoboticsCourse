@@ -1,5 +1,5 @@
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot, drone, wait
+from maildelivery.agents import robot, drone, wait, robot_fly
 from maildelivery.brains.brains_bots_and_drones import robot_planner
 from maildelivery.brains.plan_parser import full_plan_2_per_agent, parse_plan
 from maildelivery.geometry import pose2
@@ -12,7 +12,7 @@ import os
 
 DT = 0.001 #[s]
 V_ROBOT = 8.0 #[m/s]
-V_DRONE = 10.0 #[m/s]
+V_DRONE = 4.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'15_movie.gif')
@@ -201,7 +201,6 @@ if MOVIE:
 t = 0
 plotCounter = 0
 
-a_current_actions = [wait(ai) for ai in a]
 a_next_actions_indicies = [0 for _ in range(Nagents)]
 a_done = [False for _ in range(Nagents)]
 while True:
@@ -209,14 +208,17 @@ while True:
     for i,ai in enumerate(a):
         #go do next action
         if a_done[i] == False and \
-            type(a_current_actions[i]) == wait and \
+            type(ai.current_action) == wait and \
                 t >= a_execution_times[i][a_next_actions_indicies[i]]:
-            a_current_actions[i] = a_actions[i][a_next_actions_indicies[i]]
-            print(f"t = {t:2.2f}  :",a_current_actions[i])
+            
+            ai.current_action =  a_actions[i][a_next_actions_indicies[i]]
+            print(f"t = {t:2.2f}  :",ai.current_action)
             a_next_actions_indicies[i] += 1
-             
-        if ai.act(a_current_actions[i], env): #do action, and if its finished, start waiting allowing accepting new actions
-            a_current_actions[i] = wait(ai)
+
+        if type(ai.current_action) == robot_fly:
+            temp = 1
+        if ai.act(ai.current_action, env): #do action, and if its finished, start waiting allowing accepting new actions
+            ai.current_action = wait(ai)
 
     #update plot        
     if plotCounter % 100 == 0:
@@ -228,7 +230,7 @@ while True:
     t += DT
 
     for i in range(Nagents):
-        a_done[i] = a_next_actions_indicies[i] == len(a_actions[i]) and type(a_current_actions[i]) == wait
+        a_done[i] = a_next_actions_indicies[i] == len(a_actions[i]) and type(a[i].current_action) == wait
 
     if all(a_done):
         animate()

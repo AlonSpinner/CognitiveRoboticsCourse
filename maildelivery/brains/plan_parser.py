@@ -1,4 +1,4 @@
-from maildelivery.agents import agent, robot, action, wait, move, pickup, drop, chargeup, drone_fly, drone_fly_robot
+from maildelivery.agents import agent, robot, action, robot_fly, wait, move, pickup, drop, chargeup, drone_fly, drone_fly_robot
 from maildelivery.world import enviorment
 
 def parse_plan(execution_times, actions, durations, env : enviorment, agents : list[agent]):
@@ -34,7 +34,7 @@ def parse_plan(execution_times, actions, durations, env : enviorment, agents : l
             loc = env.locations[int(params[2][1:])], #location
             time_start = e,
             time_end = e + d
-                ))
+            ))
 
         elif name == 'chargeup':
             parsed_actions.append(chargeup(
@@ -60,12 +60,11 @@ def parse_plan(execution_times, actions, durations, env : enviorment, agents : l
                 time_start = e,
                 time_end = e + d
                 ))
-
-        elif name == '_prep_for_liftoff':
-            parsed_actions.append(wait(
-            agent = agents[(int(params[0][1:]))],
-            time_start = e,
-            time_end = e + d
+        elif name == 'prep_for_liftoff':
+            parsed_actions.append(robot_fly(
+                agent = agents[(int(params[0][1:]))],
+                time_start = e,
+                time_end = e + d
             ))
 
     return parsed_actions

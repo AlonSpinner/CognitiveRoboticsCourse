@@ -76,6 +76,7 @@ class robot_planner:
         _move.add_effect(EndTiming(),location_is_free(l_to), False)
         _move.add_effect(EndTiming(), road_is_free(l_from,l_to), True)
         _move.add_decrease_effect(EndTiming(),charge(r),self.f_dist2charge(distance(l_from,l_to)))
+        _move.add_effect(StartTiming(),robot_ready_for_liftoff(r), False)
 
         _pickup = InstantaneousAction('pickup', p = _package, r = _robot, l = _location)
         p = _pickup.parameter('p')
@@ -87,6 +88,7 @@ class robot_planner:
         _pickup.add_effect(location_has_package(p, l), False)
         _pickup.add_effect(robot_has_package(p, r), True)
         _pickup.add_effect(robot_not_holding_package(r), False)
+        _pickup.add_effect(robot_ready_for_liftoff(r), False)
 
         _drop = InstantaneousAction('drop', p = _package, r = _robot, l = _location)
         p = _drop.parameter('p')
@@ -97,6 +99,7 @@ class robot_planner:
         _drop.add_effect(robot_has_package(p, r), False)
         _drop.add_effect(location_has_package(p, l), True)
         _drop.add_effect(robot_not_holding_package(r), True)
+        _drop.add_effect(robot_ready_for_liftoff(r), False)
 
         _chargeup = DurativeAction('chargeup', r = _robot, l = _location)
         r = _chargeup.parameter('r')
@@ -105,6 +108,7 @@ class robot_planner:
         _chargeup.add_condition(StartTiming(),robot_at(r, l))
         _chargeup.add_condition(StartTiming(), location_is_dock(l))
         _chargeup.add_effect(EndTiming(), charge(r), self.max_charge)
+        _chargeup.add_effect(StartTiming(), robot_ready_for_liftoff(r), False)
 
         _drone_fly = DurativeAction('drone_fly',  d = _drone, l_from = _location, l_to = _location)
         d = _drone_fly.parameter('d')
@@ -115,7 +119,7 @@ class robot_planner:
         _drone_fly.add_effect(StartTiming(),drone_at(d, l_from), False)
         _drone_fly.add_effect(EndTiming(), drone_at(d, l_to), True)
 
-        _prep_for_liftoff = InstantaneousAction('_prep_for_liftoff', r = _robot)
+        _prep_for_liftoff = InstantaneousAction('prep_for_liftoff', r = _robot)
         r = _prep_for_liftoff.parameter('r')
         _prep_for_liftoff.add_precondition(robot_not_holding_package(r))
         _prep_for_liftoff.add_effect(robot_ready_for_liftoff(r), True)

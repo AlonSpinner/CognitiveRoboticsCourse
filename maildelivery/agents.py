@@ -23,7 +23,7 @@ class wait(action):
     time_start : float = 0
     time_end : float = 0
     def __repr__(self):
-        return f"{self.agent} no waits"
+        return f"{self.agent} waits"
 
 @dataclass(frozen = True)
 class move(action):
@@ -64,6 +64,12 @@ class chargeup(action):
     def __repr__(self):
         return f"{self.agent} charging up at {self.loc}"
 
+@dataclass(frozen = True)
+class robot_fly(action):
+    agent : agent
+    time_start : float = 0
+    time_end : float = 0
+
 class robot(agent):
     def __init__(self,id, pose0, dt) -> None:
         self.id = id
@@ -79,6 +85,7 @@ class robot(agent):
         self.f_dist2charge  = lambda dist: 2 * dist #some default function
         self.f_charge2time = lambda missing_charge: missing_charge/100
         self.graphics : list = []
+        self.current_action : action = wait(self)
        
     def sense(self): #gps like sensor
         return self.pose.t()
@@ -122,6 +129,9 @@ class robot(agent):
                 return True
             else:
                 return False
+
+        elif type(a) is robot_fly:
+            return False #drone will make the action -> wait after landing, enabling sucess
 
         elif type(a) is wait:
             return True
@@ -202,10 +212,13 @@ class drone:
                 return False
 
         elif type(a) is drone_fly_robot:
+            if type(a.robot.current_action) != robot_fly:
+                return False
             self.motion_control(a)
             #bring robot with
             a.robot.pose = self.pose
             if np.linalg.norm(self.pose.transformTo(a.loc_to.xy)) < REACH_DELTA:
+                a.robot.current_action = wait(a.robot) #robot now waits to allow for its next task
                 return True
             else:
                 return False
