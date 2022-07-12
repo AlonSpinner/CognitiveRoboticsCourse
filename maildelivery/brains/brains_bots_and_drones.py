@@ -1,3 +1,4 @@
+from traitlets import Bool
 from maildelivery.agents import robot, drone
 from maildelivery.world import enviorment
 from maildelivery.binary_solvers import manipulate_pddls, paths
@@ -56,6 +57,7 @@ class robot_planner:
         location_is_dock = Fluent('location_is_dock', BoolType(), l = _location)
         drone_at = Fluent('drone_at', BoolType(), d = _drone, l = _location)
         drone_velocity = Fluent('drone_velocity', RealType(), d = _drone)
+        robot_ready_for_liftoff = Fluent('robot_ready_for_liftoff', BoolType(), r = _robot)
       
         _move = DurativeAction('move',  r = _robot, l_from = _location, l_to = _location)
         r = _move.parameter('r')
@@ -113,17 +115,23 @@ class robot_planner:
         _drone_fly.add_effect(StartTiming(),drone_at(d, l_from), False)
         _drone_fly.add_effect(EndTiming(), drone_at(d, l_to), True)
 
+        _prep_for_liftoff = InstantaneousAction('_prep_for_liftoff', r = _robot)
+        r = _prep_for_liftoff.parameter('r')
+        _prep_for_liftoff.add_precondition(robot_not_holding_package(r))
+        _prep_for_liftoff.add_effect(robot_ready_for_liftoff(r), True)
+
         _drone_fly_robot = DurativeAction('drone_fly_robot',  d = _drone, r = _robot, l_from = _location, l_to = _location)
         d = _drone_fly_robot.parameter('d')
         r = _drone_fly_robot.parameter('r')
         l_from = _drone_fly_robot.parameter('l_from')
         l_to = _drone_fly_robot.parameter('l_to')
         _drone_fly_robot.set_fixed_duration(Div(distance(l_from,l_to),(drone_velocity(d))))
+        _drone_fly_robot.add_condition(StartTiming(), robot_ready_for_liftoff(r))
         _drone_fly_robot.add_condition(StartTiming(), location_is_dock(l_to))
         _drone_fly_robot.add_condition(StartTiming(), robot_at(r, l_from))
         _drone_fly_robot.add_condition(StartTiming(), drone_at(d, l_from))
         _drone_fly_robot.add_condition(EndTiming(),location_is_free(l_to))
-        _drone_fly_robot.add_condition(StartTiming(),robot_not_holding_package(r))
+        _drone_fly_robot.add_effect(StartTiming(), robot_ready_for_liftoff(r), False)
         _drone_fly_robot.add_effect(StartTiming(),robot_at(r, l_from), False)
         _drone_fly_robot.add_effect(StartTiming(),drone_at(d, l_from), False)
         _drone_fly_robot.add_effect(StartTiming(),location_is_free(l_from), True)
@@ -138,6 +146,7 @@ class robot_planner:
         problem.add_action(_chargeup)
         problem.add_action(_drone_fly)
         problem.add_action(_drone_fly_robot)
+        problem.add_action(_prep_for_liftoff)
         problem.add_fluent(robot_at, default_initial_value = False)
         problem.add_fluent(is_connected, default_initial_value = False)
         problem.add_fluent(location_is_free, default_initial_value = True)
@@ -151,6 +160,7 @@ class robot_planner:
         problem.add_fluent(location_is_dock, default_initial_value = False)
         problem.add_fluent(drone_at, default_initial_value = False)
         problem.add_fluent(drone_velocity) #initalized in create_problem()
+        problem.add_fluent(robot_ready_for_liftoff, default_initial_value = False)
 
         #save to self
         self.problem = problem
@@ -173,6 +183,7 @@ class robot_planner:
         self.location_is_dock = location_is_dock
         self.drone_at = drone_at
         self.drone_velocity = drone_velocity
+        self.robot_ready_for_liftoff = robot_ready_for_liftoff
         
     def create_problem(self, env : enviorment, robots : list[robot], drones : list[drone]):
         Nrobots = len(robots)

@@ -61,6 +61,13 @@ def parse_plan(execution_times, actions, durations, env : enviorment, agents : l
                 time_end = e + d
                 ))
 
+        elif name == '_prep_for_liftoff':
+            parsed_actions.append(wait(
+            agent = agents[(int(params[0][1:]))],
+            time_start = e,
+            time_end = e + d
+            ))
+
     return parsed_actions
 
 def actions_indicies_per_agent(parsed_actions : list[action], Nagents):
