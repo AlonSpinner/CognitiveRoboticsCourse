@@ -1,0 +1,4 @@
+numpy
+matplotlib
+git+https://github.com/aiplan4eu/unified-planning@master
+
