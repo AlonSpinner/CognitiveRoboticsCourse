@@ -11,6 +11,7 @@ plainly speaking:
 * robots can recharge at a dock (marked by a blue square)
 * drones can pick up robots that carry no packages and drop them at unoccupied docks
 * drones and robots have different velocities
+* we minimize make-span
 
 ## aknowledgements
 * the great people who developed OPTIC, tamer, lpg-td and other solvers.
@@ -40,4 +41,7 @@ test number 17 (replanning) was abandoned at this hour </br>
 $ cd tests
 $ python 08_problem_3.py
 ```
+You can possibly find better plans for the problems by having the lpg solver look for more solutions.
+This can by done by changing the "lpg_n" parameter when calling planner.solve()
+Try not to ask for too many different soltuions when such don't exist.
 
