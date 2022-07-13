@@ -1,5 +1,5 @@
 from maildelivery.world import enviorment,location, package
-from maildelivery.agents import robot, drone, wait, robot_fly, drone_fly_robot
+from maildelivery.agents import robot, drone, wait, robot_fly, drone_fly_robot, move, drone_fly
 from maildelivery.brains.brains_bots_and_drones import robot_planner
 from maildelivery.brains.plan_parser import full_plan_2_per_agent, parse_plan
 from maildelivery.geometry import pose2
@@ -244,20 +244,26 @@ while True:
 
         if type(ai.current_action) != wait \
             and type(ai.current_action) != robot_fly \
-                and t > ai.current_action.time_end + 0.1:
-                    ax.set_title('SOMETHING WENT WRONG.... REPLANNING!')
+                and t > ai.current_action.time_end + 0.5:
+                    ax.set_title(f'something went wrong with {ai}.... REPLANNING!')
+                    plt.pause(0.5)
                     if MOVIE:
                         moviewriter.grab_frame()
                     #assumption: plan failed because robot ran out of charge
                     #create intersection where agents are
                     for aj in a:
-                        new_loc = location(len(env.locations), ai.pose.t().squeeze(),'intersection')
-                        ai.last_location = new_loc.id
-                        loc_from = ai.current_action.loc_from
-                        loc_to = ai.current_action.loc_to
-                        env.locations += [new_loc]
-                        env.connectivityList = env.connectivityList + [[new_loc.id,loc_from.id]] + [[new_loc.id,loc_to.id]]
-                    
+                        if type(aj) == robot and type(aj.current_action) == move:
+                            new_loc = location(len(env.locations), aj.pose.t().squeeze(),'intersection')
+                            aj.last_location = new_loc.id
+                            loc_from = aj.current_action.loc_from
+                            loc_to = aj.current_action.loc_to
+                            env.locations += [new_loc]
+                            env.connectivityList = env.connectivityList + [[new_loc.id,loc_from.id]] + [[new_loc.id,loc_to.id]]
+                        if type(aj) == drone and (type(aj.current_action) == drone_fly or type(aj.current_action) == drone_fly_robot):
+                            new_loc = location(len(env.locations), aj.pose.t().squeeze(),'intersection')
+                            aj.last_location = new_loc.id
+                            loc_from = aj.current_action.loc_from
+                            env.locations += [new_loc]
                     env.plot(ax)
 
                     planner = robot_planner()
