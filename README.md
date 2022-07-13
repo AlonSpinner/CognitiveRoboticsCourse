@@ -27,5 +27,7 @@ pip install -r requirements.txt
 ```
 
 # Playing Around
-run the test files in the test folder
+run the test files in the test folder </br>
+tests ending with 'problem' are the interesting ones </br>
+test number 17 (replanning) was abandoned at this hour </br>
 
