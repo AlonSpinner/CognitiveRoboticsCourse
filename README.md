@@ -23,11 +23,21 @@ plainly speaking:
 developed with python 3.9.12 </br>
 you may have to install solvers from https://github.com/aiplan4eu if using unified planning solvers (tamer specifically)
 ```
-pip install -r requirements.txt 
+$ conda create --name maildelivery python=3.9
+$ conda activate maildelivery
+$ git clone https://github.com/AlonSpinner/maildelivery
+$ cd maildelivery
+$ pip install -r requirements.txt 
+$ pip install .
 ```
 
 # Playing Around
 run the test files in the test folder </br>
 tests ending with 'problem' are the interesting ones </br>
 test number 17 (replanning) was abandoned at this hour </br>
+
+```
+$ cd tests
+$ python 08_problem_3.py
+```
 
