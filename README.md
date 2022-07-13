@@ -26,3 +26,6 @@ you may have to install solvers from https://github.com/aiplan4eu if using unifi
 pip install -r requirements.txt 
 ```
 
+# Playing Around
+run the test files in the test folder
+
