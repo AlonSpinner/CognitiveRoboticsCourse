@@ -21,8 +21,10 @@ plainly speaking:
 ![SC2 Video](images/16_movie.gif)
 
 # Installation
-developed with python 3.9.12 </br>
-you may have to install solvers from https://github.com/aiplan4eu if using unified planning solvers (tamer specifically)
+developed with python 3.9.12
+
+you may have to install solvers from https://github.com/aiplan4eu if using unified planning solvers (tamer specifically) </br>
+this is not required to run default tests files.
 ```
 $ conda create --name maildelivery python=3.9
 $ conda activate maildelivery
@@ -34,8 +36,8 @@ $ pip install .
 
 # Playing Around
 run the test files in the test folder </br>
-tests ending with 'problem' are the interesting ones </br>
-test number 17 (replanning) was abandoned at this hour </br>
+* tests ending with 'problem' are the interesting ones </br>
+* test number 17 (replanning) was abandoned at this hour </br>
 
 ```
 $ cd tests
