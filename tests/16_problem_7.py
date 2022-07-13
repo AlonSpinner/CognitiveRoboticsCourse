@@ -12,7 +12,7 @@ import os
 
 DT = 0.001 #[s]
 V_ROBOT = 8.0 #[m/s]
-V_DRONE = 10.0 #[m/s]
+V_DRONE = 6.0 #[m/s]
 MOVIE = True
 dir_path = os.path.dirname(__file__)
 MOVIE_FILENAME = os.path.join(dir_path,'16_movie.gif')
@@ -198,7 +198,7 @@ planner.f_charge2time = f_charge2time
 planner.max_charge = max_charge
 planner.create_problem(env,r,d)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 5)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 11)
 actions = parse_plan(execution_times, actions, durations,env, a)
 a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
 
