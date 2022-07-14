@@ -150,7 +150,8 @@ r0.velocity = V_ROBOT
 r0.f_dist2charge = f_dist2charge
 r0.f_charge2time = f_charge2time
 r0.max_charge = 100
-r0.charge = 100.0
+r0.charge = 50.0
+r0.return_charge = 60.0
 
 station = 21
 x0 = env.locations[station].xy[0]
@@ -164,6 +165,7 @@ r1.f_dist2charge = f_dist2charge
 r1.f_charge2time = f_charge2time
 r1.max_charge = 100
 r1.charge = 50.0
+r1.return_charge = 60.0
 
 station = 22
 x0 = env.locations[station].xy[0]
@@ -177,6 +179,7 @@ r2.f_dist2charge = f_dist2charge
 r2.f_charge2time = f_charge2time
 r2.max_charge = 100
 r2.charge = 50.0
+r2.return_charge = 60.0
 
 drone_init_location = 31
 x0 = env.locations[drone_init_location].xy[0]
@@ -196,9 +199,9 @@ planner = robot_planner()
 planner.f_dist2charge = f_dist2charge
 planner.f_charge2time = f_charge2time
 planner.max_charge = max_charge
-planner.create_problem(env,r,d)
+planner.create_problem(env,r,d, backWithCharge = True)
 
-execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 11)
+execution_times, actions, durations = planner.solve(engine_name = 'lpg', minimize_makespan = True, lpg_n = 6)
 actions = parse_plan(execution_times, actions, durations,env, a)
 a_execution_times, a_actions, a_durations = full_plan_2_per_agent(execution_times, actions, durations, a)
 

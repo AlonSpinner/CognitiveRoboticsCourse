@@ -1,10 +1,11 @@
-from traitlets import Bool
 from maildelivery.agents import robot, drone
 from maildelivery.world import enviorment
 from maildelivery.binary_solvers import manipulate_pddls, paths
 from maildelivery.binary_solvers.optic import optic_wrapper
 from maildelivery.binary_solvers.lpg import lpg_wrapper
 from maildelivery.brains.plan_parser import parse_up
+
+from fractions import Fraction
 
 import unified_planning as up
 from unified_planning.shortcuts import OneshotPlanner, \
@@ -185,7 +186,7 @@ class robot_planner:
         self.drone_velocity = drone_velocity
         self.robot_ready_for_liftoff = robot_ready_for_liftoff
         
-    def create_problem(self, env : enviorment, robots : list[robot], drones : list[drone]):
+    def create_problem(self, env : enviorment, robots : list[robot], drones : list[drone], backWithCharge = False):
         Nrobots = len(robots)
 
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
@@ -262,7 +263,10 @@ class robot_planner:
         for p in env.packages:
             self.problem.add_goal(self.location_has_package(_packages[p.id],_locations[p.goal]))
         for r in robots:
-            self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
+            self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))   
+        if backWithCharge:
+            for r in robots:
+                self.problem.add_goal(GE(self.charge(_robots[r.id]),Real(Fraction(r.return_charge))))
 
         self._robots = _robots
         self._locations = _locations

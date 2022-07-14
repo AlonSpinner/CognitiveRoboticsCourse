@@ -88,6 +88,7 @@ class robot(agent):
         self.f_charge2time = lambda missing_charge: missing_charge/100
         self.graphics : list = []
         self.current_action : action = wait(self)
+        self.return_charge = self.max_charge / 2
        
     def sense(self): #gps like sensor
         return self.pose.t()

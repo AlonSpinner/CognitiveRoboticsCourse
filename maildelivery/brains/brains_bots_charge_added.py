@@ -5,6 +5,8 @@ from maildelivery.binary_solvers.optic import optic_wrapper
 from maildelivery.binary_solvers.lpg import lpg_wrapper
 from maildelivery.brains.plan_parser import parse_up
 
+from fractions import Fraction
+
 import unified_planning as up
 from unified_planning.shortcuts import OneshotPlanner, \
         Fluent, InstantaneousAction, DurativeAction, Problem, Object, SimulatedEffect, \
@@ -135,7 +137,7 @@ class robot_planner:
         self.location_is_dock = location_is_dock
         
 
-    def create_problem(self, env : enviorment, robots : list[robot]):
+    def create_problem(self, env : enviorment, robots : list[robot], backWithCharge = False):
         _locations = [Object(f"l{id}", self._location) for id in [loc.id for loc in env.locations]]
         _robots = [Object(f"r{id}", self._robot) for id in [bot.id for bot in robots]]
         _packages = [Object(f"p{id}", self._package) for id in [p.id for p in env.packages]]
@@ -175,7 +177,6 @@ class robot_planner:
             self.problem.set_initial_value(self.charge(
                                                 _robots[r.id]),
                                                 robots[r.id].charge)
-
         #place packages
         for p in env.packages:
 
@@ -202,6 +203,9 @@ class robot_planner:
             self.problem.add_goal(self.location_has_package(_packages[p.id],_locations[p.goal]))
         for r in robots:
             self.problem.add_goal(self.robot_at(_robots[r.id],_locations[r.goal_location]))
+        if backWithCharge:
+            for r in robots:
+                self.problem.add_goal(GE(self.charge(_robots[r.id]),Real(Fraction(r.return_charge))))
 
         self._robots = _robots
         self._locations = _locations
